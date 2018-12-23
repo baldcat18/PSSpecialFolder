@@ -21,7 +21,7 @@ Describe "newSpecialFolder のテスト" {
 		It 'Title should "Desktop"' {
 			$folder.Title | Should -Be "Desktop"
 		}
-		$desktopPath = [Environment]::GetFolderPath([Environment+SpecialFolder]::Desktop)
+		$desktopPath = [Environment]::GetFolderPath("Desktop")
 		It "Path should `"$desktopPath`"" {
 			$folder.Path | Should -Be $desktopPath
 		}
@@ -54,6 +54,39 @@ Describe "newSpecialFolder のテスト" {
 		}
 		It "Path should `"$controlPanelPath`"" {
 			$folder.Path | Should -Be $controlPanelPath
+		}
+	}
+	Context "B:\FooBar" {
+		It "Should Null" {
+			newSpecialFolder "B:\FooBar" | Should -BeFalse
+		}
+	}
+	$myDocumentsPath = [Environment]::GetFolderPath("MyDocuments")
+	Context $myDocumentsPath {
+		$folder = newSpecialFolder $myDocumentsPath
+		$myDocumentsName = Split-Path -Leaf $myDocumentsPath
+		It "Title should `"$myDocumentsName`"" {
+			$folder.Title | Should -Be $myDocumentsName
+		}
+		It "Path should `"$myDocumentsPath`"" {
+			$folder.Path | Should -Be $myDocumentsPath
+		}
+		It "Dir should `"file:\\\$myDocumentsPath`"" {
+			$folder.Dir | Should -Be "file:\\\$myDocumentsPath"
+		}
+	}
+	$sharedWinDirPath = "\\$Env:COMPUTERNAME\$($Env:windir -replace ':', '$')"
+	Context $sharedWinDirPath {
+		$folder = newSpecialFolder $sharedWinDirPath
+		$sharedWinDirName = Split-Path -Leaf $sharedWinDirPath
+		It "Title should `"$sharedWinDirName`"" {
+			$folder.Title | Should -Be $sharedWinDirName
+		}
+		It "Path should `"$sharedWinDirPath`"" {
+			$folder.Path | Should -Be $sharedWinDirPath
+		}
+		It "Dir should `"file:$sharedWinDirPath`"" {
+			$folder.Dir | Should -Be "file:$sharedWinDirPath"
 		}
 	}
 }

@@ -89,4 +89,26 @@ Describe "newSpecialFolder のテスト" {
 			$folder.Dir | Should -Be "file:$sharedWinDirPath"
 		}
 	}
+	$appDataPath = [Environment]::GetFolderPath("ApplicationData")
+	Context "$appDataPath @{ Title = `"AppData`" }" {
+		$folder = newSpecialFolder $appDataPath @{ Title = "AppData" }
+		It "Title should `"AppData`"" {
+			$folder.Title | Should -Be "AppData"
+		}
+		It "Path should `"$appDataPath`"" {
+			$folder.Path | Should -Be $appDataPath
+		}
+	}
+	$LibrariesPath = (Get-Item "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders").
+		GetValue("{1B3EA5DC-B587-4786-B4EF-BD1DC332AEAE}")
+	if (!$LibrariesPath) { $LibrariesPath = "$appDataPath\Microsoft\Windows\Libraries" }
+	Context "shell:Libraries @{ Path = `"$LibrariesPath`" }" {
+		$folder = newSpecialFolder shell:Libraries @{ Path = "$LibrariesPath" }
+		It "Title should `"Libraries`"" {
+			$folder.Title | Should -Be "Libraries"
+		}
+		It "Path should `"$LibrariesPath`"" {
+			$folder.Path | Should -Be $LibrariesPath
+		}
+	}
 }

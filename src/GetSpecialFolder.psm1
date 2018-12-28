@@ -45,3 +45,15 @@ function newSpecialFolder {
 	
 	return [SpecialFolder]@{ Title = $title; Path = $path; Dir = $Dir; FolderItem = $folderItem }
 }
+
+function newShellCommand {
+	[OutputType([SpecialFolder])]
+	param ([string]$Dir)
+	
+	if (!$Dir) { return }
+	
+	$path = "Microsoft.PowerShell.Core\Registry::HKEY_CLASSES_ROOT\CLSID\$($Dir.Substring($Dir.Length - 38))"
+	if (!(Test-Path $path)) { return }
+	
+	return [SpecialFolder]@{ Title = (Get-Item $path).GetValue(""); Path = $Dir; Dir = $Dir }
+}

@@ -1,6 +1,6 @@
 ﻿Import-Module "$PSScriptRoot/../src/GetSpecialFolder.psm1" -Force
 
-Describe "newSpecialFolder のテスト" {
+Describe "newSpecialFolder Test" {
 	Context "Null" {
 		It "Should Null" {
 			newSpecialFolder $null | Should -BeFalse
@@ -109,6 +109,29 @@ Describe "newSpecialFolder のテスト" {
 		}
 		It "Path should `"$LibrariesPath`"" {
 			$folder.Path | Should -Be $LibrariesPath
+		}
+	}
+}
+
+Describe "newShellCommand Test" {
+	Context "Null" {
+		It "Should Null" {
+			newShellCommand $null | Should -BeFalse
+		}
+	}
+	Context "shell:::{00000000-0000-0000-0000-000000000000}" {
+		It "Should Null" {
+			newShellCommand "shell:::{00000000-0000-0000-0000-000000000000}" | Should -BeFalse
+		}
+	}
+	$taskbarPath = 'shell:::{0DF44EAA-FF21-4412-828E-260A8728E7F1}'
+	Context "$taskbarPath (Taskbar)" {
+		$folder = newShellCommand $taskbarPath
+		It 'Title should "Taskbar"' {
+			$folder.Title | Should -Be "Taskbar"
+		}
+		It "Path should `"$taskbarPath`"" {
+			$folder.Path | Should -Be $taskbarPath
 		}
 	}
 }

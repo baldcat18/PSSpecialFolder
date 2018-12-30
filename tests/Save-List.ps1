@@ -1,0 +1,19 @@
+﻿<#
+.SYNOPSIS
+Get-SpecialFolderの出力をファイルに保存する
+#>
+
+[CmdletBinding()]
+param()
+
+Set-StrictMode -Version Latest
+
+$osVersion = (Get-CimInstance Win32_OperatingSystem).Version
+$cpu = $env:PROCESSOR_ARCHITECTURE
+$edition = Get-ItemPropertyValue "HKLM:/SOFTWARE/Microsoft/Windows NT/CurrentVersion" "EditionID"
+$now = Get-Date -Format yyyyMMdd-HHmmss
+
+Import-Module "$PSScriptRoot/../src/GetSpecialFolder.psm1" -Force
+
+Get-SpecialFolder -Debug -InformationAction Continue 6>&1 |
+	Out-File "$PSScriptRoot\$osVersion $cpu $edition $now.txt" -Encoding utf8

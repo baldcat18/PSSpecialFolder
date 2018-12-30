@@ -57,3 +57,16 @@ function newShellCommand {
 	
 	return [SpecialFolder]@{ Title = (Get-Item $path).GetValue(""); Path = $Dir; Dir = $Dir }
 }
+
+<#
+.SYNOPSIS
+Gets the special folders for Windows. This function supports the virtual folders, e.g. Control Panel and Recycle Bin.
+.OUTPUTS
+SpecialFolder[]
+#>
+function Get-SpecialFolder {
+	[CmdletBinding()]
+	[OutputType([SpecialFolder[]])]
+	param ()
+	
+}

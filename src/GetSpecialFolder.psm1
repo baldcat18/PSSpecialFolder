@@ -13,7 +13,11 @@ class FolderOption {
 	[string]$Path
 }
 
-$shell = New-Object -ComObject Shell.Application
+function const ([string]$name, $value) {
+	New-Variable -Name $name -Value $value -Option Constant -Scope 1
+}
+
+const shell (New-Object -ComObject Shell.Application)
 
 function newSpecialFolder {
 	[OutputType([SpecialFolder])]
@@ -23,16 +27,16 @@ function newSpecialFolder {
 	if ($Dir.Substring(0, 2) -eq "\\") { $Dir = "file:" + $Dir }
 	elseif ($Dir.Substring(0, 6) -ne "shell:" -and $Dir.Substring(0, 5) -ne "file:") { $Dir = "file:\\\" + $Dir }
 	
-	try { $folder = $shell.NameSpace($Dir) }
+	try { const folder $shell.NameSpace($Dir) }
 	catch { return }
 	
 	if (!$folder) { return }
-	$folderItem = $shell.NameSpace($Dir).Self
+	const folderItem $shell.NameSpace($Dir).Self
 	
 	$title =
 		if ($Dir -match "^shell:(?:(?:\w|\s)+)$") { $Dir.Substring(6) }
 		elseif ($Dir -match "^shell:::.*\{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\}$") {
-			$clsid = $Dir.Substring($Dir.Length - 38)
+			const clsid $Dir.Substring($Dir.Length - 38)
 			(Get-Item "Microsoft.PowerShell.Core\Registry::HKEY_CLASSES_ROOT\CLSID\$clsid").GetValue("")
 		}
 		else { $Dir -replace "^.+\\(.+?)$", "`$1" }
@@ -52,7 +56,7 @@ function newShellCommand {
 	
 	if (!$Dir) { return }
 	
-	$path = "Microsoft.PowerShell.Core\Registry::HKEY_CLASSES_ROOT\CLSID\$($Dir.Substring($Dir.Length - 38))"
+	const path "Microsoft.PowerShell.Core\Registry::HKEY_CLASSES_ROOT\CLSID\$($Dir.Substring($Dir.Length - 38))"
 	if (!(Test-Path $path)) { return }
 	
 	return [SpecialFolder]@{ Title = (Get-Item $path).GetValue(""); Path = $Dir; Dir = $Dir }
@@ -69,26 +73,23 @@ function Get-SpecialFolder {
 	[OutputType([SpecialFolder[]])]
 	param ()
 	
-	$osVerion = [Environment]::OSVersion.Version
+	const osVerion [Environment]::OSVersion.Version
 	
 	# Win8.1以降
-	$win81 = $osVerion -gt [version]::new(6, 3)
+	const win81 ($osVerion -gt [version]::new(6, 3))
 	# Win10以降
-	$win10 = $osVerion -gt [version]::new(10, 0)
+	const win10 ($osVerion -gt [version]::new(10, 0))
 	# Win10 1607以降
-	$win10_1607 = $osVerion -gt [version]::new(10, 0, 14393)
-	# Win10 1607以降
-	$win10_1607 = $osVerion -gt [version]::new(10, 0, 14393)
+	const win10_1607 ($osVerion -gt [version]::new(10, 0, 14393))
 	# Win10 1703以降
-	$win10_1703 = $osVerion -gt [version]::new(10, 0, 15063)
+	const win10_1703 ($osVerion -gt [version]::new(10, 0, 15063))
 	# Win10 1709以降
-	$win10_1709 = $osVerion -gt [version]::new(10, 0, 16299)
+	const win10_1709 ($osVerion -gt [version]::new(10, 0, 16299))
 	# Win10 1803以降
-	$win10_1803 = $osVerion -gt [version]::new(10, 0, 17134)
+	const win10_1803 ($osVerion -gt [version]::new(10, 0, 17134))
 	
-	$is64bit = [System.Environment]::Is64BitProcess
+	const is64bit [System.Environment]::Is64BitProcess
 	
-	$userShellFoldersKey = Get-Item "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\\User Shell Folders"
-	$currentVersionKey = Get-Item "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion"
-	
+	const userShellFoldersKey (Get-Item "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\\User Shell Folders")
+	const currentVersionKey (Get-Item "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion")
 }

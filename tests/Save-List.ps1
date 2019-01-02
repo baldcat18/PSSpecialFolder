@@ -16,4 +16,14 @@ $now = Get-Date -Format yyyyMMdd-HHmmss
 Import-Module "$PSScriptRoot/../src/GetSpecialFolder.psm1" -Force
 
 Get-SpecialFolder -Debug -InformationAction Continue 6>&1 |
+	ForEach-Object {
+		if ($_ -is [System.Management.Automation.InformationRecord] -or !$_.FolderItem) { $_ }
+		else { [pscustomobject]@{
+			Title = $_.Title
+			Dir = $_.Dir
+			Path = $_.Path
+			DisplayName = $_.FolderItem.Name
+			Type = $_.FolderItem.Type
+		} }
+	} |
 	Out-File "$PSScriptRoot\$osVersion $cpu $edition $now.txt" -Encoding utf8

@@ -13,7 +13,9 @@ class FolderOption {
 	[string]$Path
 }
 
-function const ([string]$name, $value) {
+function const {
+	param ([string]$name, $value)
+	
 	New-Variable -Name $name -Value $value -Option Constant -Scope 1
 }
 
@@ -73,7 +75,7 @@ function Get-SpecialFolder {
 	[OutputType([SpecialFolder[]])]
 	param ()
 	
-	const osVerion [Environment]::OSVersion.Version
+	const osVerion ([Environment]::OSVersion.Version)
 	
 	# Win8.1以降
 	const win81 ($osVerion -gt [version]::new(6, 3))
@@ -88,7 +90,7 @@ function Get-SpecialFolder {
 	# Win10 1803以降
 	const win10_1803 ($osVerion -gt [version]::new(10, 0, 17134))
 	
-	const is64bit [System.Environment]::Is64BitProcess
+	const is64bit ([System.Environment]::Is64BitProcess)
 	
 	const userShellFoldersKey (Get-Item "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\\User Shell Folders")
 	const currentVersionKey (Get-Item "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion")

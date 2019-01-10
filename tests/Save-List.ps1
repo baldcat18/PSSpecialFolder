@@ -16,6 +16,7 @@ $now = Get-Date -Format yyyyMMdd-HHmmss
 Import-Module "$PSScriptRoot/../src/GetSpecialFolder.psm1" -Force
 
 Get-SpecialFolder -Debug -InformationAction Continue 6>&1 |
+	Where-Object { $_ } |
 	ForEach-Object {
 		if ($_ -is [System.Management.Automation.InformationRecord] -or !$_.FolderItem) { $_ }
 		else { [pscustomobject]@{

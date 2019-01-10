@@ -134,4 +134,14 @@ Describe "newShellCommand Test" {
 			$folder.Path | Should -Be $taskbarPath
 		}
 	}
+	$cortanaPath = 'shell:::{2559A1F8-21D7-11D4-BDAF-00C04F60B9F0}'
+	Context "$cortanaPath Cortana" {
+		$folder = newShellCommand $cortanaPath Cortana
+		It 'Title should "Cortana"' {
+			$folder.Title | Should -Be "Cortana"
+		}
+		It "Path should `"$cortanaPath`"" {
+			$folder.Path | Should -Be $cortanaPath
+		}
+	}
 }

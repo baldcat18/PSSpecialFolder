@@ -54,14 +54,16 @@ function newSpecialFolder {
 
 function newShellCommand {
 	[OutputType([SpecialFolder])]
-	param ([string]$Dir)
+	param ([string]$Path, [string]$Title = "")
 	
-	if (!$Dir) { return }
+	if (!$Path) { return }
 	
-	const path "Microsoft.PowerShell.Core\Registry::HKEY_CLASSES_ROOT\CLSID\$($Dir.Substring($Dir.Length - 38))"
-	if (!(Test-Path $path)) { return }
+	const clsidPath "Microsoft.PowerShell.Core\Registry::HKEY_CLASSES_ROOT\CLSID\$($Path.Substring($Path.Length - 38))"
+	if (!(Test-Path $clsidPath)) { return }
 	
-	return [SpecialFolder]@{ Title = (Get-Item $path).GetValue(""); Path = $Dir; Dir = $Dir }
+	const clsidTitle (Get-Item $clsidPath).GetValue("")
+	
+	return [SpecialFolder]@{ Title = if ($clsidTitle) { $clsidTitle } else { $Title }; Path = $Path }
 }
 
 <#

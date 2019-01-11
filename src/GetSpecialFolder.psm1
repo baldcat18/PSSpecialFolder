@@ -61,9 +61,7 @@ function newShellCommand {
 	const clsidPath "Microsoft.PowerShell.Core\Registry::HKEY_CLASSES_ROOT\CLSID\$($Path.Substring($Path.Length - 38))"
 	if (!(Test-Path $clsidPath)) { return }
 	
-	const clsidTitle (Get-Item $clsidPath).GetValue("")
-	
-	return [SpecialFolder]@{ Title = if ($clsidTitle) { $clsidTitle } else { $Title }; Path = $Path }
+	return [SpecialFolder]@{ Title = if ($Title) { $Title } else { (Get-Item $clsidPath).GetValue("") }; Path = $Path }
 }
 
 <#

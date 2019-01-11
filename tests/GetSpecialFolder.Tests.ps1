@@ -134,14 +134,14 @@ Describe "newShellCommand Test" {
 			$folder.Path | Should -Be $taskbarPath
 		}
 	}
-	$cortanaPath = 'shell:::{2559A1F8-21D7-11D4-BDAF-00C04F60B9F0}'
-	Context "$cortanaPath Cortana" {
-		$folder = newShellCommand $cortanaPath Cortana
-		It 'Title should "Cortana"' {
-			$folder.Title | Should -Be "Cortana"
+	$fileExplorerPath = 'shell:::{52205FD8-5DFB-447D-801A-D0B52F2E83E1}'
+	Context "$fileExplorerPath `"File Explorer`"" {
+		$folder = newShellCommand $fileExplorerPath "File Explorer"
+		It 'Title should "File Explorer"' {
+			$folder.Title | Should -Be "File Explorer"
 		}
-		It "Path should `"$cortanaPath`"" {
-			$folder.Path | Should -Be $cortanaPath
+		It "Path should `"$fileExplorerPath`"" {
+			$folder.Path | Should -Be $fileExplorerPath
 		}
 	}
 }

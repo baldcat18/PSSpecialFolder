@@ -285,6 +285,118 @@ function Get-SpecialFolder {
 	# Pen and Touch Control Panel
 	Write-Output (newShellCommand "shell:::{F82DF8F7-8B9F-442E-A48C-818EA735FF9B}")
 	
+	# フォルダーとして使えないshellコマンド
+	Write-Information "Category: Unusable`n"
+	
+	Write-Output (newSpecialFolder "shell:MAPIFolder")
+	Write-Output (newSpecialFolder "shell:RecordedTVLibrary")
+	
+	Write-Output (newShellCommand "shell:::{00020D75-0000-0000-C000-000000000046}")
+	# Desktop
+	Write-Output (newShellCommand "shell:::{00021400-0000-0000-C000-000000000046}")
+	# Shortcut
+	Write-Output (newShellCommand "shell:::{00021401-0000-0000-C000-000000000046}")
+	# Win10 1507から1703まで
+	Write-Output (newShellCommand "shell:::{047EA9A0-93BB-415F-A1C3-D7AEB3DD5087}")
+	# Open With Context Menu Handler
+	Write-Output (newShellCommand "shell:::{09799AFB-AD67-11D1-ABCD-00C04FC30936}")
+	# Folder Shortcut
+	Write-Output (newShellCommand "shell:::{0AFACED1-E828-11D1-9187-B532F1E9575D}")
+	Write-Output (newShellCommand "shell:::{0C39A5CF-1A7A-40C8-BA74-8900E6DF5FCD}")
+	Write-Output (newShellCommand "shell:::{0D45D530-764B-11D0-A1CA-00AA00C16E65}")
+	# Shell File System Folder
+	# Win8から
+	Write-Output (newShellCommand "shell:::{0E5AAE11-A475-4C5B-AB00-C66DE400274E}")
+	# Device Center Print Context Menu Extension
+	Write-Output (newShellCommand "shell:::{0E6DAA63-DD4E-47CE-BF9D-FDB72ECE4A0D}")
+	# IE History and Feeds Shell Data Source for Windows Search
+	Write-Output (newShellCommand "shell:::{11016101-E366-4D22-BC06-4ADA335C892B}")
+	# OpenMediaSharing
+	Write-Output (newShellCommand "shell:::{17FC1A80-140E-4290-A64F-4A29A951A867}")
+	# CLSID_DBFolderBoth
+	Write-Output (newShellCommand "shell:::{1BEF2128-2F96-4500-BA7C-098DC0049CB2}")
+	# CompatContextMenu Class
+	Write-Output (newShellCommand "shell:::{1D27F844-3A1F-4410-85AC-14651078412D}")
+	# Windows Security
+	Write-Output (newShellCommand "shell:::{2559A1F2-21D7-11D4-BDAF-00C04F60B9F0}")
+	# Location Folder
+	Write-Output (newShellCommand "shell:::{267CF8A9-F4E3-41E6-95B1-AF881BE130FF}")
+	# Enhanced Storage Context Menu Handler Class
+	Write-Output (newShellCommand "shell:::{2854F705-3548-414C-A113-93E27C808C85}")
+	# System Restore
+	Write-Output (newShellCommand "shell:::{3F6BC534-DFA1-4AB4-AE54-EF25A74E0107}")
+	# Start Menu Folder
+	Write-Output (newShellCommand "shell:::{48E7CAAB-B918-4E58-A94D-505519C795DC}")
+	# IGD Property Page
+	Write-Output (newShellCommand "shell:::{4A1E5ACD-A108-4100-9E26-D2FAFA1BA486}")
+	# LzhCompressedFolder2
+	# Win10 1607まで
+	Write-Output (newShellCommand "shell:::{4F289A46-2BBB-4AE8-9EDA-E5E034707A71}")
+	# This PC
+	# Win10から
+	Write-Output (newShellCommand "shell:::{5E5F29CE-E0A8-49D3-AF32-7A7BDC173478}")
+	Write-Output (newShellCommand "shell:::{62AE1F9A-126A-11D0-A14B-0800361B1103}")
+	# Search Connector Folder
+	Write-Output (newShellCommand "shell:::{72B36E70-8700-42D6-A7F7-C9AB3323EE51}")
+	# CryptPKO Class
+	Write-Output (newShellCommand "shell:::{7444C717-39BF-11D1-8CD9-00C04FC29D45}")
+	# Temporary Internet Files
+	Write-Output (newShellCommand "shell:::{7BD29E00-76C1-11CF-9DD0-00A0C9034933}")
+	# Temporary Internet Files
+	Write-Output (newShellCommand "shell:::{7BD29E01-76C1-11CF-9DD0-00A0C9034933}")
+	# if ($win10_1703) { "" } else { "Briefcase" }
+	Write-Output (newShellCommand "shell:::{85BBD920-42A0-1069-A2E4-08002B30309D}")
+	# Shortcut
+	Write-Output (newShellCommand "shell:::{85CFCCAF-2D14-42B6-80B6-F40F65D016E7}")
+	# Mobile Broadband Profile Settings Editor
+	Write-Output (newShellCommand "shell:::{87630419-6216-4FF8-A1F0-143562D16D5C}")
+	# Compressed (zipped) Folder SendTo Target
+	Write-Output (newShellCommand "shell:::{888DCA60-FC0A-11CF-8F0F-00C04FD7D062}")
+	# ActiveX Cache Folder
+	Write-Output (newShellCommand "shell:::{88C6C381-2E85-11D0-94DE-444553540000}")
+	# Libraries delegate folder that appears in Users Files Folder
+	Write-Output (newShellCommand "shell:::{896664F7-12E1-490F-8782-C0835AFD98FC}")
+	# Windows Search Service Media Center Namespace Extension Handler
+	# Win10 1607まで
+	Write-Output (newShellCommand "shell:::{98D99750-0B8A-4C59-9151-589053683D73}")
+	# MAPI Shell Context Menu
+	Write-Output (newShellCommand "shell:::{9D3C0751-A13F-46A6-B833-B46A43C30FE8}")
+	# Previous Versions
+	Write-Output (newShellCommand "shell:::{9DB7A13C-F208-4981-8353-73CC61AE2783}")
+	# Mail Service
+	Write-Output (newShellCommand "shell:::{9E56BE60-C50F-11CF-9A2C-00A0C90A90CE}")
+	# Desktop Shortcut
+	Write-Output (newShellCommand "shell:::{9E56BE61-C50F-11CF-9A2C-00A0C90A90CE}")
+	# DevicePairingFolder Initialization
+	Write-Output (newShellCommand "shell:::{AEE2420F-D50E-405C-8784-363C582BF45A}")
+	# CLSID_DBFolder
+	Write-Output (newShellCommand "shell:::{B2952B16-0E07-4E5A-B993-58C52CB94CAE}")
+	# Device Center Scan Context Menu Extension
+	Write-Output (newShellCommand "shell:::{B5A60A9E-A4C7-4A93-AC6E-0B76D1D87DC4}")
+	# DeviceCenter Initialization
+	Write-Output (newShellCommand "shell:::{C2B136E2-D50E-405C-8784-363C582BF43E}")
+	# Win10 1507から1607まで
+	Write-Output (newShellCommand "shell:::{D9AC5E73-BB10-467B-B884-AA1E475C51F5}")
+	# delegate folder that appears in Users Files Folder
+	Write-Output (newShellCommand "shell:::{DFFACDC5-679F-4156-8947-C5C76BC0B67F}")
+	# CompressedFolder
+	Write-Output (newShellCommand "shell:::{E88DCCE0-B7B3-11D1-A9F0-00AA0060FA31}")
+	# MyDocs Drop Target
+	Write-Output (newShellCommand "shell:::{ECF03A32-103D-11D2-854D-006008059367}")
+	# Shell File System Folder
+	Write-Output (newShellCommand "shell:::{F3364BA0-65B9-11CE-A9BA-00AA004AE837}")
+	# Sticky Notes Namespace Extension for Windows Desktop Search
+	# Win10 1607まで
+	Write-Output (newShellCommand "shell:::{F3F5824C-AD58-4728-AF59-A1EBE3392799}")
+	# Subscription Folder
+	Write-Output (newShellCommand "shell:::{F5175861-2688-11D0-9C5E-00AA00A45957}")
+	# Internet Shortcut
+	Write-Output (newShellCommand "shell:::{FBF23B40-E3F0-101B-8488-00AA003E56F8}")
+	# History
+	Write-Output (newShellCommand "shell:::{FF393560-C2A7-11CF-BFF4-444553540000}")
+	# Windows Photo Viewer Image Verbs
+	Write-Output (newShellCommand "shell:::{FFE2A43C-56B9-4BF5-9A79-CC6D4285608A}")
+	
 	<#
 	Write-Output (newSpecialFolder "shell:")
 	#>

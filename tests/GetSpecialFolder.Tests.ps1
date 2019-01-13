@@ -99,16 +99,16 @@ Describe "newSpecialFolder Test" {
 			$folder.Path | Should -Be $appDataPath
 		}
 	}
-	$LibrariesPath = (Get-Item "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders").
+	$librariesPath = (Get-Item "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders").
 		GetValue("{1B3EA5DC-B587-4786-B4EF-BD1DC332AEAE}")
-	if (!$LibrariesPath) { $LibrariesPath = "$appDataPath\Microsoft\Windows\Libraries" }
-	Context "shell:Libraries @{ Path = `"$LibrariesPath`" }" {
-		$folder = newSpecialFolder shell:Libraries @{ Path = "$LibrariesPath" }
+	if (!$librariesPath) { $librariesPath = "$appDataPath\Microsoft\Windows\Libraries" }
+	Context "shell:Libraries @{ Path = `"$librariesPath`" }" {
+		$folder = newSpecialFolder shell:Libraries @{ Path = "$librariesPath" }
 		It "Title should `"Libraries`"" {
 			$folder.Title | Should -Be "Libraries"
 		}
-		It "Path should `"$LibrariesPath`"" {
-			$folder.Path | Should -Be $LibrariesPath
+		It "Path should `"$librariesPath`"" {
+			$folder.Path | Should -Be $librariesPath
 		}
 	}
 }

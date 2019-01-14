@@ -92,7 +92,7 @@ function Get-SpecialFolder {
 	
 	const is64bit ([System.Environment]::Is64BitProcess)
 	
-	const userShellFoldersKey (Get-Item "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\\User Shell Folders")
+	const userShellFoldersKey (Get-Item "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders")
 	const currentVersionKey (Get-Item "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion")
 	
 	Write-Information "Module Version: $((Get-Module GetSpecialFolder).Version.ToString())`n"
@@ -250,6 +250,76 @@ function Get-SpecialFolder {
 	$videosLibraryPath = $userShellFoldersKey.GetValue("{491E922F-5643-4AF4-A7EB-4E7A138D8174}")
 	if (!$videosLibraryPath) { $videosLibraryPath = "$librariesPath\Videos.library-ms" }
 	Write-Output (newSpecialFolder "shell:VideosLibrary" @{ Path = $videosLibraryPath })
+	
+	Write-Information "Category: StartMenu`n"
+	
+	Write-Output (newSpecialFolder "shell:Start Menu")
+	Write-Output (newSpecialFolder "shell:Programs")
+	Write-Output (newSpecialFolder "shell:Administrative Tools")
+	Write-Output (newSpecialFolder "shell:Startup")
+	
+	Write-Information "Category: LocalAppData`n"
+	
+	# %LOCALAPPDATA%
+	Write-Output (newSpecialFolder "shell:Local AppData")
+	Write-Output (newSpecialFolder "shell:LocalAppDataLow")
+		
+	# Win10 1709からサポート
+	# shell:Local AppData\Desktop
+	Write-Output (newSpecialFolder "shell:AppDataDesktop")
+	# Win10からサポート
+	# shell:Local AppData\DevelopmentFiles
+	Write-Output (newSpecialFolder "shell:Development Files")
+	# Win10 1709からサポート
+	# shell:Local AppData\Documents
+	Write-Output (newSpecialFolder "shell:AppDataDocuments")
+	# Win10 1709からサポート
+	# shell:Local AppData\Favorites
+	Write-Output (newSpecialFolder "shell:AppDataFavorites")
+	# ストアアプリの設定
+	# Win8からサポート
+	Write-Output (newSpecialFolder "shell:Local AppData\Packages" @{ Title = "Settings of the Windows Apps" })
+	# Win10 1709からサポート
+	# shell:Local AppData\ProgramData
+	Write-Output (newSpecialFolder "shell:AppDataProgramData")
+	# %TEMP%
+	# %TMP%
+	Write-Output (newSpecialFolder ([System.IO.Path]::GetTempPath()) @{ Title = "Temporary Folder" })
+	Write-Output (newSpecialFolder "shell:Local AppData\VirtualStore")
+		
+	# Win8からサポート
+	Write-Output (newSpecialFolder "shell:Application Shortcuts")
+	Write-Output (newSpecialFolder "shell:CD Burning")
+	Write-Output (newSpecialFolder "shell:GameTasks")
+	Write-Output (newSpecialFolder "shell:History")
+	Write-Output (newSpecialFolder "shell:Cache")
+	# Win8.1でこのカテゴリに移動
+	if ($win81) { Write-Output (newSpecialFolder "shell:Cookies") }
+	Write-Output (newSpecialFolder "shell:Ringtones")
+	# Win8からサポート
+	# shell:Local AppData\Microsoft\Windows\RoamedTileImages
+	Write-Output (newSpecialFolder "shell:Roamed Tile Images")
+	# Win8からサポート
+	Write-Output (newSpecialFolder "shell:Roaming Tiles")
+	# Win8からサポート
+	Write-Output (newSpecialFolder "shell:Local AppData\Microsoft\Windows\WinX")
+		
+	# Win8.1からサポート
+	# shell:Local AppData\Microsoft\Windows\ConnectedSearch\History
+	Write-Output (newSpecialFolder "shell:SearchHistoryFolder")
+	# Win8.1からサポート
+	# shell:Local AppData\Microsoft\Windows\ConnectedSearch\Templates
+	Write-Output (newSpecialFolder "shell:SearchTemplatesFolder")
+		
+	Write-Output (newSpecialFolder $(if ($win81) { "shell:Local AppData\Microsoft\Windows Sidebar\Gadgets" } else { "shell:Gadgets" }))
+	# shell:Local AppData\Microsoft\Windows Photo Gallery\Original Images
+	# フォトギャラリーでファイルを編集する時に自動生成される
+	Write-Output (newSpecialFolder "shell:Original Images")
+		
+	# shell:Local AppData\Programs
+	Write-Output (newSpecialFolder "shell:UserProgramFiles")
+	# shell:Local AppData\Programs\Common
+	Write-Output (newSpecialFolder "shell:UserProgramFilesCommon")
 	
 	Write-Information "Category: OtherShellCommands`n"
 	

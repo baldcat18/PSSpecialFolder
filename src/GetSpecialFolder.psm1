@@ -321,6 +321,33 @@ function Get-SpecialFolder {
 	# shell:Local AppData\Programs\Common
 	Write-Output (newSpecialFolder "shell:UserProgramFilesCommon")
 	
+	Write-Information "Category: Public`n"
+	
+	# shell:::{4336A54D-038B-4685-AB02-99BB52D3FB8B}
+	# shell:ThisDeviceFolder ([This Device]) (Win10 1507から1607まで)
+	# shell:::{5B934B42-522B-4C34-BBFE-37A3EF7B9C90} ([This Device]) (Win10から)
+	# %PUBLIC%
+	Write-Output (newSpecialFolder "shell:Public")
+	# Win8からサポート
+	# shell:Public\AccountPictures
+	Write-Output (newSpecialFolder "shell:PublicAccountPictures")
+	Write-Output (newSpecialFolder "shell:Common Desktop")
+	Write-Output (newSpecialFolder "shell:Common Documents")
+	Write-Output (newSpecialFolder "shell:CommonDownloads")
+	Write-Output (newSpecialFolder "shell:PublicLibraries")
+	Write-Output (newSpecialFolder "shell:CommonMusic")
+	# shell:CommonMusic\Sample Music
+	Write-Output (newSpecialFolder "shell:SampleMusic")
+	# Win7までサポート
+	# shell:CommonMusic\Sample Playlists
+	Write-Output (newSpecialFolder "shell:SamplePlaylists")
+	Write-Output (newSpecialFolder "shell:CommonPictures")
+	# shell:CommonPictures\Sample Pictures
+	Write-Output (newSpecialFolder "shell:SamplePictures")
+	Write-Output (newSpecialFolder "shell:CommonVideo")
+	# shell:CommonVideo\Sample Videos
+	Write-Output (newSpecialFolder "shell:SampleVideos")
+	
 	Write-Information "Category: OtherShellCommands`n"
 	
 	# Taskbar

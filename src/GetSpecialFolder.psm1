@@ -348,6 +348,35 @@ function Get-SpecialFolder {
 	# shell:CommonVideo\Sample Videos
 	Write-Output (newSpecialFolder "shell:SampleVideos")
 	
+	Write-Information "Category: ProgramData`n"
+	
+	# %ALLUSERSPROFILE%
+	# %ProgramData%
+	Write-Output (newSpecialFolder "shell:Common AppData")
+	# %ALLUSERSPROFILE%\OEM Links
+	Write-Output (newSpecialFolder "shell:OEM Links")
+		
+	# Win8からサポート
+	if ($win81) { Write-Output (newSpecialFolder (Get-ItemPropertyValue "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Appx" "PackageRepositoryRoot") @{ Title = "Repositories of the Windows Apps" }) }
+	Write-Output (newSpecialFolder "shell:Device Metadata Store")
+	Write-Output (newSpecialFolder "shell:PublicGameTasks")
+	# Win10からサポート
+	# shell:Common AppData\Microsoft\Windows\RetailDemo
+	# 市販デモ モードで使用される
+	Write-Output (newSpecialFolder "shell:Retail Demo")
+	Write-Output (newSpecialFolder "shell:CommonRingtones")
+	Write-Output (newSpecialFolder "shell:Common Templates")
+	
+	Write-Information "Category: CommonStartMenu`n"
+	
+	Write-Output (newSpecialFolder "shell:Common Start Menu")
+	Write-Output (newSpecialFolder "shell:Common Programs")
+	# shell:ControlPanelFolder\::{D20EA4E1-3957-11D2-A40B-0C5020524153}
+	Write-Output (newSpecialFolder "shell:Common Administrative Tools")
+	Write-Output (newSpecialFolder "shell:Common Startup")
+	# Win10からサポート
+	Write-Output (newSpecialFolder "shell:Common Start Menu Places")
+	
 	Write-Information "Category: OtherShellCommands`n"
 	
 	# Taskbar

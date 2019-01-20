@@ -90,9 +90,11 @@ function Get-SpecialFolder {
 	# Win10 1803以降
 	const win10_1803 ($osVerion -gt [version]::new(10, 0, 17134))
 	
-	const is64bit ([System.Environment]::Is64BitProcess)
+	const is64bitOS ([Environment]::Is64BitOperatingSystem)
+	const isWow64 ($is64bitOS -and ![Environment]::Is64BitProcess)
 	
 	const userShellFoldersKey (Get-Item "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders")
+	const appxKey (Get-Item "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Appx")
 	const currentVersionKey (Get-Item "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion")
 	
 	Write-Information "Module Version: $((Get-Module GetSpecialFolder).Version.ToString())`n"
@@ -357,7 +359,7 @@ function Get-SpecialFolder {
 	Write-Output (newSpecialFolder "shell:OEM Links")
 		
 	# Win8からサポート
-	if ($win81) { Write-Output (newSpecialFolder (Get-ItemPropertyValue "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Appx" "PackageRepositoryRoot") @{ Title = "Repositories of the Windows Apps" }) }
+	if ($win81) { Write-Output (newSpecialFolder $appxKey.GetValue("PackageRepositoryRoot") @{ Title = "Repositories of the Windows Apps" }) }
 	Write-Output (newSpecialFolder "shell:Device Metadata Store")
 	Write-Output (newSpecialFolder "shell:PublicGameTasks")
 	# Win10からサポート
@@ -376,6 +378,52 @@ function Get-SpecialFolder {
 	Write-Output (newSpecialFolder "shell:Common Startup")
 	# Win10からサポート
 	Write-Output (newSpecialFolder "shell:Common Start Menu Places")
+	
+	Write-Information "Category: Windows`n"
+	
+	# %SystemRoot%
+	# %windir%
+	Write-Output (newSpecialFolder "shell:Windows")
+	# shell:::{1D2680C9-0E2A-469D-B787-065558BC7D43} ([Fusion Cache]) (.NET3.5まで)
+	# CLSIDを使ってアクセスするとエクスプローラーがクラッシュする
+	Write-Output (newSpecialFolder "shell:Windows\assembly" @{ Title = ".NET Framework Assemblies" })
+	# shell:ControlPanelFolder\::{BD84B380-8CA2-1069-AB1D-08000948F534}
+	Write-Output (newSpecialFolder "shell:Fonts")
+	
+	Write-Output (newSpecialFolder "shell:ResourceDir")
+	# shell:ResourceDir\xxxx (xxxxはロケールIDの16進数4桁 日本語では0411)
+	Write-Output (newSpecialFolder "shell:LocalizedResourcesDir")
+	
+	Write-Output (newSpecialFolder $(if (!$isWow64) { "shell:System" } else { "shell:SystemX86" } ) )
+	if ($is64bitOS) {
+		Write-Output (newSpecialFolder $(if (!$isWow64) { "shell:SystemX86" } else { "shell:Windows\SysWOW64" } ) )
+	}
+	
+	Write-Information "Category: UserProfiles`n"
+	
+	Write-Output (newSpecialFolder "shell:UserProfiles")
+	Write-Output (newSpecialFolder (Get-ItemPropertyValue "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList" "Default") @{ Title = "DefaultUserProfile" })
+	
+	Write-Information "Category: ProgramFiles`n"
+	
+	# shell:ProgramFilesX64 (64ビットアプリのみ)
+	# %ProgramFiles%
+	Write-Output (newSpecialFolder "shell:ProgramFiles")
+	if ($is64bitOS) {
+		if (!$isWow64) { Write-Output (newSpecialFolder "shell:ProgramFilesX86") }
+		else { Write-Output (newSpecialFolder $currentVersionKey.GetValue("ProgramW6432Dir") @{Title = "ProgramFilesX64"}) }
+	}
+	# shell:ProgramFilesCommonX64 (64ビットアプリのみ)
+	# %CommonProgramFiles%
+	Write-Output (newSpecialFolder "shell:ProgramFilesCommon")
+	if ($is64bitOS) {
+		if (!$isWow64) { Write-Output (newSpecialFolder "shell:ProgramFilesCommonX86") }
+		else { Write-Output (newSpecialFolder $currentVersionKey.GetValue("CommonW6432Dir") @{Title = "ProgramFilesCommonX64"}) }
+	}
+	# Win8からサポート
+	Write-Output (newSpecialFolder $appxKey.GetValue("PackageRoot") @{ Title = "Windows Apps" })
+	if ($win81) { Write-Output (newSpecialFolder "shell:ProgramFiles\Windows Sidebar\Gadgets" @{ Title = "Default Gadgets" }) } else { Write-Output (newSpecialFolder "shell:Default Gadgets") }
+	Write-Output (newSpecialFolder "shell:ProgramFiles\Windows Sidebar\Shared Gadgets")
 	
 	Write-Information "Category: OtherShellCommands`n"
 	

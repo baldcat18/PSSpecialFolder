@@ -425,9 +425,37 @@ function Get-SpecialFolder {
 	if ($win81) { Write-Output (newSpecialFolder "shell:ProgramFiles\Windows Sidebar\Gadgets" @{ Title = "Default Gadgets" }) } else { Write-Output (newSpecialFolder "shell:Default Gadgets") }
 	Write-Output (newSpecialFolder "shell:ProgramFiles\Windows Sidebar\Shared Gadgets")
 	
+	Write-Information "Category: Desktop / $(if ($win81) { "ThisPC" } else { "Computer" })`n"
+	
+	Write-Output (newSpecialFolder "shell:Desktop")
+	# shell:MyComputerFolderはWin10 1507/1511だとなぜかデスクトップになってしまう
+	Write-Output (newSpecialFolder "shell:MyComputerFolder")
+	# Recent Places Folder
+	Write-Output (newSpecialFolder "shell:::{22877A6D-37A1-461A-91B0-DBDA5AAEBC99}")
+	# Win10からサポート
+	# shell:::{4564B25E-30CD-4787-82BA-39E73A750B14} ([Recent Items Instance Folder])
+	Write-Output (newSpecialFolder "shell:::{3134EF9C-6B18-4996-AD04-ED5912E00EB5}" @{ Title = "Recent files" })
+	# Portable Devices
+	Write-Output (newSpecialFolder "shell:::{35786D3C-B075-49B9-88DD-029876E11C01}")
+	# Frequent Places Folder
+	# Win10からサポート
+	Write-Output (newSpecialFolder "shell:::{3936E9E4-D92C-4EEE-A85A-BC16D5EA0819}")
+	Write-Output (newSpecialFolder "shell:RecycleBinFolder")
+	# Win10からサポート
+	Write-Output (newSpecialFolder "shell:::{679F85CB-0220-4080-B29B-5540CC05AAB6}" @{ Title = "Quick access" })
+	# Removable Storage Devices
+	# Win8からサポート
+	# Win8/8.1では[PC]と同じなので非表示に
+	if ($win10) { Write-Output (newSpecialFolder "shell:::{A6482830-08EB-41E2-84C1-73920C2BADB9}") }
+	Write-Output (newSpecialFolder "shell:HomeGroupFolder")
+	Write-Output (newSpecialFolder "shell:NetworkPlacesFolder")
+	# Removable Drives
+	# Win10からサポート
+	Write-Output (newSpecialFolder "shell:::{F5FB2C77-0E2F-4A16-A381-3E560C68BC83}")
+	
 	Write-Information "Category: OtherShellCommands`n"
 	
-	# Taskbar
+	# if ($win81) { "Taskbar" } else { "Taskbar and Start Menu" }
 	Write-Output (newShellCommand "shell:::{0DF44EAA-FF21-4412-828E-260A8728E7F1}")
 	# Search
 	# Win10 1511まで

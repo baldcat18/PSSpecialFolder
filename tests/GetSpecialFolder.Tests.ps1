@@ -46,6 +46,16 @@ Describe "newSpecialFolder Test" {
 			$folder.Path | Should -Be $recycleBinPath
 		}
 	}
+	$powerOptionsPath = 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\0\::{025A5937-A6BE-4686-A844-36FE4BEC8B6D}'
+	Context "$powerOptionsPath (Power Options)" {
+		$folder = newSpecialFolder $powerOptionsPath
+		It 'Title should "Power Options"' {
+			$folder.Title | Should -Be 'Power Options'
+		}
+		It "Path should `"$powerOptionsPath`"" {
+			$folder.Path | Should -Be $powerOptionsPath
+		}
+	}
 	$controlPanelPath = 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\0'
 	Context "$controlPanelPath (All Control Panel Items)" {
 		$folder = newSpecialFolder $controlPanelPath

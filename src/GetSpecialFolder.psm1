@@ -37,7 +37,7 @@ function newSpecialFolder {
 	
 	$title =
 		if ($Dir -match "^shell:(?:(?:\w|\s)+)$") { $Dir.Substring(6) }
-		elseif ($Dir -match "^shell:::.*\{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\}$") {
+		elseif ($Dir -match "^shell:.*::\{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\}$") {
 			const clsid $Dir.Substring($Dir.Length - 38)
 			(Get-Item "Microsoft.PowerShell.Core\Registry::HKEY_CLASSES_ROOT\CLSID\$clsid").GetValue("")
 		}

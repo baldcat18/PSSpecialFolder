@@ -453,6 +453,149 @@ function Get-SpecialFolder {
 	# Win10からサポート
 	Write-Output (newSpecialFolder "shell:::{F5FB2C77-0E2F-4A16-A381-3E560C68BC83}")
 	
+	Write-Information "Category: ControlPanel`n"
+	
+	# Control Panel
+	Write-Output (newSpecialFolder "shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}")
+	Write-Output (newSpecialFolder "shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\1" @{ Title = "Appearance and Personalization" })
+	# shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\4
+	Write-Output (newSpecialFolder "shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\2" @{ Title = "Hardware and Sound" })
+	Write-Output (newSpecialFolder "shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\3" @{ Title = "Network and Internet" })
+	# shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\10
+	Write-Output (newSpecialFolder "shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\5" @{ Title = "System and Security" })
+	Write-Output (newSpecialFolder "shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\6" @{ Title = if ($win10_1803) { "Clock and Region" } else { "Clock, Language, and Region" } })
+	Write-Output (newSpecialFolder "shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\7" @{ Title = "Ease of Access" })
+	Write-Output (newSpecialFolder "shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\8" @{ Title = "Programs" })
+	Write-Output (newSpecialFolder "shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\9" @{ Title = "User Accounts" })
+	
+	# shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}
+	# shell:::{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}
+	# shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\11
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder" @{ Title = "All Control Panel Items" })
+	
+	# コントロールパネル内の項目はCLSIDだけを指定してもアクセス可能
+	# 例えば[電源オプション]なら shell:::{025A5937-A6BE-4686-A844-36FE4BEC8B6D}
+	# ただしその場合はアドレスバーからコントロールパネルに移動できない
+	
+	# DefaultLocation
+	# Win7/8のみサポート
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{00C6D95F-329C-409A-81D7-C46C66EA7F33}")
+	# Biometrics
+	# Win7/8のみサポート
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{0142E4D0-FB7A-11DC-BA4A-000FFE7AB428}")
+	# Power Options
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{025A5937-A6BE-4686-A844-36FE4BEC8B6D}")
+	# Credential Manager
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{1206F5F1-0569-412C-8FEC-3204630DFB70}")
+	Write-Output (newSpecialFolder "shell:AddNewProgramsFolder")
+	# Set User Defaults
+	# shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}\::{E44E5D18-0652-4508-A4E2-8A090067BCB0}
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{17CD9488-1228-4B2F-88CE-4298E93E0966}")
+	# Workspaces Center
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{241D7C96-F8BF-4F85-B01F-E2B043341A4B}" @{ Title = "RemoteApp and Desktop Connections" })
+	# Windows Update
+	# Win8.1までサポート
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{36EEF7DB-88AD-4E81-AD49-0E313F0C35F8}")
+	# if ($win10_1709) { "Windows Defender Firewall" } else { "Windows Firewall" }
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{4026492F-2F69-46B8-B9BF-5654FC07E423}")
+	# Speech Recognition
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{58E3C745-D971-4081-9034-86E34B30836A}")
+	# User Accounts
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{60632754-C523-4B62-B45C-4172DA012619}")
+	# HomeGroup Control Panel
+	# Win10 1709までサポート
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{67CA7650-96E6-4FDD-BB43-A8E774F73A57}")
+	# Performance Information and Tools
+	# Win8までサポート
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{78F3955E-3B90-4184-BD14-5397C15F1EFC}")
+	# Network and Sharing Center
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{8E908FC9-BECC-40F6-915B-F4CA0E70D03D}")
+	# Parental Controls
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{96AE8D84-A250-4520-95A5-A47A7E3C548B}")
+	# AutoPlay
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{9C60DE1E-E5FC-40F4-A487-460851A8D915}")
+	# System Recovery
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{9FE63AFD-59CF-4419-9775-ABCC3849F861}")
+	# Device Center
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{A8A91A66-3A7D-4424-8D24-04E180695C7A}" @{ Title = "Devices and Printers" })
+	# if ($win10) { "Windows 7 File Recovery" } else { "Backup And Restore" }
+	# Win8.1以外でサポート
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{B98A2BEA-7D42-4558-8BD1-832F41BAC6FD}")
+	# System
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{BB06C0E4-D293-4F75-8A90-CB05B6477EEE}")
+	# if ($win10) { "Security and Maintenance CPL" } else { "Action Center CPL" }
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{BB64F8A7-BEE7-4E1A-AB8D-7D8273F7FDB6}")
+	# Microsoft Windows Font Folder
+	# shell:Fonts
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{BD84B380-8CA2-1069-AB1D-08000948F534}" @{ Path = "shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\0\::{BD84B380-8CA2-1069-AB1D-08000948F534}" })
+	# Language Settings
+	# Win8からWin10 1803までサポート
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{BF782CC9-5A52-4A17-806C-2A894FFEEAC5}")
+	# Display
+	# Win10 1607までサポート
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{C555438B-3C23-4769-A71F-B6D3D9B6053A}")
+	# Troubleshooting
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{C58C4893-3BE0-4B45-ABB5-A63E4B8C8651}")
+	# Getting Started
+	# Win7までサポート
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{CB1B7F8C-C50A-4176-B604-9E24DEE8D4D1}")
+	# Administrative Tools
+	# shell:Common Administrative Tools
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{D20EA4E1-3957-11D2-A40B-0C5020524153}" @{ Path = "shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\0\::{D20EA4E1-3957-11D2-A40B-0C5020524153}" })
+	# Ease of Access
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{D555645E-D4F8-4C29-A827-D93C859C4F2A}")
+	# Secure Startup
+	# Enterprise/Ultimateで使用可
+	# Win8からはProでも使用可
+	# Win8.1からはCore/Homeでも使用可
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{D9EF8727-CAC2-4E60-809E-86F80A666C91}" @{ Title = "BitLocker Drive Encryption" })
+	# Network Map
+	# Win7までサポート
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{E7DE9B1A-7533-4556-9484-B26FB486475E}")
+	# Windows SideShow
+	# Win8までサポート
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{E95A4861-D57A-4BE1-AD0F-35267E261739}")
+	# Sensors
+	# Win8.1までサポート
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{E9950154-C418-419E-A90A-20C5287AE24B}" @{ Title = if ($win81) { "Location Settings" } else { "Location and Other Sensors" } })
+	# ECS
+	# Win8.1からサポート
+	# Win7ではKB2891638をインストールすれば使用可
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{ECDB0924-4208-451E-8EE0-373C0956DE16}" @{ Title = "Work Folders" })
+	# Personalization Control Panel
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{ED834ED6-4B5A-4BFE-8F11-A626DCB6A921}")
+	# History Vault
+	# Win8からサポート
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{F6B6E965-E9B2-444B-9286-10C9152EDBC5}" @{ Title = "File History" })
+	# Storage Spaces
+	# Win8からサポート
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{F942C606-0914-47AB-BE56-1321B8035096}")
+	
+	Write-Output (newSpecialFolder "shell:ChangeRemoveProgramsFolder")
+	Write-Output (newSpecialFolder "shell:AppUpdatesFolder")
+	
+	Write-Output (newSpecialFolder "shell:SyncCenterFolder")
+	# shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}\::{2E9E59C0-B437-4981-A647-9C34B9B90891} ([Sync Setup Folder])
+	Write-Output (newSpecialFolder "shell:SyncSetupFolder")
+	Write-Output (newSpecialFolder "shell:ConflictFolder")
+	Write-Output (newSpecialFolder "shell:SyncResultsFolder")
+	
+	# Taskbar
+	Write-Output (newSpecialFolder "shell:$(if ($win10) { "::{21EC2020-3AEA-1069-A2DD-08002B30309D}" } else { "ControlPanelFolder" })\::{05D7B0F4-2121-4EFF-BF6B-ED3F69B894D9}" @{ Title = "Notification Area Icons" })
+	# Manage Wireless Networks
+	# Win8.1 Update以降ではフォルダーを開けないので非表示に
+	if (!$win81) { Write-Output (newSpecialFolder "shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}\::{1FA9085F-25A2-489B-85D4-86326EEDCD87}") }
+	# shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}\::{863AA9FD-42DF-457B-8E4D-0DE1B8015C60}
+	Write-Output (newSpecialFolder "shell:PrintersFolder")
+	# Bluetooth Devices
+	Write-Output (newSpecialFolder "shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}\::{28803F59-3A75-4058-995F-4EE5503B023C}")
+	# shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}\::{992CFFA0-F557-101A-88EC-00DD010CCC48}
+	Write-Output (newSpecialFolder "shell:ConnectionsFolder")
+	# Font Settings
+	Write-Output (newSpecialFolder "shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}\::{93412589-74D4-4E4E-AD0E-E0CB621440FD}")
+	# All Tasks
+	Write-Output (newSpecialFolder "shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}\::{ED7BA470-8E54-465E-825C-99712043E01C}")
+	
 	Write-Information "Category: OtherShellCommands`n"
 	
 	# if ($win81) { "Taskbar" } else { "Taskbar and Start Menu" }

@@ -134,14 +134,14 @@ Describe "newShellCommand Test" {
 			newShellCommand "shell:::{00000000-0000-0000-0000-000000000000}" | Should -BeFalse
 		}
 	}
-	$taskbarPath = 'shell:::{0DF44EAA-FF21-4412-828E-260A8728E7F1}'
-	Context "$taskbarPath (Taskbar)" {
-		$folder = newShellCommand $taskbarPath
-		It 'Title should "Taskbar"' {
-			$folder.Title | Should -Be "Taskbar"
+	$runPath = 'shell:::{2559A1F3-21D7-11D4-BDAF-00C04F60B9F0}'
+	Context "$runPath (Run...)" {
+		$folder = newShellCommand $runPath
+		It 'Title should "Run..."' {
+			$folder.Title | Should -Be "Run..."
 		}
-		It "Path should `"$taskbarPath`"" {
-			$folder.Path | Should -Be $taskbarPath
+		It "Path should `"$runPath`"" {
+			$folder.Path | Should -Be $runPath
 		}
 	}
 	$fileExplorerPath = 'shell:::{52205FD8-5DFB-447D-801A-D0B52F2E83E1}'

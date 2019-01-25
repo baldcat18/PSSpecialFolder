@@ -596,6 +596,50 @@ function Get-SpecialFolder {
 	# All Tasks
 	Write-Output (newSpecialFolder "shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}\::{ED7BA470-8E54-465E-825C-99712043E01C}")
 	
+	Write-Information "Category: OtherFolders`n"
+	
+	# Hyper-V Remote File Browsing
+	# Win10 1703までサポート
+	Write-Output (newSpecialFolder "shell:::{0907616E-F5E6-48D8-9D61-A91C3D28106D}")
+	# Cabinet Shell Folder
+	Write-Output (newSpecialFolder "shell:::{0CD7A5C0-9F37-11CE-AE65-08002B2E1262}")
+	# Network
+	Write-Output (newSpecialFolder "shell:::{208D2C60-3AEA-1069-A2D7-08002B30309D}")
+	# DLNA Media Servers Data Source
+	# Win8からサポート
+	Write-Output (newSpecialFolder "shell:::{289AF617-1CC3-42A6-926C-E6A863F0E3BA}")
+	# Results Folder
+	Write-Output (newSpecialFolder "shell:::{2965E715-EB66-4719-B53F-1672673BBEFA}")
+	# Explorer Browser Results Folder
+	Write-Output (newSpecialFolder "shell:::{418C8B64-5463-461D-88E0-75E2AFA3C6FA}," @{ Title = " " })
+	# Win8からサポート
+	Write-Output (newSpecialFolder "shell:AppsFolder")
+	# Command Folder
+	Write-Output (newSpecialFolder "shell:::{437FF9C0-A07F-4FA0-AF80-84B6C6440A16}")
+	# Other Users Folder
+	Write-Output (newSpecialFolder "shell:::{6785BFAC-9D2D-4BE5-B7E2-59937E8FB80A}")
+	# Programs Folder
+	# Win8.1 Update以降ではフォルダーを開けないので非表示に
+	if (!$win81) { Write-Output (newSpecialFolder "shell:::{7BE9D83C-A729-4D97-B5A7-1B7313C39E0A}") }
+	# Programs Folder and Fast Items
+	# Win8.1 Update以降ではフォルダーを開けないので非表示に
+	if (!$win81) { Write-Output (newSpecialFolder "shell:::{865E5E76-AD83-4DCA-A109-50DC2113CE9A}") }
+	# search:
+	# search-ms:
+	Write-Output (newSpecialFolder "shell:SearchHomeFolder")
+	# Win8.1 UpdateからWin10 1511までサポート
+	Write-Output (newSpecialFolder "shell:StartMenuAllPrograms")
+	# 企業向けエディションで使用可
+	Write-Output (newSpecialFolder "shell:::{AFDB1F70-2A4C-11D2-9039-00C04F8EEB3E}" @{ Title = "Offline Files Folder" })
+	# delegate folder that appears in Computer
+	Write-Output (newSpecialFolder "shell:::{B155BDF8-02F0-451E-9A26-AE317CFD7779}")
+	# AppSuggestedLocations
+	Write-Output (newSpecialFolder "shell:::{C57A6066-66A3-4D91-9EB9-41532179F0A5}")
+	# Win10 1709までサポート
+	Write-Output (newSpecialFolder "shell:Games")
+	# Previous Versions Results Folder
+	Write-Output (newSpecialFolder "shell:::{F8C2AB3B-17BC-41DA-9758-339D7DBF2D88}")
+	
 	Write-Information "Category: OtherShellCommands`n"
 	
 	# if ($win81) { "Taskbar" } else { "Taskbar and Start Menu" }

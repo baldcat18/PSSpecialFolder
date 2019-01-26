@@ -94,8 +94,8 @@ function Get-SpecialFolder {
 	const isWow64 ($is64bitOS -and ![Environment]::Is64BitProcess)
 	
 	const userShellFoldersKey (Get-Item "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders")
-	const appxKey (Get-Item "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Appx")
 	const currentVersionKey (Get-Item "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion")
+	if ($win81) { const appxKey (Get-Item "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Appx") }
 	
 	Write-Information "Module Version: $((Get-Module GetSpecialFolder).Version.ToString())`n"
 	
@@ -421,7 +421,7 @@ function Get-SpecialFolder {
 		else { Write-Output (newSpecialFolder $currentVersionKey.GetValue("CommonW6432Dir") @{Title = "ProgramFilesCommonX64"}) }
 	}
 	# Win8からサポート
-	Write-Output (newSpecialFolder $appxKey.GetValue("PackageRoot") @{ Title = "Windows Apps" })
+	if ($win81) { Write-Output (newSpecialFolder $appxKey.GetValue("PackageRoot") @{ Title = "Windows Apps" }) }
 	if ($win81) { Write-Output (newSpecialFolder "shell:ProgramFiles\Windows Sidebar\Gadgets" @{ Title = "Default Gadgets" }) } else { Write-Output (newSpecialFolder "shell:Default Gadgets") }
 	Write-Output (newSpecialFolder "shell:ProgramFiles\Windows Sidebar\Shared Gadgets")
 	

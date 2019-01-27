@@ -35,19 +35,21 @@ function newSpecialFolder {
 	if (!$folder) { return }
 	const folderItem $shell.NameSpace($Dir).Self
 	
-	$title =
-		if ($Dir -match "^shell:(?:(?:\w|\s)+)$") { $Dir.Substring(6) }
+	const title $(
+		if ($Option.Title) { $Option.Title }
+		elseif ($Dir -match "^shell:(?:(?:\w|\s)+)$") { $Dir.Substring(6) }
 		elseif ($Dir -match "^shell:.*::\{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\}$") {
 			const clsid $Dir.Substring($Dir.Length - 38)
 			(Get-Item "Microsoft.PowerShell.Core\Registry::HKEY_CLASSES_ROOT\CLSID\$clsid").GetValue("")
 		}
 		else { $Dir -replace "^.+\\(.+?)$", "`$1" }
+	)
 	
-	$path = $folderItem.Path
-	if ($path.Substring(0,2) -eq "::") { $path = "shell:" + $path }
-	
-	if ($Option.Title) { $title = $Option.Title }
 	if ($Option.Path) { $path = $Option.Path }
+	else {
+		$path = $folderItem.Path
+		if ($path.Substring(0,2) -eq "::") { $path = "shell:" + $path }
+	}
 	
 	return [SpecialFolder]@{ Title = $title; Path = $path; Dir = $Dir; FolderItem = $folderItem }
 }
@@ -78,17 +80,17 @@ function Get-SpecialFolder {
 	const osVerion ([Environment]::OSVersion.Version)
 	
 	# Win8.1以降
-	const win81 ($osVerion -gt [version]::new(6, 3))
+	const win81 ($osVerion -gt [Version]::new(6, 3))
 	# Win10以降
-	const win10 ($osVerion -gt [version]::new(10, 0))
+	const win10 ($osVerion -gt [Version]::new(10, 0))
 	# Win10 1607以降
-	const win10_1607 ($osVerion -gt [version]::new(10, 0, 14393))
+	const win10_1607 ($osVerion -gt [Version]::new(10, 0, 14393))
 	# Win10 1703以降
-	const win10_1703 ($osVerion -gt [version]::new(10, 0, 15063))
+	const win10_1703 ($osVerion -gt [Version]::new(10, 0, 15063))
 	# Win10 1709以降
-	const win10_1709 ($osVerion -gt [version]::new(10, 0, 16299))
+	const win10_1709 ($osVerion -gt [Version]::new(10, 0, 16299))
 	# Win10 1803以降
-	const win10_1803 ($osVerion -gt [version]::new(10, 0, 17134))
+	const win10_1803 ($osVerion -gt [Version]::new(10, 0, 17134))
 	
 	const is64bitOS ([Environment]::Is64BitOperatingSystem)
 	const isWow64 ($is64bitOS -and ![Environment]::Is64BitProcess)
@@ -174,7 +176,7 @@ function Get-SpecialFolder {
 	Write-Output (newSpecialFolder "shell:Searches")
 	
 	# OneDriveカテゴリのフォルダーはすべてWin8.1からサポート
-	Write-Information "Category: OneDrive`n"
+	Write-Information "`nCategory: OneDrive`n"
 	
 	# shell:UsersFilesFolder\OneDrive
 	# Win8.1ではMicrosoftアカウントでサインインする時に自動生成される
@@ -191,7 +193,7 @@ function Get-SpecialFolder {
 	# shell:OneDrive\Pictures\Camera Roll
 	Write-Output (newSpecialFolder $(if ($win10) { "shell:OneDriveCameraRoll" } else { "shell:SkyDriveCameraRoll" }))
 	
-	Write-Information "Category: AppData`n"
+	Write-Information "`nCategory: AppData`n"
 	
 	# %APPDATA%
 	Write-Output (newSpecialFolder "shell:AppData")
@@ -216,7 +218,7 @@ function Get-SpecialFolder {
 	Write-Output (newSpecialFolder "shell:SendTo")
 	Write-Output (newSpecialFolder "shell:Templates")
 	
-	Write-Information "Category: Libraries`n"
+	Write-Information "`nCategory: Libraries`n"
 	
 	$librariesPath = $userShellFoldersKey.GetValue("{1B3EA5DC-B587-4786-B4EF-BD1DC332AEAE}")
 	if (!$librariesPath) { $librariesPath = "$([Environment]::GetFolderPath("ApplicationData"))\Microsoft\Windows\Libraries" }
@@ -253,14 +255,14 @@ function Get-SpecialFolder {
 	if (!$videosLibraryPath) { $videosLibraryPath = "$librariesPath\Videos.library-ms" }
 	Write-Output (newSpecialFolder "shell:VideosLibrary" @{ Path = $videosLibraryPath })
 	
-	Write-Information "Category: StartMenu`n"
+	Write-Information "`nCategory: StartMenu`n"
 	
 	Write-Output (newSpecialFolder "shell:Start Menu")
 	Write-Output (newSpecialFolder "shell:Programs")
 	Write-Output (newSpecialFolder "shell:Administrative Tools")
 	Write-Output (newSpecialFolder "shell:Startup")
 	
-	Write-Information "Category: LocalAppData`n"
+	Write-Information "`nCategory: LocalAppData`n"
 	
 	# %LOCALAPPDATA%
 	Write-Output (newSpecialFolder "shell:Local AppData")
@@ -323,7 +325,7 @@ function Get-SpecialFolder {
 	# shell:Local AppData\Programs\Common
 	Write-Output (newSpecialFolder "shell:UserProgramFilesCommon")
 	
-	Write-Information "Category: Public`n"
+	Write-Information "`nCategory: Public`n"
 	
 	# shell:::{4336A54D-038B-4685-AB02-99BB52D3FB8B}
 	# shell:ThisDeviceFolder ([This Device]) (Win10 1507から1607まで)
@@ -350,7 +352,7 @@ function Get-SpecialFolder {
 	# shell:CommonVideo\Sample Videos
 	Write-Output (newSpecialFolder "shell:SampleVideos")
 	
-	Write-Information "Category: ProgramData`n"
+	Write-Information "`nCategory: ProgramData`n"
 	
 	# %ALLUSERSPROFILE%
 	# %ProgramData%
@@ -369,7 +371,7 @@ function Get-SpecialFolder {
 	Write-Output (newSpecialFolder "shell:CommonRingtones")
 	Write-Output (newSpecialFolder "shell:Common Templates")
 	
-	Write-Information "Category: CommonStartMenu`n"
+	Write-Information "`nCategory: CommonStartMenu`n"
 	
 	Write-Output (newSpecialFolder "shell:Common Start Menu")
 	Write-Output (newSpecialFolder "shell:Common Programs")
@@ -379,7 +381,7 @@ function Get-SpecialFolder {
 	# Win10からサポート
 	Write-Output (newSpecialFolder "shell:Common Start Menu Places")
 	
-	Write-Information "Category: Windows`n"
+	Write-Information "`nCategory: Windows`n"
 	
 	# %SystemRoot%
 	# %windir%
@@ -399,12 +401,12 @@ function Get-SpecialFolder {
 		Write-Output (newSpecialFolder $(if (!$isWow64) { "shell:SystemX86" } else { "shell:Windows\SysWOW64" } ) )
 	}
 	
-	Write-Information "Category: UserProfiles`n"
+	Write-Information "`nCategory: UserProfiles`n"
 	
 	Write-Output (newSpecialFolder "shell:UserProfiles")
 	Write-Output (newSpecialFolder (Get-ItemPropertyValue "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList" "Default") @{ Title = "DefaultUserProfile" })
 	
-	Write-Information "Category: ProgramFiles`n"
+	Write-Information "`nCategory: ProgramFiles`n"
 	
 	# shell:ProgramFilesX64 (64ビットアプリのみ)
 	# %ProgramFiles%
@@ -425,7 +427,7 @@ function Get-SpecialFolder {
 	if ($win81) { Write-Output (newSpecialFolder "shell:ProgramFiles\Windows Sidebar\Gadgets" @{ Title = "Default Gadgets" }) } else { Write-Output (newSpecialFolder "shell:Default Gadgets") }
 	Write-Output (newSpecialFolder "shell:ProgramFiles\Windows Sidebar\Shared Gadgets")
 	
-	Write-Information "Category: Desktop / $(if ($win81) { "ThisPC" } else { "Computer" })`n"
+	Write-Information "`nCategory: Desktop / $(if ($win81) { "ThisPC" } else { "Computer" })`n"
 	
 	Write-Output (newSpecialFolder "shell:Desktop")
 	# shell:MyComputerFolderはWin10 1507/1511だとなぜかデスクトップになってしまう
@@ -453,7 +455,7 @@ function Get-SpecialFolder {
 	# Win10からサポート
 	Write-Output (newSpecialFolder "shell:::{F5FB2C77-0E2F-4A16-A381-3E560C68BC83}")
 	
-	Write-Information "Category: ControlPanel`n"
+	Write-Information "`nCategory: ControlPanel`n"
 	
 	# Control Panel
 	Write-Output (newSpecialFolder "shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}")
@@ -490,7 +492,7 @@ function Get-SpecialFolder {
 	Write-Output (newSpecialFolder "shell:AddNewProgramsFolder")
 	# Set User Defaults
 	# shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}\::{E44E5D18-0652-4508-A4E2-8A090067BCB0}
-	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{17CD9488-1228-4B2F-88CE-4298E93E0966}")
+	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{17CD9488-1228-4B2F-88CE-4298E93E0966}" @{ Title = "Default Programs" })
 	# Workspaces Center
 	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{241D7C96-F8BF-4F85-B01F-E2B043341A4B}" @{ Title = "RemoteApp and Desktop Connections" })
 	# Windows Update
@@ -596,7 +598,7 @@ function Get-SpecialFolder {
 	# All Tasks
 	Write-Output (newSpecialFolder "shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}\::{ED7BA470-8E54-465E-825C-99712043E01C}")
 	
-	Write-Information "Category: OtherFolders`n"
+	Write-Information "`nCategory: OtherFolders`n"
 	
 	# Hyper-V Remote File Browsing
 	# Win10 1703までサポート
@@ -640,7 +642,7 @@ function Get-SpecialFolder {
 	# Previous Versions Results Folder
 	Write-Output (newSpecialFolder "shell:::{F8C2AB3B-17BC-41DA-9758-339D7DBF2D88}")
 	
-	Write-Information "Category: OtherShellCommands`n"
+	Write-Information "`nCategory: OtherShellCommands`n"
 	
 	# if ($win81) { "Taskbar" } else { "Taskbar and Start Menu" }
 	Write-Output (newShellCommand "shell:::{0DF44EAA-FF21-4412-828E-260A8728E7F1}")
@@ -737,7 +739,7 @@ function Get-SpecialFolder {
 	Write-Output (newShellCommand "shell:::{F82DF8F7-8B9F-442E-A48C-818EA735FF9B}")
 	
 	# フォルダーとして使えないshellコマンド
-	Write-Information "Category: Unusable`n"
+	Write-Information "`nCategory: Unusable`n"
 	
 	Write-Output (newSpecialFolder "shell:MAPIFolder")
 	Write-Output (newSpecialFolder "shell:RecordedTVLibrary")

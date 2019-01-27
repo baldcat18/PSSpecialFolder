@@ -642,6 +642,8 @@ function Get-SpecialFolder {
 	# Previous Versions Results Folder
 	Write-Output (newSpecialFolder "shell:::{F8C2AB3B-17BC-41DA-9758-339D7DBF2D88}")
 	
+	if ($DebugPreference -eq "SilentlyContinue") { return }
+	
 	Write-Information "`nCategory: OtherShellCommands`n"
 	
 	# if ($win81) { "Taskbar" } else { "Taskbar and Start Menu" }

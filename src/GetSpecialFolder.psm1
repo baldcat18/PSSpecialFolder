@@ -105,7 +105,7 @@ function Get-SpecialFolder {
 	
 	# shell:Profile
 	# shell:::{59031A47-3F72-44A7-89C5-5595FE6B30EE}
-	# shell:ThisDeviceFolder / shell:::{F8278C54-A712-415B-B593-B77A2BE0DDA9} ([このデバイス]) (Win10 1703から)
+	# shell:ThisDeviceFolder / shell:::{F8278C54-A712-415B-B593-B77A2BE0DDA9} (Win10 1703から)
 	# %USERPROFILE%
 	# %HOMEDRIVE%%HOMEPATH%
 	Write-Output (newSpecialFolder "shell:UsersFilesFolder")
@@ -117,7 +117,7 @@ function Get-SpecialFolder {
 	# shell:MyComputerFolder\::{B4BFCC3A-DB2C-424C-B029-7FE99A87C641} (Win8.1から)
 	Write-Output $(if ($win81) { newSpecialFolder "shell:ThisPCDesktopFolder"} else { newSpecialFolder ([Environment]::GetFolderPath("DesktopDirectory")) @{ Title = "DesktopDirectory" } })
 	# shell:Local Documents / shell:MyComputerFolder\::{D3162B92-9365-467A-956B-92703ACA08AF} (Win10から)
-	# shell:::{450D8FBA-AD25-11D0-98A8-0800361B1103} ([マイ ドキュメント] (Win8.1から))
+	# shell:::{450D8FBA-AD25-11D0-98A8-0800361B1103} ([My Documents] (Win8.1から))
 	# shell:MyComputerFolder\::{A8CDFF1C-4878-43BE-B5FD-F8091C1C60D0} (Win8.1から)
 	Write-Output (newSpecialFolder "shell:Personal" @{ Title = "My Documents" })
 	# shell:Local Downloads / shell:MyComputerFolder\::{088E3905-0323-4B02-9826-5D99428E115F} (Win10から)
@@ -163,7 +163,7 @@ function Get-SpecialFolder {
 	# shell:UsersFilesFolder\{56784854-C6CB-462B-8169-88E350ACB882}
 	Write-Output (newSpecialFolder "shell:Contacts")
 	Write-Output (newSpecialFolder "shell:Favorites")
-	# shell:::{323CA680-C24D-4099-B94D-446DD2D7249E} ([お気に入り])
+	# shell:::{323CA680-C24D-4099-B94D-446DD2D7249E} ([Favorites])
 	# shell:::{D34A6CA6-62C2-4C34-8A7C-14709C1AD938} ([Common Places FS Folder])
 	# shell:UsersFilesFolder\{BFB9D5E0-C6A9-404C-B2B2-AE6DB6AF4968}
 	Write-Output (newSpecialFolder "shell:Links")
@@ -328,8 +328,8 @@ function Get-SpecialFolder {
 	Write-Information "`nCategory: Public`n"
 	
 	# shell:::{4336A54D-038B-4685-AB02-99BB52D3FB8B}
-	# shell:ThisDeviceFolder ([This Device]) (Win10 1507から1607まで)
-	# shell:::{5B934B42-522B-4C34-BBFE-37A3EF7B9C90} ([This Device]) (Win10から)
+	# shell:ThisDeviceFolder (Win10 1507から1607まで)
+	# shell:::{5B934B42-522B-4C34-BBFE-37A3EF7B9C90} (Win10から)
 	# %PUBLIC%
 	Write-Output (newSpecialFolder "shell:Public")
 	# Win8からサポート
@@ -644,6 +644,33 @@ function Get-SpecialFolder {
 	
 	if ($DebugPreference -eq "SilentlyContinue") { return }
 	
+	# 通常とは違う名前がエクスプローラーのタイトルバーに表示されるフォルダー
+	Write-Information "`nCategory: AnotherName`n"
+	
+	# (if ($win10_1703) { "UsersFilesFolder" } else { "Public" })
+	# shell:::{5B934B42-522B-4C34-BBFE-37A3EF7B9C90} (Win10 1507から1607まで)
+	# shell:::{F8278C54-A712-415B-B593-B77A2BE0DDA9} (Win10 1703から)
+	Write-Output (newSpecialFolder "shell:ThisDeviceFolder")
+	# My Documents (Documents)
+	# Win8までだと別名にならないので非表示に
+	if ($win81) { Write-Output (newSpecialFolder "shell:::{450D8FBA-AD25-11D0-98A8-0800361B1103}" @{ Title = "My Documents" }) }
+	# Favorites (Links)
+	Write-Output (newSpecialFolder "shell:::{323CA680-C24D-4099-B94D-446DD2D7249E}")
+	# Common Places FS Folder (Links)
+	Write-Output (newSpecialFolder "shell:::{D34A6CA6-62C2-4C34-8A7C-14709C1AD938}")
+	# printhood delegate folder (PrintHood)
+	Write-Output (newSpecialFolder "shell:::{ED50FC29-B964-48A9-AFB3-15EBB9B97F36}")
+	# Fusion Cache (.NET Framework Assemblies)
+	# .NET3.5まで
+	# CLSIDを使ってアクセスするとエクスプローラーがクラッシュする
+	Write-Output (newSpecialFolder "shell:::{1D2680C9-0E2A-469D-B787-065558BC7D43}")
+	# Recent Items Instance Folder (Recent files)
+	# Win10から
+	Write-Output (newSpecialFolder "shell:::{4564B25E-30CD-4787-82BA-39E73A750B14}")
+	# Sync Setup Folder (SyncSetupFolder)
+	Write-Output (newSpecialFolder "shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}\::{2E9E59C0-B437-4981-A647-9C34B9B90891}")
+	
+	# フォルダー以外のshellコマンド
 	Write-Information "`nCategory: OtherShellCommands`n"
 	
 	# if ($win81) { "Taskbar" } else { "Taskbar and Start Menu" }

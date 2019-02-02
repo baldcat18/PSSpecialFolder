@@ -36,7 +36,7 @@ function newSpecialFolder {
 	const folderItem $shell.NameSpace($Dir).Self
 	
 	const title $(
-		if ($Option.Title) { $Option.Title }
+		if ($null -ne $Option.Title) { $Option.Title }
 		elseif ($Dir -match "^shell:(?:(?:\w|\s)+)$") { $Dir.Substring(6) }
 		elseif ($Dir -match "^shell:.*::\{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\}$") {
 			const clsid $Dir.Substring($Dir.Length - 38)
@@ -45,7 +45,7 @@ function newSpecialFolder {
 		else { $Dir -replace "^.+\\(.+?)$", "`$1" }
 	)
 	
-	if ($Option.Path) { $path = $Option.Path }
+	if ($null -ne $Option.Path) { $path = $Option.Path }
 	else {
 		$path = $folderItem.Path
 		if ($path.Substring(0,2) -eq "::") { $path = "shell:" + $path }
@@ -613,7 +613,7 @@ function Get-SpecialFolder {
 	# Results Folder
 	Write-Output (newSpecialFolder "shell:::{2965E715-EB66-4719-B53F-1672673BBEFA}")
 	# Explorer Browser Results Folder
-	Write-Output (newSpecialFolder "shell:::{418C8B64-5463-461D-88E0-75E2AFA3C6FA}," @{ Title = " " })
+	Write-Output (newSpecialFolder "shell:::{418C8B64-5463-461D-88E0-75E2AFA3C6FA}," @{ Title = "" })
 	# Win8からサポート
 	Write-Output (newSpecialFolder "shell:AppsFolder")
 	# Command Folder

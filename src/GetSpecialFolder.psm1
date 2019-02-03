@@ -670,6 +670,82 @@ function Get-SpecialFolder {
 	# Sync Setup Folder (SyncSetupFolder)
 	Write-Output (newSpecialFolder "shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}\::{2E9E59C0-B437-4981-A647-9C34B9B90891}")
 	
+	# エクスプローラーで開けないフォルダー
+	Write-Information "`nCategory: CantOpen`n"
+	
+	# CLSID_SearchFolder
+	Write-Output (newSpecialFolder "shell:::{04731B67-D933-450A-90E6-4ACD2E9408FE}")
+	# Manage Wireless Networks
+	# Win8.1 Updateでこのカテゴリに移動
+	if ($win81) { Write-Output (newSpecialFolder "shell:::{1FA9085F-25A2-489B-85D4-86326EEDCD87}") }
+	# Sync Center Conflict Folder
+	Write-Output (newSpecialFolder "shell:::{289978AC-A101-4341-A817-21EBA7FD046D}")
+	# LayoutFolder
+	Write-Output (newSpecialFolder "shell:::{328B0346-7EAF-4BBE-A479-7CB88A095F5B}")
+	# Explorer Browser Results Folder
+	Write-Output (newSpecialFolder "shell:::{418C8B64-5463-461D-88E0-75E2AFA3C6FA}")
+	# PC Settings
+	# Win8.1から
+	Write-Output (newSpecialFolder "shell:::{5ED4F38C-D3FF-4D61-B506-6820320AEBFE}")
+	# Microsoft FTP Folder
+	Write-Output (newSpecialFolder "shell:::{63DA6EC0-2E98-11CF-8D82-444553540000}")
+	# CLSID_AppInstanceFolder
+	# Win8から
+	Write-Output (newSpecialFolder "shell:::{64693913-1C21-4F30-A98F-4E52906D3B56}")
+	# Sync Results Folder
+	Write-Output (newSpecialFolder "shell:::{71D99464-3B6B-475C-B241-E15883207529}")
+	# Programs Folder
+	# Win8.1 Updateでこのカテゴリに移動
+	# Win10 1511まで
+	if ($win81) { Write-Output (newSpecialFolder "shell:::{7BE9D83C-A729-4D97-B5A7-1B7313C39E0A}") }
+	# Programs Folder and Fast Items
+	# Win8.1 Updateでこのカテゴリに移動
+	# Win10 1511まで
+	if ($win81) { Write-Output (newSpecialFolder "shell:::{865E5E76-AD83-4DCA-A109-50DC2113CE9A}") }
+	# Win10でこのカテゴリに移動
+	if ($win10) { Write-Output (newSpecialFolder "shell:InternetFolder") }
+	# File Backup Index
+	Write-Output (newSpecialFolder "shell:::{877CA5AC-CB41-4842-9C69-9136E42D47E2}")
+	Write-Output (newSpecialFolder "shell:::{89D83576-6BD1-4C86-9454-BEB04E94C819}" @{ Title = "Microsoft Office Outlook" })
+	# DXP
+	Write-Output (newSpecialFolder "shell:::{8FD8B88D-30E1-4F25-AC2B-553D3D65F0EA}")
+	# Enhanced Storage Data Source
+	Write-Output (newSpecialFolder "shell:::{9113A02D-00A3-46B9-BC5F-9C04DADDD5D7}")
+	# CLSID_StartMenuLauncherProviderFolder
+	# Win8から
+	Write-Output (newSpecialFolder "shell:::{98F275B4-4FFF-11E0-89E2-7B86DFD72085}")
+	# IE RSS Feeds Folder
+	Write-Output (newSpecialFolder "shell:::{9A096BB5-9DC3-4D1C-8526-C3CBF991EA4E}")
+	# CLSID_StartMenuCommandingProviderFolder
+	# Win8から
+	Write-Output (newSpecialFolder "shell:::{A00EE528-EBD9-48B8-944A-8942113D46AC}")
+	# Previous Versions Results Delegate Folder
+	Write-Output (newSpecialFolder "shell:::{A3C3D402-E56C-4033-95F7-4885E80B0111}")
+	# Library Folder
+	Write-Output (newSpecialFolder "shell:::{A5A3563A-5755-4A6F-854E-AFA3230B199F}")
+	# Win8から
+	Write-Output (newSpecialFolder "shell:HomeGroupCurrentUserFolder")
+	# Sync Results Delegate Folder
+	Write-Output (newSpecialFolder "shell:::{BC48B32F-5910-47F5-8570-5074A8A5636A}")
+	Write-Output (newSpecialFolder "shell:::{BD7A2E7B-21CB-41B2-A086-B309680C6B7E}" @{ Title = "Offline Files" })
+	# DLNA Content Directory Data Source
+	# Win8から
+	Write-Output (newSpecialFolder "shell:::{D2035EDF-75CB-4EF1-95A7-410D9EE17170}")
+	# CLSID_StartMenuProviderFolder
+	Write-Output (newSpecialFolder "shell:::{DAF95313-E44D-46AF-BE1B-CBACEA2C3065}")
+	# CLSID_StartMenuPathCompleteProviderFolder
+	Write-Output (newSpecialFolder "shell:::{E345F35F-9397-435C-8F95-4E922C26259E}")
+	# Sync Center Conflict Delegate Folder
+	Write-Output (newSpecialFolder "shell:::{E413D040-6788-4C22-957E-175D1C513A34}")
+	# Shell DocObject Viewer
+	Write-Output (newSpecialFolder "shell:::{E7E4BC40-E76A-11CE-A9BB-00AA004AE837}")
+	# StreamBackedFolder
+	# Win8から
+	Write-Output (newSpecialFolder "shell:::{EDC978D6-4D53-4B2F-A265-5805674BE568}")
+	# Sync Setup Delegate Folder
+	Write-Output (newSpecialFolder "shell:::{F1390A9A-A3F4-4E5D-9C5F-98F3BD8D935C}")
+	Write-Output (newSpecialFolder "shell:CSCFolder")
+	
 	# フォルダー以外のshellコマンド
 	Write-Information "`nCategory: OtherShellCommands`n"
 	

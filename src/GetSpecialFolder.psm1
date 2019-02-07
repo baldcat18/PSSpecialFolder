@@ -427,7 +427,7 @@ function Get-SpecialFolder {
 	if ($win81) { Write-Output (newSpecialFolder "shell:ProgramFiles\Windows Sidebar\Gadgets" @{ Title = "Default Gadgets" }) } else { Write-Output (newSpecialFolder "shell:Default Gadgets") }
 	Write-Output (newSpecialFolder "shell:ProgramFiles\Windows Sidebar\Shared Gadgets")
 	
-	Write-Information "`nCategory: Desktop / $(if ($win81) { "ThisPC" } else { "Computer" })`n"
+	Write-Information "`nCategory: Desktop / MyComputer`n"
 	
 	Write-Output (newSpecialFolder "shell:Desktop")
 	# shell:MyComputerFolderはWin10 1507/1511だとなぜかデスクトップになってしまう
@@ -645,7 +645,7 @@ function Get-SpecialFolder {
 	if ($DebugPreference -eq "SilentlyContinue") { return }
 	
 	# 通常とは違う名前がエクスプローラーのタイトルバーに表示されるフォルダー
-	Write-Information "`nCategory: AnotherName`n"
+	Write-Information "`nCategory: OtherNames`n"
 	
 	# (if ($win10_1703) { "UsersFilesFolder" } else { "Public" })
 	# shell:::{5B934B42-522B-4C34-BBFE-37A3EF7B9C90} (Win10 1507から1607まで)

@@ -99,7 +99,7 @@ function Get-SpecialFolder {
 	const currentVersionKey (Get-Item "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion")
 	if ($win81) { const appxKey (Get-Item "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Appx") }
 	
-	Write-Information "Module Version: $((Get-Module GetSpecialFolder).Version.ToString())`n"
+	Write-Information "Module Version: $((Get-Module PSSpecialFolder).Version.ToString())`n"
 	
 	Write-Information "Category: User's Files"
 	

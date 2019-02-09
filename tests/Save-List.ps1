@@ -13,7 +13,7 @@ $cpu = $env:PROCESSOR_ARCHITECTURE
 $edition = Get-ItemPropertyValue "HKLM:/SOFTWARE/Microsoft/Windows NT/CurrentVersion" "EditionID"
 $now = Get-Date -Format yyyyMMdd-HHmmss
 
-Import-Module "$PSScriptRoot/../src/GetSpecialFolder.psm1" -Force
+Import-Module "$PSScriptRoot/../src/PSSpecialFolder.psd1" -Force
 
 Get-SpecialFolder -Debug -InformationAction Continue 6>&1 |
 	Where-Object { $_ } |

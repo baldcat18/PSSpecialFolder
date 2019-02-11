@@ -294,6 +294,9 @@ function Get-SpecialFolder {
 	# Win8からサポート
 	Write-Output (newSpecialFolder "shell:Application Shortcuts")
 	Write-Output (newSpecialFolder "shell:CD Burning")
+	# Win10 1809からサポート
+	# 標準ユーザー権限でフォントをインストールした時に自動生成される
+	Write-Output (newSpecialFolder "shell:Local AppData\Microsoft\Windows\Fonts" @{ Title = "UserFonts" })
 	Write-Output (newSpecialFolder "shell:GameTasks")
 	Write-Output (newSpecialFolder "shell:History")
 	Write-Output (newSpecialFolder "shell:Cache")
@@ -389,8 +392,10 @@ function Get-SpecialFolder {
 	# shell:::{1D2680C9-0E2A-469D-B787-065558BC7D43} ([Fusion Cache]) (.NET3.5まで)
 	# CLSIDを使ってアクセスするとエクスプローラーがクラッシュする
 	Write-Output (newSpecialFolder "shell:Windows\assembly" @{ Title = ".NET Framework Assemblies" })
+	Write-Output (newSpecialFolder (Get-ItemPropertyValue "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Internet Settings" "ActiveXCache") @{ Title = "ActiveX Cache Folder" })
 	# shell:ControlPanelFolder\::{BD84B380-8CA2-1069-AB1D-08000948F534}
 	Write-Output (newSpecialFolder "shell:Fonts")
+	Write-Output (newSpecialFolder "shell:Windows\Offline Web Pages" @{ Title = "Subscription Folder" })
 	
 	Write-Output (newSpecialFolder "shell:ResourceDir")
 	# shell:ResourceDir\xxxx (xxxxはロケールIDの16進数4桁 日本語では0411)

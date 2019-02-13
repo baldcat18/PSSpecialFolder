@@ -94,10 +94,6 @@ function Get-SpecialFolder {
 	
 	# Win8.1以降
 	const win81 ($osVersion -gt [version]::new(6, 3))
-	# Win10 1703以降
-	const win10_1703 ($osVersion -gt [version]::new(10, 0, 15063))
-	# Win10 1709以降
-	const win10_1709 ($osVersion -gt [version]::new(10, 0, 16299))
 	# Win10 1803以降
 	const win10_1803 ($osVersion -gt [version]::new(10, 0, 17134))
 	
@@ -512,7 +508,8 @@ function Get-SpecialFolder {
 	# Windows Update
 	# Win8.1までサポート
 	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{36EEF7DB-88AD-4E81-AD49-0E313F0C35F8}")
-	# if ($win10_1709) { "Windows Defender Firewall" } else { "Windows Firewall" }
+	# Windows Firewall (Win10 1703まで)
+	# Windows Defender Firewall (Win10 1709から)
 	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{4026492F-2F69-46B8-B9BF-5654FC07E423}")
 	# Speech Recognition
 	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{58E3C745-D971-4081-9034-86E34B30836A}")
@@ -534,12 +531,14 @@ function Get-SpecialFolder {
 	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{9FE63AFD-59CF-4419-9775-ABCC3849F861}")
 	# Device Center
 	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{A8A91A66-3A7D-4424-8D24-04E180695C7A}" @{ Title = "Devices and Printers" })
-	# if ($win10) { "Windows 7 File Recovery" } else { "Backup And Restore" }
+	# Backup And Restore (Win8まで)
+	# Windows 7 File Recovery (Win10から)
 	# Win8.1以外でサポート
 	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{B98A2BEA-7D42-4558-8BD1-832F41BAC6FD}")
 	# System
 	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{BB06C0E4-D293-4F75-8A90-CB05B6477EEE}")
-	# if ($win10) { "Security and Maintenance CPL" } else { "Action Center CPL" }
+	# Action Center CPL (Win8.1まで)
+	# Security and Maintenance CPL (Win10から)
 	Write-Output (newSpecialFolder "shell:ControlPanelFolder\::{BB64F8A7-BEE7-4E1A-AB8D-7D8273F7FDB6}")
 	# Microsoft Windows Font Folder
 	# shell:Fonts
@@ -661,7 +660,8 @@ function Get-SpecialFolder {
 	# 通常とは違う名前がエクスプローラーのタイトルバーに表示されるフォルダー
 	Write-Information "`nCategory: OtherNames`n"
 	
-	# (if ($win10_1703) { "UsersFilesFolder" } else { "Public" })
+	# Public (Win10 1607まで)
+	# UsersFilesFolder (Win10 1703から)
 	# shell:::{5B934B42-522B-4C34-BBFE-37A3EF7B9C90} (Win10 1507から1607まで)
 	# shell:::{F8278C54-A712-415B-B593-B77A2BE0DDA9} (Win10 1703から)
 	Write-Output (newSpecialFolder "shell:ThisDeviceFolder")
@@ -769,7 +769,8 @@ function Get-SpecialFolder {
 	# フォルダー以外のshellコマンド
 	Write-Information "`nCategory: OtherShellCommands`n"
 	
-	# if ($win81) { "Taskbar" } else { "Taskbar and Start Menu" }
+	# Taskbar and Start Menu (Win7まで)
+	# Taskbar (Win8から)
 	Write-Output (newShellCommand "shell:::{0DF44EAA-FF21-4412-828E-260A8728E7F1}")
 	# Search
 	# Win10 1511まで
@@ -1058,7 +1059,8 @@ function Get-SpecialFolder {
 	Write-Output (newShellCommand "shell:::{7BD29E00-76C1-11CF-9DD0-00A0C9034933}")
 	# Temporary Internet Files
 	Write-Output (newShellCommand "shell:::{7BD29E01-76C1-11CF-9DD0-00A0C9034933}")
-	# if ($win10_1703) { "" } else { "Briefcase" }
+	# Briefcase (Win10 1607まで)
+	#  (Win10 1703から)
 	Write-Output (newShellCommand "shell:::{85BBD920-42A0-1069-A2E4-08002B30309D}")
 	# Shortcut
 	Write-Output (newShellCommand "shell:::{85CFCCAF-2D14-42B6-80B6-F40F65D016E7}")

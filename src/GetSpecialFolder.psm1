@@ -51,7 +51,7 @@ function newSpecialFolder {
 	const folderItem $shell.NameSpace($Dir).Self
 	
 	const title $(
-		if ($null -ne $Option.Title) { $Option.Title }
+		if ($Option.Title -ne $null) { $Option.Title }
 		elseif ($Dir -match "^shell:(?:(?:\w|\s)+)$") { $Dir.Substring(6) }
 		elseif ($Dir -match "^shell:.*::\{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\}$") {
 			const clsid $Dir.Substring($Dir.Length - 38)
@@ -60,7 +60,7 @@ function newSpecialFolder {
 		else { $Dir -replace "^.+\\(.+?)$", "`$1" }
 	)
 	
-	if ($null -ne $Option.Path) { $path = $Option.Path }
+	if ($Option.Path -ne $null) { $path = $Option.Path }
 	else {
 		$path = $folderItem.Path
 		if ($path.Substring(0,2) -eq "::") { $path = "shell:" + $path }

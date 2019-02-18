@@ -28,3 +28,9 @@ Get-SpecialFolder -Debug -InformationAction Continue 6>&1 |
 		} }
 	} |
 	Out-File "$PSScriptRoot\$osVersion $cpu $edition $now.txt" -Encoding utf8
+
+$txtFiles =
+	Get-ChildItem "$PSScriptRoot\$osVersion $cpu $edition *.txt" | Sort-Object -Property LastWriteTime -Descending
+if (@($txtFiles).Length -ge 2) {
+	fc.exe /n /t $txtFiles[1].FullName $txtFiles[0].FullName
+}

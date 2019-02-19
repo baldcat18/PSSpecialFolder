@@ -20,7 +20,7 @@ Get-SpecialFolder -Debug -InformationAction Continue 6>&1 |
 	ForEach-Object {
 		if ($_ -is [System.Management.Automation.InformationRecord] -or !$_.FolderItem) { $_ }
 		else { [pscustomobject]@{
-			Title = $_.Title
+			Name = $_.Name
 			Dir = $_.Dir
 			Path = $_.Path
 			DisplayName = $_.FolderItem.Name

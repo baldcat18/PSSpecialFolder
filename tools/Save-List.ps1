@@ -18,7 +18,10 @@ Import-Module "$PSScriptRoot/../src/PSSpecialFolder.psd1" -Force
 Get-SpecialFolder -Debug -InformationAction Continue 6>&1 |
 	Where-Object { $_ } |
 	ForEach-Object {
-		if ($_ -is [System.Management.Automation.InformationRecord] -or !$_.FolderItem) { $_ }
+		if ($_ -is [System.Management.Automation.InformationRecord]) { [pscustomobject]@{
+			I = $_.ToString().Replace("`n", "")
+		} }
+		elseif (!$_.FolderItem) { $_ }
 		else { [pscustomobject]@{
 			Name = $_.Name
 			Dir = $_.Dir
@@ -27,10 +30,13 @@ Get-SpecialFolder -Debug -InformationAction Continue 6>&1 |
 			Type = $_.FolderItem.Type
 		} }
 	} |
-	Out-File "$PSScriptRoot\$osVersion $cpu $edition $now.txt" -Encoding utf8
+	ConvertTo-Html -As List -Head '<meta charset="UTF-8">' |
+	ForEach-Object { $_.ToString().Replace("<td>*:</td>", "<td>Information:</td>") } |
+	Out-File "$PSScriptRoot/$osVersion $cpu $edition $now.html" -Encoding utf8
 
-$txtFiles =
-	Get-ChildItem "$PSScriptRoot\$osVersion $cpu $edition *.txt" | Sort-Object -Property LastWriteTime -Descending
-if (@($txtFiles).Length -ge 2) {
-	fc.exe /n /t $txtFiles[1].FullName $txtFiles[0].FullName
-}
+Push-Location $PSScriptRoot
+
+$txtFiles = Get-ChildItem "$osVersion $cpu $edition *.html" | Sort-Object -Property LastWriteTime -Descending
+if (@($txtFiles).Length -ge 2) { fc.exe /n $txtFiles[1].Name $txtFiles[0].Name }
+
+Pop-Location

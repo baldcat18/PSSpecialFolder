@@ -408,7 +408,7 @@ function Get-SpecialFolder {
 	
 	Write-Output (newSpecialFolder $(if (!$isWow64) { "shell:System" } else { "shell:SystemX86" } ) )
 	if ($is64bitOS) {
-		Write-Output (newSpecialFolder $(if (!$isWow64) { "shell:SystemX86" } else { "shell:Windows\SysWOW64" } ) )
+		Write-Output (newSpecialFolder $(if (!$isWow64) { "shell:SystemX86" } else { "shell:Windows\SysNative" } ) )
 	}
 	
 	Write-Information "`nCategory: UserProfiles`n"
@@ -614,7 +614,7 @@ function Get-SpecialFolder {
 	Write-Information "`nCategory: OtherFolders`n"
 	
 	# Hyper-V Remote File Browsing
-	# Win10 1703までサポート
+	# クライアントHyper-Vを有効にすると利用可
 	Write-Output (newSpecialFolder "shell:::{0907616E-F5E6-48D8-9D61-A91C3D28106D}")
 	# Cabinet Shell Folder
 	Write-Output (newSpecialFolder "shell:::{0CD7A5C0-9F37-11CE-AE65-08002B2E1262}")

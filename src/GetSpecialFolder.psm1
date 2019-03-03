@@ -81,14 +81,7 @@ function newShellCommand {
 	return [SpecialFolder]@{ Name = if ($Name) { $Name } else { (Get-Item $clsidPath).GetValue("") }; Path = $Path }
 }
 
-<#
-.SYNOPSIS
-Gets the special folders for Windows. This function supports the virtual folders, e.g. Control Panel and Recycle Bin.
-.OUTPUTS
-SpecialFolder[]
-#>
-function Get-SpecialFolder {
-	[CmdletBinding()]
+function getSpecialFolder {
 	[OutputType([SpecialFolder[]])]
 	param ()
 	
@@ -1112,8 +1105,22 @@ function Get-SpecialFolder {
 	Write-Output (newShellCommand "shell:::{FF393560-C2A7-11CF-BFF4-444553540000}")
 	# Windows Photo Viewer Image Verbs
 	Write-Output (newShellCommand "shell:::{FFE2A43C-56B9-4BF5-9A79-CC6D4285608A}")
+}
+
+<#
+.SYNOPSIS
+Gets the special folders for Windows. This function supports the virtual folders, e.g. Control Panel and Recycle Bin.
+.OUTPUTS
+SpecialFolder[]
+#>
+function Get-SpecialFolder {
+	[CmdletBinding()]
+	[OutputType([SpecialFolder[]])]
+	param ()
 	
-	<#
-	Write-Output (newSpecialFolder "shell:")
-	#>
+	return getSpecialFolder |
+		Where-Object {
+			if (!$_) { return $false }
+			return $true
+		}
 }

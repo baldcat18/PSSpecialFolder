@@ -16,7 +16,6 @@ $now = Get-Date -Format yyyyMMdd-HHmmss
 Import-Module "$PSScriptRoot/../src/PSSpecialFolder.psd1" -Force
 
 Get-SpecialFolder -Debug -InformationAction Continue 6>&1 |
-	Where-Object { $_ } |
 	ForEach-Object {
 		if ($_ -is [System.Management.Automation.InformationRecord]) { [pscustomobject]@{
 			I = $_.ToString().Replace("`n", "")

@@ -19,16 +19,14 @@ class FolderOption {
 }
 
 function const {
-	param ([string]$name, $value)
+	param ([string]$Name, $Value, [string]$Description = "")
 	
-	New-Variable -Name $name -Value $value -Option Constant -Scope 1
+	New-Variable -Option Constant -Scope 1 @PSBoundParameters
 }
 
 const osVersion ([Environment]::OSVersion.Version)
-# Win10以降
-const win10 ($osVersion -gt [version]::new(10, 0))
-# Win10 1607以降
-const win10_1607 ($osVersion -gt [version]::new(10, 0, 14393))
+const win10 ($osVersion -gt [version]::new(10, 0)) "Win10以降"
+const win10_1607 ($osVersion -gt [version]::new(10, 0, 14393)) "Win10 1607以降"
 
 if ($win10 -and !$win10_1607) {
 	Write-Warning "The PSSpecialFolder module supports Windows 10 Version 1607+."
@@ -85,10 +83,8 @@ function getSpecialFolder {
 	[OutputType([SpecialFolder[]])]
 	param ()
 	
-	# Win8.1以降
-	const win81 ($osVersion -gt [version]::new(6, 3))
-	# Win10 1803以降
-	const win10_1803 ($osVersion -gt [version]::new(10, 0, 17134))
+	const win81 ($osVersion -gt [version]::new(6, 3)) "Win8.1以降"
+	const win10_1803 ($osVersion -gt [version]::new(10, 0, 17134)) "Win10 1803以降"
 	
 	const is64bitOS ([Environment]::Is64BitOperatingSystem)
 	const isWow64 ($is64bitOS -and ![Environment]::Is64BitProcess)

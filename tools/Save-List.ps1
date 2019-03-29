@@ -30,7 +30,7 @@ Get-SpecialFolder -Debug -InformationAction Continue 6>&1 |
 		} }
 	} |
 	ConvertTo-Html -As List -Head '<meta charset="UTF-8">' |
-	ForEach-Object { $_.ToString().Replace("<td>*:</td>", "<td>Information:</td>") } |
+	ForEach-Object { $_.ToString() -replace "<td>.:</td>", "<td>Information:</td>" } |
 	Out-File "$PSScriptRoot/$osVersion $cpu $edition $now.html" -Encoding utf8
 
 Push-Location $PSScriptRoot

@@ -155,3 +155,5 @@ Describe "newShellCommand Test" {
 		}
 	}
 }
+
+Remove-Module GetSpecialFolder

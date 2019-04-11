@@ -26,10 +26,10 @@ function const {
 
 const osVersion ([Environment]::OSVersion.Version)
 const win10 ($osVersion -gt [version]::new(10, 0)) 'Win10以降'
-const win10_1607 ($osVersion -gt [version]::new(10, 0, 14393)) 'Win10 1607以降'
+const win10_1703 ($osVersion -gt [version]::new(10, 0, 15063)) 'Win10 1703以降'
 
-if ($win10 -and !$win10_1607) {
-	Write-Warning 'The PSSpecialFolder module supports Windows 10 Version 1607+.'
+if ($win10 -and !$win10_1703) {
+	Write-Warning 'The PSSpecialFolder module supports Windows 10 Version 1703+.'
 }
 
 const shell (New-Object -ComObject Shell.Application)
@@ -180,13 +180,13 @@ function getSpecialFolder {
 	# %OneDrive% (Win10 1607から)
 	Write-Output (newSpecialFolder 'shell:OneDrive')
 	# shell:OneDrive\Documents
-	Write-Output (newSpecialFolder $(if ($win10) { 'shell:OneDriveDocuments' } else { 'shell:SkyDriveDocuments' }))
+	Write-Output (newSpecialFolder $(if ($win10_1703) { 'shell:OneDriveDocuments' } else { 'shell:SkyDriveDocuments' }))
 	# shell:OneDrive\Music
-	Write-Output (newSpecialFolder $(if ($win10) { 'shell:OneDriveMusic' } else { 'shell:SkyDriveMusic' }))
+	Write-Output (newSpecialFolder $(if ($win10_1703) { 'shell:OneDriveMusic' } else { 'shell:SkyDriveMusic' }))
 	# shell:OneDrive\Pictures
-	Write-Output (newSpecialFolder $(if ($win10) { 'shell:OneDrivePictures' } else { 'shell:SkyDrivePictures' }))
+	Write-Output (newSpecialFolder $(if ($win10_1703) { 'shell:OneDrivePictures' } else { 'shell:SkyDrivePictures' }))
 	# shell:OneDrive\Pictures\Camera Roll
-	Write-Output (newSpecialFolder $(if ($win10) { 'shell:OneDriveCameraRoll' } else { 'shell:SkyDriveCameraRoll' }))
+	Write-Output (newSpecialFolder $(if ($win10_1703) { 'shell:OneDriveCameraRoll' } else { 'shell:SkyDriveCameraRoll' }))
 	
 	Write-Information "`nCategory: AppData`n"
 	
@@ -448,7 +448,7 @@ function getSpecialFolder {
 	# Removable Storage Devices
 	# Win8からサポート
 	# Win8/8.1では[PC]と同じなので非表示に
-	if ($win10) { Write-Output (newSpecialFolder 'shell:::{A6482830-08EB-41E2-84C1-73920C2BADB9}') }
+	if ($win10_1703) { Write-Output (newSpecialFolder 'shell:::{A6482830-08EB-41E2-84C1-73920C2BADB9}') }
 	Write-Output (newSpecialFolder 'shell:HomeGroupFolder')
 	Write-Output (newSpecialFolder 'shell:NetworkPlacesFolder')
 	# Removable Drives
@@ -586,7 +586,7 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:SyncResultsFolder')
 	
 	# Taskbar
-	Write-Output (newSpecialFolder "shell:$(if ($win10) { '::{21EC2020-3AEA-1069-A2DD-08002B30309D}' } else { 'ControlPanelFolder' })\::{05D7B0F4-2121-4EFF-BF6B-ED3F69B894D9}" @{ Name = 'Notification Area Icons' })
+	Write-Output (newSpecialFolder "shell:$(if ($win10_1703) { '::{21EC2020-3AEA-1069-A2DD-08002B30309D}' } else { 'ControlPanelFolder' })\::{05D7B0F4-2121-4EFF-BF6B-ED3F69B894D9}" @{ Name = 'Notification Area Icons' })
 	# Manage Wireless Networks
 	# Win8.1 Update以降ではフォルダーを開けないので非表示に
 	if (!$win81) { Write-Output (newSpecialFolder 'shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}\::{1FA9085F-25A2-489B-85D4-86326EEDCD87}') }
@@ -707,7 +707,7 @@ function getSpecialFolder {
 	# Win10 1511まで
 	if ($win81) { Write-Output (newSpecialFolder 'shell:::{865E5E76-AD83-4DCA-A109-50DC2113CE9A}') }
 	# Win10でこのカテゴリに移動
-	if ($win10) { Write-Output (newSpecialFolder 'shell:InternetFolder') }
+	if ($win10_1703) { Write-Output (newSpecialFolder 'shell:InternetFolder') }
 	# File Backup Index
 	Write-Output (newSpecialFolder 'shell:::{877CA5AC-CB41-4842-9C69-9136E42D47E2}')
 	Write-Output (newSpecialFolder 'shell:::{89D83576-6BD1-4C86-9454-BEB04E94C819}' @{ Name = 'Microsoft Office Outlook' })
@@ -779,7 +779,7 @@ function getSpecialFolder {
 	# Set Program Access and Defaults
 	Write-Output (newShellCommand 'shell:::{2559A1F7-21D7-11D4-BDAF-00C04F60B9F0}')
 	# Win8から
-	Write-Output (newShellCommand 'shell:::{2559A1F8-21D7-11D4-BDAF-00C04F60B9F0}' $(if ($win10) { 'Cortana' } else { 'Search' }))
+	Write-Output (newShellCommand 'shell:::{2559A1F8-21D7-11D4-BDAF-00C04F60B9F0}' $(if ($win10_1703) { 'Cortana' } else { 'Search' }))
 	# Show Desktop
 	# Win+Dと同じ
 	Write-Output (newShellCommand 'shell:::{3080F90D-D7AD-11D9-BD98-0000947B0257}')
@@ -819,7 +819,7 @@ function getSpecialFolder {
 	Write-Output (newShellCommand 'shell:::{80F3F1D5-FECA-45F3-BC32-752C152E456E}')
 	# Internet Folder
 	# Win10以降では開けないので非表示に
-	if (!$win10) { Write-Output newShellCommand 'shell:InternetFolder' }
+	if (!$win10_1703) { Write-Output newShellCommand 'shell:InternetFolder' }
 	# Indexing Options Control Panel
 	Write-Output (newShellCommand 'shell:::{87D66A43-7B11-4A28-9811-C86EE395ACF7}')
 	# Portable Workspace Creator

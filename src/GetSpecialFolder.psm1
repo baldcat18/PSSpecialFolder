@@ -1,6 +1,6 @@
 ﻿Set-StrictMode -Version Latest
 
-if ($Host.Version -ge [version]::new(6, 0) -and !$IsWindows) {
+if ($PSVersionTable['PSVersion'] -ge [version]::new(6, 0) -and !$IsWindows) {
 	throw [PlatformNotSupportedException]::new('The PSSpecialFolder module supports Windows only.')
 	return
 }

@@ -18,7 +18,7 @@ Import-Module "$PSScriptRoot/../src/PSSpecialFolder.psd1" -Force
 Get-SpecialFolder -Debug -InformationAction Continue 6>&1 |
 	ForEach-Object {
 		if ($_ -is [System.Management.Automation.InformationRecord]) { [pscustomobject]@{
-			I = $_.ToString().Replace("`n", '')
+			Information = $_.ToString().Replace("`n", '')
 		} }
 		elseif (!$_.FolderItem) { $_ }
 		else { [pscustomobject]@{
@@ -30,7 +30,8 @@ Get-SpecialFolder -Debug -InformationAction Continue 6>&1 |
 		} }
 	} |
 	ConvertTo-Html -As List -Head '<meta charset="UTF-8">' |
-	ForEach-Object { $_.ToString() -replace '<td>.:</td>', '<td>Information:</td>' } |
+	# ps5.1では必要 (https://github.com/PowerShell/PowerShell/pull/2184)
+	ForEach-Object { $_.ToString().Replace('<td>*:</td>', '<td>Information:</td>') } |
 	Out-File "$PSScriptRoot/$osVersion $cpu $edition $now.html" -Encoding utf8
 
 Push-Location $PSScriptRoot

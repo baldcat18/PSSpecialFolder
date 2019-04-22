@@ -13,7 +13,10 @@ $cpu = $env:PROCESSOR_ARCHITECTURE
 $edition = Get-ItemPropertyValue 'HKLM:/SOFTWARE/Microsoft/Windows NT/CurrentVersion' 'EditionID'
 $now = Get-Date -Format yyyyMMdd-HHmmss
 
-Import-Module "$PSScriptRoot/../src/PSSpecialFolder.psd1" -Force
+# 開発用以外のバージョンをアンロードする
+Get-Module PSSpecialFolder | Remove-Module
+
+$module = Import-Module "$PSScriptRoot/../src/PSSpecialFolder.psd1" -PassThru
 
 Get-SpecialFolder -Debug -InformationAction Continue 6>&1 |
 	ForEach-Object {
@@ -34,9 +37,9 @@ Get-SpecialFolder -Debug -InformationAction Continue 6>&1 |
 	ForEach-Object { $_.ToString().Replace('<td>*:</td>', '<td>Information:</td>') } |
 	Out-File "$PSScriptRoot/$osVersion $cpu $edition $now.html" -Encoding utf8
 
-Push-Location $PSScriptRoot
+Remove-Module $module
 
+Push-Location $PSScriptRoot
 $txtFiles = Get-ChildItem "$osVersion $cpu $edition *.html" | Sort-Object -Property LastWriteTime -Descending
 if (@($txtFiles).Length -ge 2) { fc.exe /n /20 $txtFiles[1].Name $txtFiles[0].Name }
-
 Pop-Location

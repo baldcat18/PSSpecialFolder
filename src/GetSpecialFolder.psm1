@@ -85,7 +85,7 @@ function getSpecialFolder {
 	
 	const win81 ($osVersion -gt [version]::new(6, 3)) 'Win8.1以降'
 	const win10_1803 ($osVersion -gt [version]::new(10, 0, 17134)) 'Win10 1803以降'
-	const win10_1903 ($osVersion -gt [version]::new(10, 0, 18343)) 'Win10IP Build18343以降'
+	const win10_1903 ($osVersion -gt [version]::new(10, 0, 18362)) 'Win10 1903以降'
 	
 	const is64bitOS ([Environment]::Is64BitOperatingSystem)
 	const isWow64 ($is64bitOS -and ![Environment]::Is64BitProcess)
@@ -661,7 +661,7 @@ function getSpecialFolder {
 	Write-Output (newShellCommand 'shell:::{2559A1F1-21D7-11D4-BDAF-00C04F60B9F0}')
 	# Windows Security
 	# Ctrl+Alt+Delと同じ
-	# Win10 1903(?)でこのカテゴリに移動
+	# Win10 1809までCLSIDは定義されているが利用できないので非表示に
 	if ($win10_1903) { Write-Output (newShellCommand 'shell:::{2559A1F2-21D7-11D4-BDAF-00C04F60B9F0}') }
 	# Run...
 	Write-Output (newShellCommand 'shell:::{2559A1F3-21D7-11D4-BDAF-00C04F60B9F0}')
@@ -722,7 +722,7 @@ function getSpecialFolder {
 	# Win8まで
 	Write-Output (newShellCommand 'shell:::{8E35B548-F174-4C7D-81E2-8ED33126F6FD}')
 	# Infrared
-	# Win10 1607から1809まで(?)
+	# Win10 1607から1809まで
 	Write-Output (newShellCommand 'shell:::{A0275511-0E86-4ECA-97C2-ECD8F1221D08}')
 	# Internet Options
 	Write-Output (newShellCommand 'shell:::{A3DD4F92-658A-410F-84FD-6FBBBEF2FFFE}')
@@ -1027,9 +1027,6 @@ function getSpecialFolder {
 	Write-Output (newShellCommand 'shell:::{1BEF2128-2F96-4500-BA7C-098DC0049CB2}')
 	# CompatContextMenu Class
 	Write-Output (newShellCommand 'shell:::{1D27F844-3A1F-4410-85AC-14651078412D}')
-	# Windows Security
-	# Win10 1903(?)以降では[OtherShellCommands]カテゴリになるので非表示に
-	if (!$win10_1903) { Write-Output (newShellCommand 'shell:::{2559A1F2-21D7-11D4-BDAF-00C04F60B9F0}') }
 	# Location Folder
 	Write-Output (newShellCommand 'shell:::{267CF8A9-F4E3-41E6-95B1-AF881BE130FF}')
 	# Enhanced Storage Context Menu Handler Class

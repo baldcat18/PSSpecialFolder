@@ -18,21 +18,17 @@ class FolderOption {
 	[string]$Path
 }
 
-function const {
-	param ([string]$Name, $Value, [string]$Description = '')
-	
-	New-Variable -Option Constant -Scope 1 @PSBoundParameters
-}
-
-const osVersion ([Environment]::OSVersion.Version)
-const win10 ($osVersion -gt [version]::new(10, 0)) 'Win10以降'
-const win10_1703 ($osVersion -gt [version]::new(10, 0, 15063)) 'Win10 1703以降'
+$osVersion = [Environment]::OSVersion.Version
+# Win10以降
+$win10 = $osVersion -gt [version]::new(10, 0)
+# Win10 1703以降
+$win10_1703 = $osVersion -gt [version]::new(10, 0, 15063)
 
 if ($win10 -and !$win10_1703) {
 	Write-Warning 'The PSSpecialFolder module supports Windows 10 Version 1703+.'
 }
 
-const shell (New-Object -ComObject Shell.Application)
+$shell = New-Object -ComObject Shell.Application
 
 function newSpecialFolder {
 	[OutputType([SpecialFolder])]
@@ -42,17 +38,17 @@ function newSpecialFolder {
 	if ($Dir.Substring(0, 2) -eq '\\') { $Dir = 'file:' + $Dir }
 	elseif ($Dir.Substring(0, 6) -ne 'shell:' -and $Dir.Substring(0, 5) -ne 'file:') { $Dir = "file:\\\$Dir" }
 	
-	try { const folder $shell.NameSpace($Dir) }
+	try { $folder = $shell.NameSpace($Dir) }
 	catch { return }
 	
 	if (!$folder) { return }
-	const folderItem $shell.NameSpace($Dir).Self
+	$folderItem = $shell.NameSpace($Dir).Self
 	
-	const name $(
+	$name = $(
 		if ($Option.Name -ne $null) { $Option.Name }
 		elseif ($Dir -match '^shell:(?:(?:\w|\s)+)$') { $Dir.Substring(6) }
 		elseif ($Dir -match '^shell:.*::\{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\}$') {
-			const clsid $Dir.Substring($Dir.Length - 38)
+			$clsid = $Dir.Substring($Dir.Length - 38)
 			(Get-Item "Microsoft.PowerShell.Core\Registry::HKEY_CLASSES_ROOT\CLSID\$clsid").GetValue('')
 		}
 		else { $Dir -replace '^.+\\(.+?)$', '$1' }
@@ -73,7 +69,7 @@ function newShellCommand {
 	
 	if (!$Path) { return }
 	
-	const clsidPath "Microsoft.PowerShell.Core\Registry::HKEY_CLASSES_ROOT\CLSID\$($Path.Substring($Path.Length - 38))"
+	$clsidPath = "Microsoft.PowerShell.Core\Registry::HKEY_CLASSES_ROOT\CLSID\$($Path.Substring($Path.Length - 38))"
 	if (!(Test-Path $clsidPath)) { return }
 	
 	return [SpecialFolder]@{ Name = if ($Name) { $Name } else { (Get-Item $clsidPath).GetValue('') }; Path = $Path }
@@ -83,16 +79,19 @@ function getSpecialFolder {
 	[OutputType([SpecialFolder[]])]
 	param ([switch]$IncludeShellCommand)
 	
-	const win81 ($osVersion -gt [version]::new(6, 3)) 'Win8.1以降'
-	const win10_1803 ($osVersion -gt [version]::new(10, 0, 17134)) 'Win10 1803以降'
-	const win10_1903 ($osVersion -gt [version]::new(10, 0, 18362)) 'Win10 1903以降'
+	# Win8.1以降
+	$win81 = $osVersion -gt [version]::new(6, 3)
+	# Win10 1803以降
+	$win10_1803 = $osVersion -gt [version]::new(10, 0, 17134)
+	# Win10 1903以降
+	$win10_1903 = $osVersion -gt [version]::new(10, 0, 18362)
 	
-	const is64bitOS ([Environment]::Is64BitOperatingSystem)
-	const isWow64 ($is64bitOS -and ![Environment]::Is64BitProcess)
+	$is64bitOS = [Environment]::Is64BitOperatingSystem
+	$isWow64 = $is64bitOS -and ![Environment]::Is64BitProcess
 	
-	const userShellFoldersKey (Get-Item 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders')
-	const currentVersionKey (Get-Item 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion')
-	if ($win81) { const appxKey (Get-Item 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Appx') }
+	$userShellFoldersKey = Get-Item 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders'
+	$currentVersionKey = Get-Item 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion'
+	if ($win81) { $appxKey = Get-Item 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Appx' }
 	
 	Write-Information "Module Version: $((Get-Module PSSpecialFolder).Version.ToString())`n"
 	

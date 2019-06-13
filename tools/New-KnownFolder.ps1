@@ -132,19 +132,16 @@ Add-Type -TypeDefinition $source -ErrorAction Stop
 	@{ guid='{7B396E54-9EC5-4300-BE0A-2482EBAE1A26}'; name='Default Gadgets' } # Win7まで
 ) |
 	ForEach-Object {
-		[string]$guid = $_['guid']
-		[string]$name = $_['name']
-		
-		[string]$result = $null
-		[Win32API.KnownFolder]$folder = New-Object Win32API.KnownFolder $guid, $KF_FLAG_DEFAULT
+		[string]$result = ""
+		[Win32API.KnownFolder]$folder = New-Object Win32API.KnownFolder $_['guid'], $KF_FLAG_DEFAULT
 		if ($folder.Result -eq 'OK') {
 			if (!$verbose) { return }
 			$result = $folder.Result
 		} else {
-			$folder = New-Object Win32API.KnownFolder $guid, $KF_FLAG_CREATE
+			$folder = New-Object Win32API.KnownFolder $_['guid'], $KF_FLAG_CREATE
 			if ($folder.Result -eq 'NotFound' -and !$verbose) { return }
 			$result = if ($folder.Result -eq 'OK') { 'New' } else { $folder.Result }
 		}
 		
-		Write-Output ([pscustomobject]@{ Name = $name; Result = $result; Path = $folder.Path })
+		Write-Output ([pscustomobject]@{ Name = $_['name']; Result = $result; Path = $folder.Path })
 	}

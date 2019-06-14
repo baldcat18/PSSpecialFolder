@@ -40,6 +40,6 @@ Get-SpecialFolder -Debug -InformationAction Continue 6>&1 |
 Remove-Module $module
 
 Push-Location $PSScriptRoot
-$txtFiles = Get-ChildItem "$osVersion $cpu $edition *.html" | Sort-Object -Property LastWriteTime -Descending
+$txtFiles = Get-ChildItem "$osVersion $cpu $edition *.html" | Sort-Object -Property Name -Descending
 if (@($txtFiles).Length -ge 2) { fc.exe /n /20 $txtFiles[1].Name $txtFiles[0].Name }
 Pop-Location

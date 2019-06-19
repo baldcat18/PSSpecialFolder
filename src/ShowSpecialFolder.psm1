@@ -1,4 +1,6 @@
-﻿Set-StrictMode -Version Latest
+﻿using namespace System.Windows.Markup
+
+Set-StrictMode -Version Latest
 
 function Show-SpecialFolder {
 	[CmdletBinding()]
@@ -10,7 +12,19 @@ function Show-SpecialFolder {
 		return
 	}
 	
-	# 今のところは単にGet-SpecialFolderを呼ぶだけ
-	# Show-SpecialFolderでは情報ストリームを使わないので非表示に
-	Get-SpecialFolder -IncludeShellCommand:$IncludeShellCommand -InformationAction SilentlyContinue
+	Add-Type -AssemblyName PresentationFramework
+	Add-Type -AssemblyName PresentationCore
+	
+	$window = [XamlReader]::Parse((Get-Content "$PSScriptRoot/window.xaml" -Raw))
+	
+	$dataGrid = $window.FindName('dataGrid')
+	
+	$getSpecialFolderArgs = @{
+		IncludeShellCommand = $IncludeShellCommand
+		InformationAction = 'SilentlyContinue' # この関数ではカテゴリ名を表示しない
+		Debug = $DebugPreference -ne 'SilentlyContinue'
+	}
+	$dataGrid.ItemsSource = Get-SpecialFolder @getSpecialFolderArgs
+	
+	$window.ShowDialog() > $null
 }

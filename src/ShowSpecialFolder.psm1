@@ -19,6 +19,10 @@ function Show-SpecialFolder {
 	
 	$dataGrid = $window.FindName('dataGrid')
 	
+	$dataGrid.add_MouseDoubleClick({
+		if ($dataGrid.SelectedItem) { $dataGrid.SelectedItem.Open() }
+	})
+	
 	$getSpecialFolderArgs = @{
 		IncludeShellCommand = $IncludeShellCommand
 		InformationAction = 'SilentlyContinue' # この関数ではカテゴリ名を表示しない

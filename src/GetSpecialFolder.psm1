@@ -11,6 +11,10 @@ class SpecialFolder {
 	
 	hidden [string]$Dir
 	hidden [__ComObject]$FolderItem
+	
+	[void]Open() {
+		explorer.exe $(if ($this.Dir) { $this.Dir } else { $this.Path })
+	}
 }
 
 class FolderOption {
@@ -60,7 +64,12 @@ function newSpecialFolder {
 		if ($path.Substring(0,2) -eq '::') { $path = "shell:$path" }
 	}
 	
-	return [SpecialFolder]@{ Name = $name; Path = $path; Dir = $Dir; FolderItem = $folderItem }
+	return [SpecialFolder]@{
+		Name = $name
+		Path = $path
+		Dir = $Dir
+		FolderItem = $folderItem
+	}
 }
 
 function newShellCommand {

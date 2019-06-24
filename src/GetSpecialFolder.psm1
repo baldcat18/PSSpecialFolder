@@ -5,21 +5,74 @@ if ($PSVersionTable['PSVersion'] -ge [version]::new(6, 0) -and !$IsWindows) {
 	return
 }
 
+enum PropertyTypes {
+	Default
+	ShellExecute
+	Verb
+}
+
 class SpecialFolder {
 	[string]$Name
 	[string]$Path
 	
 	hidden [string]$Dir
 	hidden [__ComObject]$FolderItem
+	hidden [bool]$IsDirectory
+	hidden [PropertyTypes]$PropertyTypes
+	hidden [bool]$IsPropertiesChecked
+	hidden [__ComObject]$Properties
+	hidden [__ComObject]$FolderItemForProperties
 	
 	[void]Open() {
 		explorer.exe $(if ($this.Dir) { $this.Dir } else { $this.Path })
+	}
+	[void]CopyAsPath() {
+		Set-Clipboard $this.Path
+	}
+	[void]StartCmd() {
+		if (!$this.IsDirectory) { throw [NotSupportedException]::new('This is not a directory.') }
+		Start-Process cmd.exe "/k pushd $($this.Path)"
+	}
+	[void]StartPowershell() {
+		if (!$this.IsDirectory) { throw [NotSupportedException]::new('This is not a directory.') }
+		$appName = if ($script:isPwshInstalled) { 'pwsh.exe' } else { 'powershell.exe' }
+		Start-Process $appName "-NoExit -Command `"Push-Location -LiteralPath '$($this.Path)'`""
+	}
+	[void]StartLinuxShell() {
+		if (!$script:isWslEnabled) { throw [NotSupportedException]::new('WSL is disabled.') }
+		if (!$this.IsDirectory) { throw [NotSupportedException]::new('This is not a directory.') }
+		Start-Process cmd.exe "/c pushd $($this.Path) & wsl.exe"
+	}
+	[void]ShowProperties() {
+		if ($this.PropertyTypes -eq 'ShellExecute') { Start-Process $this.Dir -Verb properties -ErrorAction Stop }
+		elseif ($this.TestProperties()) { $this.Properties.DoIt() }
+		else { throw [NotSupportedException]::new('The properties of this folder can''t be shown.') }
+	}
+	
+	hidden [bool]TestProperties() {
+		if ($this.PropertyTypes -eq 'ShellExecute') { return $true }
+		if (!$this.FolderItem) { return $false }
+		
+		if (!$this.IsPropertiesChecked) {
+			$item = $this.FolderItemForProperties
+			if ($item -eq $null) { $item = $this.FolderItem }
+			
+			$verbs = $item.Verbs()
+			if ($verbs -and $verbs.Count) {
+				$verb = $verbs.Item($verbs.Count - 1)
+				if ($verb.Name -eq $script:propertiesName) { $this.Properties = $verb }
+			}
+			
+			$this.IsPropertiesChecked = $true
+		}
+		return !!$this.Properties
 	}
 }
 
 class FolderOption {
 	[string]$Name
 	[string]$Path
+	[PropertyTypes]$propertyTypes
 }
 
 $osVersion = [Environment]::OSVersion.Version
@@ -32,7 +85,12 @@ if ($win10 -and !$win10_1703) {
 	Write-Warning 'The PSSpecialFolder module supports Windows 10 Version 1703+.'
 }
 
+$isPwshInstalled = @(Get-Command pwsh.exe -CommandType Application -ErrorAction SilentlyContinue).Length -gt 0
+$isWslEnabled = Test-Path "$([Environment]::GetFolderPath('System'))/wsl.exe"
+
 $shell = New-Object -ComObject Shell.Application
+
+$propertiesName = @($shell.NameSpace(0).Self.Verbs())[-1].Name
 
 function newSpecialFolder {
 	[OutputType([SpecialFolder])]
@@ -48,27 +106,31 @@ function newSpecialFolder {
 	if (!$folder) { return }
 	$folderItem = $shell.NameSpace($Dir).Self
 	
-	$name = $(
-		if ($Option.Name -ne $null) { $Option.Name }
-		elseif ($Dir -match '^shell:(?:(?:\w|\s)+)$') { $Dir.Substring(6) }
-		elseif ($Dir -match '^shell:.*::\{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\}$') {
-			$clsid = $Dir.Substring($Dir.Length - 38)
-			(Get-Item "Microsoft.PowerShell.Core\Registry::HKEY_CLASSES_ROOT\CLSID\$clsid").GetValue('')
-		}
-		else { $Dir -replace '^.+\\(.+?)$', '$1' }
-	)
-	
 	if ($Option.Path -ne $null) { $path = $Option.Path }
 	else {
 		$path = $folderItem.Path
 		if ($path.Substring(0,2) -eq '::') { $path = "shell:$path" }
 	}
 	
+	$isDirectory = Test-Path $path -PathType Container
+	
 	return [SpecialFolder]@{
-		Name = $name
+		Name = 
+			if ($Option.Name -ne $null) { $Option.Name }
+			elseif ($Dir -match '^shell:(?:(?:\w|\s)+)$') { $Dir.Substring(6) }
+			elseif ($Dir -match '^shell:.*::\{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\}$') {
+				$clsid = $Dir.Substring($Dir.Length - 38)
+				(Get-Item "Microsoft.PowerShell.Core\Registry::HKEY_CLASSES_ROOT\CLSID\$clsid").GetValue('')
+			}
+			else { $Dir -replace '^.+\\(.+?)$', '$1' }
 		Path = $path
 		Dir = $Dir
 		FolderItem = $folderItem
+		IsDirectory = $isDirectory
+		PropertyTypes =
+			if ($Option.propertyTypes) { $Option.propertyTypes }
+			elseif ($isDirectory) { [PropertyTypes]::ShellExecute }
+			else { [PropertyTypes]::Verb }
 	}
 }
 

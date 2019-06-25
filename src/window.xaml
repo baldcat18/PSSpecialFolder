@@ -19,6 +19,16 @@
 					</DataGridTextColumn.Binding>
 				</DataGridTextColumn>
 			</DataGrid.Columns>
+			<DataGrid.ContextMenu>
+				<ContextMenu>
+					<MenuItem Header="_Open" Name="open" />
+					<MenuItem Header="Path _as copy" Name="copyAsPath" />
+					<MenuItem Header="Open Command _Prompt here" Name="cmd" />
+					<MenuItem Header="Open Power_Shell here" Name="powershell" />
+					<MenuItem Header="Open _Linux shell here" Name="wsl" />
+					<MenuItem Header="P_roperties" Name="properties"/>
+				</ContextMenu>
+			</DataGrid.ContextMenu>
 		</DataGrid>
 	</Grid>
 </Window>

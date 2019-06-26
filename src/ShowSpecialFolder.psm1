@@ -4,6 +4,12 @@ using namespace System.Windows.Markup
 
 Set-StrictMode -Version Latest
 
+<#
+.SYNOPSIS
+Display the special folders for Windows in a dialog.
+.DESCRIPTION
+Display the special folders for Windows in a dialog. Open the folder to double-click on it. Show context menu to right-click on the folder.
+#>
 function Show-SpecialFolder {
 	[CmdletBinding()]
 	param ([switch]$IncludeShellCommand)

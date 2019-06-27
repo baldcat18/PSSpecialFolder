@@ -23,25 +23,29 @@ class SpecialFolder {
 	hidden [__ComObject]$Properties
 	hidden [__ComObject]$FolderItemForProperties
 	
-	[void]Open() {
-		explorer.exe $(if ($this.Dir) { $this.Dir } else { $this.Path })
+	[void]Open([string]$verb) {
+		Start-Process explorer.exe $(if ($this.Dir) { $this.Dir } else { $this.Path }) -Verb $verb
 	}
 	[void]CopyAsPath() {
 		Set-Clipboard $this.Path
 	}
-	[void]StartCmd() {
+	[void]StartCmd([string]$verb) {
 		if (!$this.IsDirectory) { throw [NotSupportedException]::new('This is not a directory.') }
-		Start-Process cmd.exe "/k pushd $($this.Path)"
+		Start-Process cmd.exe "/k pushd $($this.Path)" -Verb $verb
 	}
-	[void]StartPowershell() {
+	[void]StartPowershell([string]$verb) {
 		if (!$this.IsDirectory) { throw [NotSupportedException]::new('This is not a directory.') }
-		$appName = if ($script:isPwshInstalled) { 'pwsh.exe' } else { 'powershell.exe' }
-		Start-Process $appName "-NoExit -Command `"Push-Location -LiteralPath '$($this.Path)'`""
+		$startArgs = @{
+			FilePath = if ($script:isPwshInstalled) { 'pwsh.exe' } else { 'powershell.exe' }
+			ArgumentList = "-NoExit -Command `"Push-Location -LiteralPath '$($this.Path)'`""
+			Verb = $verb
+		}
+		Start-Process @startArgs
 	}
-	[void]StartLinuxShell() {
+	[void]StartLinuxShell([string]$verb) {
 		if (!$script:isWslEnabled) { throw [NotSupportedException]::new('WSL is disabled.') }
 		if (!$this.IsDirectory) { throw [NotSupportedException]::new('This is not a directory.') }
-		Start-Process cmd.exe "/c pushd $($this.Path) & wsl.exe"
+		Start-Process cmd.exe "/c pushd $($this.Path) & wsl.exe" -Verb $verb
 	}
 	[void]ShowProperties() {
 		if ($this.PropertyTypes -eq 'ShellExecute') { Start-Process $this.Dir -Verb properties -ErrorAction Stop }

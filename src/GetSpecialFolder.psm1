@@ -76,7 +76,8 @@ class SpecialFolder {
 class FolderOption {
 	[string]$Name
 	[string]$Path
-	[PropertyTypes]$propertyTypes
+	[PropertyTypes]$PropertyTypes
+	[__ComObject]$FolderItemForProperties
 }
 
 $osVersion = [Environment]::OSVersion.Version
@@ -132,9 +133,10 @@ function newSpecialFolder {
 		FolderItem = $folderItem
 		IsDirectory = $isDirectory
 		PropertyTypes =
-			if ($Option.propertyTypes) { $Option.propertyTypes }
-			elseif ($isDirectory) { [PropertyTypes]::ShellExecute }
-			else { [PropertyTypes]::Verb }
+			if ($Option.PropertyTypes) { $Option.PropertyTypes }
+			elseif ($Option.FolderItemForProperties -or !$isDirectory) { [PropertyTypes]::Verb }
+			else { [PropertyTypes]::ShellExecute }
+		FolderItemForProperties = $Option.FolderItemForProperties
 	}
 }
 
@@ -150,12 +152,21 @@ function newShellCommand {
 	return [SpecialFolder]@{ Name = if ($Name) { $Name } else { (Get-Item $clsidPath).GetValue('') }; Path = $Path }
 }
 
+function getDirectoryFolderItem {
+	[OutputType([string])]
+	param ([string]$path)
+	
+	return $shell.NameSpace((Split-Path $path)).Items().Item((Split-Path $path -Leaf))
+}
+
 function getSpecialFolder {
 	[OutputType([SpecialFolder[]])]
 	param ([switch]$IncludeShellCommand)
 	
 	# Win8.1以降
 	$win81 = $osVersion -gt [version]::new(6, 3)
+	# Win10 1607以降
+	$win10_1607 = $osVersion -gt [version]::new(10, 0, 14393)
 	# Win10 1803以降
 	$win10_1803 = $osVersion -gt [version]::new(10, 0, 17134)
 	# Win10 1903以降
@@ -177,7 +188,7 @@ function getSpecialFolder {
 	# shell:ThisDeviceFolder / shell:::{F8278C54-A712-415B-B593-B77A2BE0DDA9} (Win10 1703から)
 	# %USERPROFILE%
 	# %HOMEDRIVE%%HOMEPATH%
-	Write-Output (newSpecialFolder 'shell:UsersFilesFolder')
+	Write-Output (newSpecialFolder 'shell:UsersFilesFolder' @{ FolderItemForProperties = $shell.NameSpace(40).Self })
 	# Win10からサポート
 	# shell:UsersFilesFolder\3D Objects
 	# shell:MyComputerFolder\::{0DB7E03F-FC29-4DC6-9020-FF41B59E513A} (Win10 1709から)
@@ -294,7 +305,7 @@ function getSpecialFolder {
 	
 	# shell:UsersLibrariesFolder
 	# shell:::{031E4825-7B94-4DC3-B131-E946B44C8DD5}
-	Write-Output (newSpecialFolder 'shell:Libraries' @{ Path = $librariesPath })
+	Write-Output (newSpecialFolder 'shell:Libraries' @{ Path = $librariesPath; FolderItemForProperties = getDirectoryFolderItem $librariesPath })
 	# Win10からサポート
 	# shell:Libraries\CameraRoll.library-ms
 	# shell:Libraries\{2B20DF75-1EDA-4039-8097-38798227D5B7}
@@ -729,7 +740,7 @@ function getSpecialFolder {
 	Write-Output (newShellCommand 'shell:::{0DF44EAA-FF21-4412-828E-260A8728E7F1}')
 	# Search
 	# Win10 1511まで
-	Write-Output (newShellCommand 'shell:::{2559A1F0-21D7-11D4-BDAF-00C04F60B9F0}')
+	if (!$win10_1607) { Write-Output (newShellCommand 'shell:::{2559A1F0-21D7-11D4-BDAF-00C04F60B9F0}') }
 	# Help and Support
 	# Win8.1まで
 	Write-Output (newShellCommand 'shell:::{2559A1F1-21D7-11D4-BDAF-00C04F60B9F0}')
@@ -754,7 +765,8 @@ function getSpecialFolder {
 	# Windows Sidebar Properties
 	# Win7まで
 	Write-Output (newShellCommand 'shell:::{37EFD44D-EF8D-41B1-940D-96973A50E9E0}')
-	Write-Output (newShellCommand 'shell:::{38A98528-6CBF-4CA9-8DC0-B1E1D10F7B1B}' 'Connect To')
+	# Win8.1まで
+	if (!$win10) { Write-Output (newShellCommand 'shell:::{38A98528-6CBF-4CA9-8DC0-B1E1D10F7B1B}' 'Connect To') }
 	# Phone and Modem Control Panel
 	Write-Output (newShellCommand 'shell:::{40419485-C444-4567-851A-2DD7BFA1684D}')
 	# Open in new window

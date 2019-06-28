@@ -21,6 +21,8 @@ function Show-SpecialFolder {
 		return
 	}
 	
+	$isExplorerRunasLaunchingUser =
+		!((Get-Item 'HKLM:/SOFTWARE/Classes/AppID/{CDCBCFCA-3CDC-436f-A4E2-0E02075250C2}').GetValue('RunAs'))
 	$isWslEnabled = Test-Path "$([Environment]::GetFolderPath('System'))/wsl.exe"
 	
 	Add-Type -AssemblyName PresentationFramework
@@ -64,7 +66,7 @@ function Show-SpecialFolder {
 		$properties.Visibility = 'Collapsed'
 		
 		if ([Keyboard]::Modifiers -band [ModifierKeys]::Shift) {
-			$openAsAdmin.Visibility = "Visible"
+			if ($isExplorerRunasLaunchingUser) { $openAsAdmin.Visibility = "Visible" }
 			if ($item.IsDirectory) {
 				$cmdEx.Visibility = 'Visible'
 				$powershellEx.Visibility = 'Visible'

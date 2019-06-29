@@ -6,7 +6,7 @@ if ($PSVersionTable['PSVersion'] -ge [version]::new(6, 0) -and !$IsWindows) {
 }
 
 enum PropertyTypes {
-	Default
+	None
 	ShellExecute
 	Verb
 }
@@ -23,18 +23,27 @@ class SpecialFolder {
 	hidden [__ComObject]$Properties
 	hidden [__ComObject]$FolderItemForProperties
 	
+	[void]Open() {
+		$this.Open('open')
+	}
 	[void]Open([string]$verb) {
 		Start-Process explorer.exe $(if ($this.Dir) { $this.Dir } else { $this.Path }) -Verb $verb
 	}
 	[void]CopyAsPath() {
 		Set-Clipboard $this.Path
 	}
+	[void]StartCmd() {
+		$this.StartCmd('open')
+	}
 	[void]StartCmd([string]$verb) {
-		if (!$this.IsDirectory) { throw [NotSupportedException]::new('This is not a directory.') }
+		if (!$this.IsDirectory) { throw [InvalidOperationException]::new('This is not a directory.') }
 		Start-Process cmd.exe "/k pushd $($this.Path)" -Verb $verb
 	}
+	[void]StartPowershell() {
+		$this.StartPowershell('open')
+	}
 	[void]StartPowershell([string]$verb) {
-		if (!$this.IsDirectory) { throw [NotSupportedException]::new('This is not a directory.') }
+		if (!$this.IsDirectory) { throw [InvalidOperationException]::new('This is not a directory.') }
 		$startArgs = @{
 			FilePath = if ($script:isPwshInstalled) { 'pwsh.exe' } else { 'powershell.exe' }
 			ArgumentList = "-NoExit -Command `"Push-Location -LiteralPath '$($this.Path)'`""
@@ -42,15 +51,19 @@ class SpecialFolder {
 		}
 		Start-Process @startArgs
 	}
+	[void]StartLinuxShell() {
+		$this.StartLinuxShell('open')
+	}
 	[void]StartLinuxShell([string]$verb) {
-		if (!$script:isWslEnabled) { throw [NotSupportedException]::new('WSL is disabled.') }
-		if (!$this.IsDirectory) { throw [NotSupportedException]::new('This is not a directory.') }
+		if (!$script:win10) { throw [InvalidOperationException]::new('WSL is not supported.') }
+		if (!$script:isWslEnabled) { throw [InvalidOperationException]::new('WSL is disabled.') }
+		if (!$this.IsDirectory) { throw [InvalidOperationException]::new('This is not a directory.') }
 		Start-Process cmd.exe "/c pushd $($this.Path) & wsl.exe" -Verb $verb
 	}
 	[void]ShowProperties() {
-		if ($this.PropertyTypes -eq 'ShellExecute') { Start-Process $this.Dir -Verb properties -ErrorAction Stop }
+		if ($this.PropertyTypes -eq 'ShellExecute') { Start-Process $this.Dir -Verb properties }
 		elseif ($this.TestProperties()) { $this.Properties.DoIt() }
-		else { throw [NotSupportedException]::new('The properties of this folder can''t be shown.') }
+		else { throw [InvalidOperationException]::new('The properties of this folder can''t be shown.') }
 	}
 	
 	hidden [bool]TestProperties() {
@@ -76,7 +89,6 @@ class SpecialFolder {
 class FolderOption {
 	[string]$Name
 	[string]$Path
-	[PropertyTypes]$PropertyTypes
 	[__ComObject]$FolderItemForProperties
 }
 
@@ -133,9 +145,8 @@ function newSpecialFolder {
 		FolderItem = $folderItem
 		IsDirectory = $isDirectory
 		PropertyTypes =
-			if ($Option.PropertyTypes) { $Option.PropertyTypes }
-			elseif ($Option.FolderItemForProperties -or !$isDirectory) { [PropertyTypes]::Verb }
-			else { [PropertyTypes]::ShellExecute }
+			if ($Option.FolderItemForProperties -or !$isDirectory) { 'Verb' }
+			else { 'ShellExecute' }
 		FolderItemForProperties = $Option.FolderItemForProperties
 	}
 }

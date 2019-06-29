@@ -28,10 +28,10 @@ function Show-SpecialFolder {
 	Add-Type -AssemblyName PresentationFramework
 	Add-Type -AssemblyName PresentationCore
 	
-	$openFolderHandler = { $dataGrid.SelectedItem.Open('open') }
-	$openCmdHandler = { $dataGrid.SelectedItem.StartCmd('open') }
-	$openPowershellHandler = { $dataGrid.SelectedItem.StartPowershell('open') }
-	$openWslHandler = { $dataGrid.SelectedItem.StartLinuxShell('open') }
+	$openFolder = { $dataGrid.SelectedItem.Open() }
+	$openCmd = { $dataGrid.SelectedItem.StartCmd() }
+	$openPowershell = { $dataGrid.SelectedItem.StartPowershell() }
+	$openWsl = { $dataGrid.SelectedItem.StartLinuxShell() }
 	
 	$window = [XamlReader]::Parse((Get-Content "$PSScriptRoot/window.xaml" -Raw))
 	
@@ -47,7 +47,7 @@ function Show-SpecialFolder {
 	$dataGrid = $window.FindName('dataGrid')
 	
 	$dataGrid.add_MouseDoubleClick({
-		if ($_.OriginalSource.GetType() -eq [TextBlock]) { & $openFolderHandler }
+		if ($_.OriginalSource.GetType() -eq [TextBlock]) { & $openFolder }
 	})
 	$dataGrid.add_MouseRightButtonUp({
 		if ($_.OriginalSource.GetType() -eq [Border]) { $_.Handled = $true }
@@ -81,19 +81,33 @@ function Show-SpecialFolder {
 		}
 		if ($item.TestProperties()) { $properties.Visibility = 'Visible' }
 	})
-	$window.FindName('open').add_Click($openFolderHandler)
+	$window.FindName('open').add_Click($openFolder)
 	$window.FindName('copyAsPath').add_Click({ $dataGrid.SelectedItem.CopyAsPath() })
-	$openAsAdmin.add_Click({ $dataGrid.SelectedItem.Open('runas') })
-	$cmd.add_Click($openCmdHandler)
-	$window.FindName('cmdAsInvoker').add_Click($openCmdHandler)
-	$window.FindName('cmdAsAdmin').add_Click({ $dataGrid.SelectedItem.StartCmd('runas') })
-	$powershell.add_Click($openPowershellHandler)
-	$window.FindName('powershellAsInvoker').add_Click($openPowershellHandler)
-	$window.FindName('powershellAsAdmin').add_Click({ $dataGrid.SelectedItem.StartPowershell('runas') })
-	$wsl.add_Click($openWslHandler)
-	$window.FindName('wslAsInvoker').add_Click($openWslHandler)
-	$window.FindName('wslAsAdmin').add_Click({ $dataGrid.SelectedItem.StartLinuxShell('runas') })
+	$openAsAdmin.add_Click({
+		# 昇格プロンプトで[いいえ]を選んだときのエラーを無視する
+		$ErrorActionPreference = 'SilentlyContinue'
+		$dataGrid.SelectedItem.Open('runas')
+	})
+	$cmd.add_Click($openCmd)
+	$window.FindName('cmdAsInvoker').add_Click($openCmd)
+	$window.FindName('cmdAsAdmin').add_Click({
+		$ErrorActionPreference = 'SilentlyContinue'
+		$dataGrid.SelectedItem.StartCmd('runas')
+	})
+	$powershell.add_Click($openPowershell)
+	$window.FindName('powershellAsInvoker').add_Click($openPowershell)
+	$window.FindName('powershellAsAdmin').add_Click({
+		$ErrorActionPreference = 'SilentlyContinue'
+		$dataGrid.SelectedItem.StartPowershell('runas')
+	})
+	$wsl.add_Click($openWsl)
+	$window.FindName('wslAsInvoker').add_Click($openWsl)
+	$window.FindName('wslAsAdmin').add_Click({
+		$ErrorActionPreference = 'SilentlyContinue'
+		$dataGrid.SelectedItem.StartLinuxShell('runas')
+	})
 	$properties.add_Click({
+		$ErrorActionPreference = 'Stop'
 		try {
 			$dataGrid.SelectedItem.ShowProperties()
 		} catch {

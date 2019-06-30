@@ -1,9 +1,21 @@
 ﻿using namespace System.Windows
 using namespace System.Windows.Controls
 using namespace System.Windows.Input
+using namespace System.Windows.Interop
 using namespace System.Windows.Markup
 
 Set-StrictMode -Version Latest
+
+function getShieldImage {
+	[OutputType([Image])]
+	param ()
+	
+	$image = [Image]::new()
+	$image.Source = [Imaging]::CreateBitmapSourceFromHIcon(
+		[System.Drawing.SystemIcons]::Shield.Handle, [Int32Rect]::Empty, $null
+	)
+	return $image
+}
 
 <#
 .SYNOPSIS
@@ -26,7 +38,7 @@ function Show-SpecialFolder {
 	$isWslEnabled = Test-Path "$([Environment]::GetFolderPath('System'))/wsl.exe"
 	
 	Add-Type -AssemblyName PresentationFramework
-	Add-Type -AssemblyName PresentationCore
+	Add-Type -AssemblyName System.Drawing
 	
 	$openFolder = { $dataGrid.SelectedItem.Open() }
 	$openCmd = { $dataGrid.SelectedItem.StartCmd() }
@@ -38,14 +50,21 @@ function Show-SpecialFolder {
 	$openAsAdmin = $window.FindName('openAsAdmin')
 	$cmd = $window.FindName('cmd')
 	$cmdEx= $window.FindName('cmdEx')
+	$cmdAsAdmin = $window.FindName('cmdAsAdmin')
 	$powershell = $window.FindName('powershell')
 	$powershellEx = $window.FindName('powershellEx')
+	$powershellAsAdmin = $window.FindName('powershellAsAdmin')
 	$wsl = $window.FindName('wsl')
 	$wslEx = $window.FindName('wslEx')
+	$wslAsAdmin = $window.FindName('wslAsAdmin')
 	$properties = $window.FindName('properties')
 	
-	$dataGrid = $window.FindName('dataGrid')
+	$openAsAdmin.Icon = getShieldImage
+	$cmdAsAdmin.Icon = getShieldImage
+	$powershellAsAdmin.Icon = getShieldImage
+	$wslAsAdmin.Icon = getShieldImage
 	
+	$dataGrid = $window.FindName('dataGrid')
 	$dataGrid.add_MouseDoubleClick({
 		if ($_.OriginalSource.GetType() -eq [TextBlock]) { & $openFolder }
 	})
@@ -90,19 +109,19 @@ function Show-SpecialFolder {
 	})
 	$cmd.add_Click($openCmd)
 	$window.FindName('cmdAsInvoker').add_Click($openCmd)
-	$window.FindName('cmdAsAdmin').add_Click({
+	$cmdAsAdmin.add_Click({
 		$ErrorActionPreference = 'SilentlyContinue'
 		$dataGrid.SelectedItem.StartCmd('runas')
 	})
 	$powershell.add_Click($openPowershell)
 	$window.FindName('powershellAsInvoker').add_Click($openPowershell)
-	$window.FindName('powershellAsAdmin').add_Click({
+	$powershellAsAdmin.add_Click({
 		$ErrorActionPreference = 'SilentlyContinue'
 		$dataGrid.SelectedItem.StartPowershell('runas')
 	})
 	$wsl.add_Click($openWsl)
 	$window.FindName('wslAsInvoker').add_Click($openWsl)
-	$window.FindName('wslAsAdmin').add_Click({
+	$wslAsAdmin.add_Click({
 		$ErrorActionPreference = 'SilentlyContinue'
 		$dataGrid.SelectedItem.StartLinuxShell('runas')
 	})

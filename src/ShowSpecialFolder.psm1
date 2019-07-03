@@ -7,7 +7,7 @@ using namespace System.Windows.Markup
 Set-StrictMode -Version Latest
 
 function getShieldImage {
-	[OutputType([Image])]
+	[OutputType([System.Windows.Controls.Image])]
 	param ()
 	
 	$image = [Image]::new()
@@ -85,7 +85,7 @@ function Show-SpecialFolder {
 		$properties.Visibility = 'Collapsed'
 		
 		if ([Keyboard]::Modifiers -band [ModifierKeys]::Shift) {
-			if ($isExplorerRunasLaunchingUser) { $openAsAdmin.Visibility = "Visible" }
+			if ($isExplorerRunasLaunchingUser) { $openAsAdmin.Visibility = 'Visible' }
 			if ($item.IsDirectory) {
 				$cmdEx.Visibility = 'Visible'
 				$powershellEx.Visibility = 'Visible'

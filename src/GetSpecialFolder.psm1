@@ -144,9 +144,7 @@ function newSpecialFolder {
 		Dir = $Dir
 		FolderItem = $folderItem
 		IsDirectory = $isDirectory
-		PropertyTypes =
-			if ($Option.FolderItemForProperties -or !$isDirectory) { 'Verb' }
-			else { 'ShellExecute' }
+		PropertyTypes = if ($Option.FolderItemForProperties -or !$isDirectory) { 'Verb' } else { 'ShellExecute' }
 		FolderItemForProperties = $Option.FolderItemForProperties
 	}
 }
@@ -761,8 +759,6 @@ function getSpecialFolder {
 	if ($win10_1903) { Write-Output (newShellCommand 'shell:::{2559A1F2-21D7-11D4-BDAF-00C04F60B9F0}') }
 	# Run...
 	Write-Output (newShellCommand 'shell:::{2559A1F3-21D7-11D4-BDAF-00C04F60B9F0}')
-	# E-mail
-	Write-Output (newShellCommand 'shell:::{2559A1F5-21D7-11D4-BDAF-00C04F60B9F0}')
 	# Set Program Access and Defaults
 	Write-Output (newShellCommand 'shell:::{2559A1F7-21D7-11D4-BDAF-00C04F60B9F0}')
 	# Win8から
@@ -1124,6 +1120,8 @@ function getSpecialFolder {
 	Write-Output (newShellCommand 'shell:::{1BEF2128-2F96-4500-BA7C-098DC0049CB2}')
 	# CompatContextMenu Class
 	Write-Output (newShellCommand 'shell:::{1D27F844-3A1F-4410-85AC-14651078412D}')
+	# E-mail
+	Write-Output (newShellCommand 'shell:::{2559A1F5-21D7-11D4-BDAF-00C04F60B9F0}')
 	# Location Folder
 	Write-Output (newShellCommand 'shell:::{267CF8A9-F4E3-41E6-95B1-AF881BE130FF}')
 	# Enhanced Storage Context Menu Handler Class

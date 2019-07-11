@@ -66,14 +66,21 @@ function Show-SpecialFolder {
 	
 	$dataGrid = $window.FindName('dataGrid')
 	$dataGrid.add_MouseDoubleClick({
-		if ($_.OriginalSource.GetType() -eq [TextBlock]) { & $openFolder }
-	})
-	$dataGrid.add_MouseRightButtonUp({
-		if ($_.OriginalSource.GetType() -eq [Border]) { $_.Handled = $true }
+		if ($_.OriginalSource.GetType() -ne [TextBlock]) { return }
+		if ($dataGrid.SelectedItem.GetType().FullName -ne 'SpecialFolder') { return }
+		& $openFolder
 	})
 	$dataGrid.add_ContextMenuOpening({
+		if ($_.OriginalSource.GetType() -ne [TextBlock]) {
+			$_.Handled = $true
+			return
+		}
+		
 		$item = $dataGrid.SelectedItem
-		if (!$item) { return }
+		if ($item.GetType().FullName -ne 'SpecialFolder') {
+			$_.Handled = $true
+			return
+		}
 		
 		$openAsAdmin.Visibility = 'Collapsed'
 		$cmd.Visibility = 'Collapsed'
@@ -136,10 +143,14 @@ function Show-SpecialFolder {
 	
 	$getSpecialFolderArgs = @{
 		IncludeShellCommand = $IncludeShellCommand
-		InformationAction = 'SilentlyContinue' # この関数ではカテゴリ名を表示しない
 		Debug = $DebugPreference -ne 'SilentlyContinue'
 	}
-	$dataGrid.ItemsSource = Get-SpecialFolder @getSpecialFolderArgs
+	$isShowCategory = $InformationPreference -ne 'Ignore' -and $InformationPreference -ne 'SilentlyContinue'
+	$dataGrid.ItemsSource = Get-SpecialFolder @getSpecialFolderArgs 6>&1 |
+		ForEach-Object {
+			if ($_.GetType().FullName -eq 'SpecialFolder') { $_ }
+			elseif ($isShowCategory) { [pscustomobject]@{ Name = $_.ToString().Replace("`n", ''); Path = $null } }
+		}
 	
 	$window.ShowDialog() > $null
 }

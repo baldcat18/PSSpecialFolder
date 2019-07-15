@@ -40,18 +40,26 @@ function Show-SpecialFolder {
 	Add-Type -AssemblyName PresentationFramework
 	Add-Type -AssemblyName System.Drawing
 	
+	$startCommand = {
+		param([scriptblock]$command)
+		
+		$ErrorActionPreference = 'Stop'
+		try { & $command }
+		catch { [MessageBox]::Show($_, $_.Exception.GetType().Name, 'OK', 'Warning') > $null }
+	}
+	$startCommandRunas = {
+		param([scriptblock]$command)
+		
+		# 昇格プロンプトで[いいえ]を選んだときのエラｰを無視する
+		$ErrorActionPreference = 'SilentlyContinue'
+		& $command
+	}
+	
 	$openFolder = { $dataGrid.SelectedItem.Open() }
 	$openCmd = { $dataGrid.SelectedItem.StartCmd() }
 	$openPowershell = { $dataGrid.SelectedItem.StartPowershell() }
 	$openWsl = { $dataGrid.SelectedItem.StartLinuxShell() }
-	$showProperties = {
-		$ErrorActionPreference = 'Stop'
-		try {
-			$dataGrid.SelectedItem.ShowProperties()
-		} catch {
-			[MessageBox]::Show($_, $_.Exception.GetType().Name, 'OK', 'Warning') > $null
-		}
-	}
+	$showProperties = { & $startCommand { $dataGrid.SelectedItem.ShowProperties() } }
 	
 	$window = [XamlReader]::Parse((Get-Content "$PSScriptRoot/window.xaml" -Raw))
 	
@@ -75,12 +83,14 @@ function Show-SpecialFolder {
 	$dataGrid = $window.FindName('dataGrid')
 	$dataGrid.add_MouseDoubleClick({
 		if ($_.OriginalSource.GetType() -ne [TextBlock]) { return }
-		if ($dataGrid.SelectedItem.GetType().FullName -ne 'SpecialFolder') { return }
+		
+		$item = $dataGrid.SelectedItem
+		if (!$item -or $item.GetType().FullName -ne 'SpecialFolder') { return }
 		
 		$modifiers = [Keyboard]::Modifiers
 		if ($modifiers -band [ModifierKeys]::Alt) { & $showProperties }
-		elseif ($modifiers -band [ModifierKeys]::Control) { & $openPowershell }
-		elseif ($modifiers -band [ModifierKeys]::Shift) { & $openCmd }
+		elseif ($modifiers -band [ModifierKeys]::Control) { & $startCommand $openPowershell }
+		elseif ($modifiers -band [ModifierKeys]::Shift) { & $startCommand $openCmd }
 		else { & $openFolder }
 	})
 	$dataGrid.add_ContextMenuOpening({
@@ -128,35 +138,22 @@ function Show-SpecialFolder {
 		if (!$item -or $item.GetType().FullName -ne 'SpecialFolder') { return }
 		
 		$modifiers = [Keyboard]::Modifiers
-		if ($modifiers -band [ModifierKeys]::Control) { & $openPowershell }
-		elseif ($modifiers -band [ModifierKeys]::Shift) { & $openCmd }
+		if ($modifiers -band [ModifierKeys]::Control) { & $startCommand $openPowershell }
+		elseif ($modifiers -band [ModifierKeys]::Shift) { & $startCommand $openCmd }
 		else { & $openFolder }
 	})
 	$window.FindName('open').add_Click($openFolder)
 	$window.FindName('copyAsPath').add_Click({ $dataGrid.SelectedItem.CopyAsPath() })
-	$openAsAdmin.add_Click({
-		# 昇格プロンプトで[いいえ]を選んだときのエラーを無視する
-		$ErrorActionPreference = 'SilentlyContinue'
-		$dataGrid.SelectedItem.Open('runas')
-	})
+	$openAsAdmin.add_Click({ & $startCommandRunas { $dataGrid.SelectedItem.Open('runas') } })
 	$cmd.add_Click($openCmd)
 	$window.FindName('cmdAsInvoker').add_Click($openCmd)
-	$cmdAsAdmin.add_Click({
-		$ErrorActionPreference = 'SilentlyContinue'
-		$dataGrid.SelectedItem.StartCmd('runas')
-	})
+	$cmdAsAdmin.add_Click({ & $startCommandRunas { $dataGrid.SelectedItem.StartCmd('runas') } })
 	$powershell.add_Click($openPowershell)
 	$window.FindName('powershellAsInvoker').add_Click($openPowershell)
-	$powershellAsAdmin.add_Click({
-		$ErrorActionPreference = 'SilentlyContinue'
-		$dataGrid.SelectedItem.StartPowershell('runas')
-	})
+	$powershellAsAdmin.add_Click({ & $startCommandRunas { $dataGrid.SelectedItem.StartPowershell('runas') } })
 	$wsl.add_Click($openWsl)
 	$window.FindName('wslAsInvoker').add_Click($openWsl)
-	$wslAsAdmin.add_Click({
-		$ErrorActionPreference = 'SilentlyContinue'
-		$dataGrid.SelectedItem.StartLinuxShell('runas')
-	})
+	$wslAsAdmin.add_Click({ & $startCommandRunas { $dataGrid.SelectedItem.StartLinuxShell('runas') } })
 	$properties.add_Click($showProperties)
 	
 	$getSpecialFolderArgs = @{

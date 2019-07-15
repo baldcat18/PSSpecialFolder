@@ -44,6 +44,14 @@ function Show-SpecialFolder {
 	$openCmd = { $dataGrid.SelectedItem.StartCmd() }
 	$openPowershell = { $dataGrid.SelectedItem.StartPowershell() }
 	$openWsl = { $dataGrid.SelectedItem.StartLinuxShell() }
+	$showProperties = {
+		$ErrorActionPreference = 'Stop'
+		try {
+			$dataGrid.SelectedItem.ShowProperties()
+		} catch {
+			[MessageBox]::Show($_, $_.Exception.GetType().Name, 'OK', 'Warning') > $null
+		}
+	}
 	
 	$window = [XamlReader]::Parse((Get-Content "$PSScriptRoot/window.xaml" -Raw))
 	
@@ -68,7 +76,12 @@ function Show-SpecialFolder {
 	$dataGrid.add_MouseDoubleClick({
 		if ($_.OriginalSource.GetType() -ne [TextBlock]) { return }
 		if ($dataGrid.SelectedItem.GetType().FullName -ne 'SpecialFolder') { return }
-		& $openFolder
+		
+		$modifiers = [Keyboard]::Modifiers
+		if ($modifiers -band [ModifierKeys]::Alt) { & $showProperties }
+		elseif ($modifiers -band [ModifierKeys]::Control) { & $openPowershell }
+		elseif ($modifiers -band [ModifierKeys]::Shift) { & $openCmd }
+		else { & $openFolder }
 	})
 	$dataGrid.add_ContextMenuOpening({
 		if ($_.OriginalSource.GetType() -ne [TextBlock]) {
@@ -107,6 +120,18 @@ function Show-SpecialFolder {
 		}
 		if ($item.TestProperties()) { $properties.Visibility = 'Visible' }
 	})
+	$dataGrid.add_PreviewKeyDown({
+		if ($_.Key -ne 'Enter') { return }
+		
+		$_.Handled = $true
+		$item = $dataGrid.SelectedItem
+		if (!$item -or $item.GetType().FullName -ne 'SpecialFolder') { return }
+		
+		$modifiers = [Keyboard]::Modifiers
+		if ($modifiers -band [ModifierKeys]::Control) { & $openPowershell }
+		elseif ($modifiers -band [ModifierKeys]::Shift) { & $openCmd }
+		else { & $openFolder }
+	})
 	$window.FindName('open').add_Click($openFolder)
 	$window.FindName('copyAsPath').add_Click({ $dataGrid.SelectedItem.CopyAsPath() })
 	$openAsAdmin.add_Click({
@@ -132,14 +157,7 @@ function Show-SpecialFolder {
 		$ErrorActionPreference = 'SilentlyContinue'
 		$dataGrid.SelectedItem.StartLinuxShell('runas')
 	})
-	$properties.add_Click({
-		$ErrorActionPreference = 'Stop'
-		try {
-			$dataGrid.SelectedItem.ShowProperties()
-		} catch {
-			[MessageBox]::Show($_, $_.Exception.GetType().Name, 'OK', 'Warning') > $null
-		}
-	})
+	$properties.add_Click($showProperties)
 	
 	$getSpecialFolderArgs = @{
 		IncludeShellCommand = $IncludeShellCommand

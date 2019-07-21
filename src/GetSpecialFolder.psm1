@@ -7,7 +7,7 @@ if ($PSVersionTable['PSVersion'] -ge [version]::new(6, 0) -and !$IsWindows) {
 
 enum PropertyTypes {
 	None
-	ShellExecute
+	StartProcess
 	Verb
 }
 
@@ -61,13 +61,13 @@ class SpecialFolder {
 		Start-Process cmd.exe "/c pushd $($this.Path) & wsl.exe" -Verb $verb
 	}
 	[void]ShowProperties() {
-		if ($this.PropertyTypes -eq 'ShellExecute') { Start-Process $this.Dir -Verb properties }
+		if ($this.PropertyTypes -eq 'StartProcess') { Start-Process $this.Dir -Verb properties }
 		elseif ($this.TestProperties()) { $this.Properties.DoIt() }
 		else { throw [InvalidOperationException]::new('The properties of this folder can''t be shown.') }
 	}
 	
 	hidden [bool]TestProperties() {
-		if ($this.PropertyTypes -eq 'ShellExecute') { return $true }
+		if ($this.PropertyTypes -eq 'StartProcess') { return $true }
 		if (!$this.FolderItem) { return $false }
 		
 		if (!$this.IsPropertiesChecked) {
@@ -144,7 +144,7 @@ function newSpecialFolder {
 		Dir = $Dir
 		FolderItem = $folderItem
 		IsDirectory = $isDirectory
-		PropertyTypes = if ($Option.FolderItemForProperties -or !$isDirectory) { 'Verb' } else { 'ShellExecute' }
+		PropertyTypes = if ($Option.FolderItemForProperties -or !$isDirectory) { 'Verb' } else { 'StartProcess' }
 		FolderItemForProperties = $Option.FolderItemForProperties
 	}
 }

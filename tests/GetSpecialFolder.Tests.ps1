@@ -29,8 +29,8 @@ InModuleScope GetSpecialFolder {
 			It "Path should `"$desktopPath`"" {
 				$folder.Path | Should -Be $desktopPath
 			}
-			It 'PropertyTypes should ShellExecute' {
-				$folder.PropertyTypes | Should -Be 'ShellExecute'
+			It 'PropertyTypes should StartProcess' {
+				$folder.PropertyTypes | Should -Be 'StartProcess'
 			}
 			It 'TestProperties() should true' {
 				$folder.TestProperties() | Should -Be $true

@@ -95,11 +95,14 @@ function Show-SpecialFolder {
 	$dataGrid = $window.FindName('dataGrid')
 	$dataGrid.add_PreviewKeyDown({
 		# $_.KeyだとAlt単独もAlt+Enterも'System'になるので[Keyboard]::IsKeyDown('Enter')を見ている
-		if ([Keyboard]::IsKeyDown('Enter')) {
-			$_.Handled = $true
-			selectInvokedCommand
-		}
-	})
+		if (![Keyboard]::IsKeyDown('Enter')) { return }
+		
+		$source = $_.OriginalSource
+		if ($source.GetType() -eq [DataGridCell]) { $dataGrid.SelectedItem = $source.DataContext }
+		
+		$_.Handled = $true
+		selectInvokedCommand
+})
 	$dataGrid.add_MouseDoubleClick({
 		if ($_.OriginalSource.GetType() -eq [TextBlock]) { selectInvokedCommand }
 	})

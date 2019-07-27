@@ -20,52 +20,64 @@ class SpecialFolder {
 	hidden [bool]$IsDirectory
 	hidden [PropertyTypes]$PropertyTypes
 	hidden [bool]$IsPropertiesChecked
-	hidden [__ComObject]$Properties
+	hidden [__ComObject]$PropertiesVerb
 	hidden [__ComObject]$FolderItemForProperties
 	
 	[void]Open() {
-		$this.Open('open')
+		$this.StartExplorer('open')
 	}
-	[void]Open([string]$verb) {
-		Start-Process explorer.exe $(if ($this.Dir) { $this.Dir } else { $this.Path }) -Verb $verb
+	[void]OpenAsAdmin() {
+		$this.StartExplorer('runas')
 	}
 	[void]CopyAsPath() {
 		Set-Clipboard $this.Path
 	}
-	[void]StartCmd() {
+	[void]Cmd() {
 		$this.StartCmd('open')
 	}
-	[void]StartCmd([string]$verb) {
-		if (!$this.IsDirectory) { throw [InvalidOperationException]::new('This is not a directory.') }
-		Start-Process cmd.exe "/k pushd $($this.Path)" -Verb $verb
+	[void]CmdAsAdmin() {
+		$this.StartCmd('runas')
 	}
-	[void]StartPowershell() {
+	[void]Powershell() {
 		$this.StartPowershell('open')
 	}
-	[void]StartPowershell([string]$verb) {
+	[void]PowershellAsAdmin() {
+		$this.StartPowershell('runas')
+	}
+	[void]LinuxShell() {
+		$this.StartLinuxShell('open')
+	}
+	[void]LinuxShellAsAdmin() {
+		$this.StartLinuxShell('runas')
+	}
+	[void]Properties() {
+		if ($this.PropertyTypes -eq 'StartProcess') { Start-Process $this.Dir -Verb properties }
+		elseif ($this.TestProperties()) { $this.PropertiesVerb.DoIt() }
+		else { throw [InvalidOperationException]::new('The properties of this folder can''t be shown.') }
+	}
+	
+	hidden [void]StartExplorer([string]$Verb) {
+		Start-Process explorer.exe $(if ($this.Dir) { $this.Dir } else { $this.Path }) -Verb $Verb
+	}
+	hidden [void]StartCmd([string]$Verb) {
+		if (!$this.IsDirectory) { throw [InvalidOperationException]::new('This is not a directory.') }
+		Start-Process cmd.exe "/k pushd $($this.Path)" -Verb $Verb
+		}
+	hidden [void]StartPowershell([string]$Verb) {
 		if (!$this.IsDirectory) { throw [InvalidOperationException]::new('This is not a directory.') }
 		$startArgs = @{
 			FilePath = if ($script:isPwshInstalled) { 'pwsh.exe' } else { 'powershell.exe' }
 			ArgumentList = "-NoExit -Command `"Push-Location -LiteralPath '$($this.Path)'`""
-			Verb = $verb
+			Verb = $Verb
 		}
 		Start-Process @startArgs
 	}
-	[void]StartLinuxShell() {
-		$this.StartLinuxShell('open')
-	}
-	[void]StartLinuxShell([string]$verb) {
+	hidden [void]StartLinuxShell([string]$Verb) {
 		if (!$script:win10) { throw [InvalidOperationException]::new('WSL is not supported.') }
 		if (!$script:isWslEnabled) { throw [InvalidOperationException]::new('WSL is disabled.') }
 		if (!$this.IsDirectory) { throw [InvalidOperationException]::new('This is not a directory.') }
-		Start-Process cmd.exe "/c pushd $($this.Path) & wsl.exe" -Verb $verb
+		Start-Process cmd.exe "/c pushd $($this.Path) & wsl.exe" -Verb $Verb
 	}
-	[void]ShowProperties() {
-		if ($this.PropertyTypes -eq 'StartProcess') { Start-Process $this.Dir -Verb properties }
-		elseif ($this.TestProperties()) { $this.Properties.DoIt() }
-		else { throw [InvalidOperationException]::new('The properties of this folder can''t be shown.') }
-	}
-	
 	hidden [bool]TestProperties() {
 		if ($this.PropertyTypes -eq 'StartProcess') { return $true }
 		if (!$this.FolderItem) { return $false }
@@ -77,12 +89,12 @@ class SpecialFolder {
 			$verbs = $item.Verbs()
 			if ($verbs -and $verbs.Count) {
 				$verb = $verbs.Item($verbs.Count - 1)
-				if ($verb.Name -eq $script:propertiesName) { $this.Properties = $verb }
+				if ($verb.Name -eq $script:propertiesName) { $this.PropertiesVerb = $verb }
 			}
 			
 			$this.IsPropertiesChecked = $true
 		}
-		return !!$this.Properties
+		return !!$this.PropertiesVerb
 	}
 }
 

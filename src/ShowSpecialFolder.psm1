@@ -59,7 +59,7 @@ function Show-SpecialFolder {
 		catch { [MessageBox]::Show($_, $_.Exception.GetType().Name, 'OK', 'Warning') > $null }
 	}
 	
-	function invokeCommandRunas {
+	function invokeCommandAsAdmin {
 		param ([scriptblock]$command)
 		
 		# 昇格プロンプトで[いいえ]を選んだときのエラｰを無視する
@@ -68,10 +68,10 @@ function Show-SpecialFolder {
 	}
 	
 	$openFolder = { $dataGrid.SelectedItem.Open() }
-	$startCmd = { $dataGrid.SelectedItem.StartCmd() }
-	$startPowershell = { $dataGrid.SelectedItem.StartPowershell() }
-	$startWsl = { $dataGrid.SelectedItem.StartLinuxShell() }
-	$showProperties = { invokeCommand { $dataGrid.SelectedItem.ShowProperties() } }
+	$startCmd = { $dataGrid.SelectedItem.Cmd() }
+	$startPowershell = { $dataGrid.SelectedItem.Powershell() }
+	$startWsl = { $dataGrid.SelectedItem.LinuxShell() }
+	$showProperties = { invokeCommand { $dataGrid.SelectedItem.Properties() } }
 	
 	$window = [XamlReader]::Parse((Get-Content "$PSScriptRoot/window.xaml" -Raw))
 	
@@ -145,16 +145,16 @@ function Show-SpecialFolder {
 	})
 	$window.FindName('open').add_Click($openFolder)
 	$window.FindName('copyAsPath').add_Click({ $dataGrid.SelectedItem.CopyAsPath() })
-	$openAsAdmin.add_Click({ invokeCommandRunas { $dataGrid.SelectedItem.Open('runas') } })
+	$openAsAdmin.add_Click({ invokeCommandAsAdmin { $dataGrid.SelectedItem.OpenAsAdmin() } })
 	$cmd.add_Click($startCmd)
 	$window.FindName('cmdAsInvoker').add_Click($startCmd)
-	$cmdAsAdmin.add_Click({ invokeCommandRunas { $dataGrid.SelectedItem.StartCmd('runas') } })
+	$cmdAsAdmin.add_Click({ invokeCommandAsAdmin { $dataGrid.SelectedItem.CmdAsAdmin() } })
 	$powershell.add_Click($startPowershell)
 	$window.FindName('powershellAsInvoker').add_Click($startPowershell)
-	$powershellAsAdmin.add_Click({ invokeCommandRunas { $dataGrid.SelectedItem.StartPowershell('runas') } })
+	$powershellAsAdmin.add_Click({ invokeCommandAsAdmin { $dataGrid.SelectedItem.PowershellAsAdmin() } })
 	$wsl.add_Click($startWsl)
 	$window.FindName('wslAsInvoker').add_Click($startWsl)
-	$wslAsAdmin.add_Click({ invokeCommandRunas { $dataGrid.SelectedItem.StartLinuxShell('runas') } })
+	$wslAsAdmin.add_Click({ invokeCommandAsAdmin { $dataGrid.SelectedItem.LinuxShellAsAdmin() } })
 	$properties.add_Click($showProperties)
 	
 	$getSpecialFolderArgs = @{

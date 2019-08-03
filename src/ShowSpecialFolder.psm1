@@ -73,48 +73,54 @@ function Show-SpecialFolder {
 	$startWsl = { $dataGrid.SelectedItem.LinuxShell() }
 	$showProperties = { invokeCommand { $dataGrid.SelectedItem.Properties() } }
 	
-	$window = [XamlReader]::Parse((Get-Content "$PSScriptRoot/window.xaml" -Raw))
+	$window = [Window]([XamlReader]::Parse((Get-Content "$PSScriptRoot/window.xaml" -Raw)))
 	
-	$openAsAdmin = $window.FindName('openAsAdmin')
-	$cmd = $window.FindName('cmd')
-	$cmdEx= $window.FindName('cmdEx')
-	$cmdAsAdmin = $window.FindName('cmdAsAdmin')
-	$powershell = $window.FindName('powershell')
-	$powershellEx = $window.FindName('powershellEx')
-	$powershellAsAdmin = $window.FindName('powershellAsAdmin')
-	$wsl = $window.FindName('wsl')
-	$wslEx = $window.FindName('wslEx')
-	$wslAsAdmin = $window.FindName('wslAsAdmin')
-	$properties = $window.FindName('properties')
+	$openAsAdmin = [MenuItem]($window.FindName('openAsAdmin'))
+	$cmd = [MenuItem]($window.FindName('cmd'))
+	$cmdEx= [MenuItem]($window.FindName('cmdEx'))
+	$cmdAsAdmin = [MenuItem]($window.FindName('cmdAsAdmin'))
+	$powershell = [MenuItem]($window.FindName('powershell'))
+	$powershellEx = [MenuItem]($window.FindName('powershellEx'))
+	$powershellAsAdmin = [MenuItem]($window.FindName('powershellAsAdmin'))
+	$wsl = [MenuItem]($window.FindName('wsl'))
+	$wslEx = [MenuItem]($window.FindName('wslEx'))
+	$wslAsAdmin = [MenuItem]($window.FindName('wslAsAdmin'))
+	$properties = [MenuItem]($window.FindName('properties'))
 	
 	$openAsAdmin.Icon = getShieldImage
 	$cmdAsAdmin.Icon = getShieldImage
 	$powershellAsAdmin.Icon = getShieldImage
 	$wslAsAdmin.Icon = getShieldImage
 	
-	$dataGrid = $window.FindName('dataGrid')
+	$dataGrid = [DataGrid]($window.FindName('dataGrid'))
 	$dataGrid.add_PreviewKeyDown({
+		param([object]$sender, [KeyEventArgs]$e)
+		
 		# $_.KeyだとAlt単独もAlt+Enterも'System'になるので[Keyboard]::IsKeyDown('Enter')を見ている
 		if (![Keyboard]::IsKeyDown('Enter')) { return }
 		
-		$source = $_.OriginalSource
+		$source = $e.OriginalSource
 		if ($source.GetType() -eq [DataGridCell]) { $dataGrid.SelectedItem = $source.DataContext }
 		
-		$_.Handled = $true
+		$e.Handled = $true
 		selectInvokedCommand
 })
 	$dataGrid.add_MouseDoubleClick({
-		if ($_.OriginalSource.GetType() -eq [TextBlock]) { selectInvokedCommand }
+		param([object]$sender, [MouseButtonEventArgs]$e)
+		
+		if ($e.OriginalSource.GetType() -eq [TextBlock]) { selectInvokedCommand }
 	})
 	$dataGrid.add_ContextMenuOpening({
-		if ($_.OriginalSource.GetType() -ne [TextBlock]) {
-			$_.Handled = $true
+		param([object]$sender, [ContextMenuEventArgs]$e)
+		
+		if ($e.OriginalSource.GetType() -ne [TextBlock]) {
+			$e.Handled = $true
 			return
 		}
 		
 		$item = $dataGrid.SelectedItem
 		if ($item.GetType().FullName -ne 'SpecialFolder') {
-			$_.Handled = $true
+			$e.Handled = $true
 			return
 		}
 		

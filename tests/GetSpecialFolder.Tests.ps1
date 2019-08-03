@@ -37,7 +37,7 @@ InModuleScope GetSpecialFolder {
 			}
 		}
 		Context 'shell:MyComputerFolder' {
-			$folder = newSpecialFolder "shell:MyComputerFolder"
+			$folder = newSpecialFolder 'shell:MyComputerFolder'
 			It 'Name should "MyComputerFolder"' {
 				$folder.Name | Should -Be 'MyComputerFolder'
 			}

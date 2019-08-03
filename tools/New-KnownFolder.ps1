@@ -10,13 +10,13 @@ param()
 
 Set-StrictMode -Version Latest
 
-[bool]$verbose = $VerbosePreference -eq 'Continue'
+$verbose = $VerbosePreference -eq 'Continue'
 
-[string]$source = Get-Content -LiteralPath "$PSScriptRoot/KnownFolder.cs" -Raw
+$source = Get-Content -LiteralPath "$PSScriptRoot/KnownFolder.cs" -Raw
 Add-Type -TypeDefinition $source -ErrorAction Stop
 
-[uint32]$KF_FLAG_DEFAULT = 0x00000000
-[uint32]$KF_FLAG_CREATE = 0x00008000
+$KF_FLAG_DEFAULT = [uint32]0x00000000
+$KF_FLAG_CREATE = [uint32]0x00008000
 
 @(
 	@{ guid='{5E6C858F-0E22-4760-9AFE-EA3317B67173}'; name='Profile' }
@@ -132,8 +132,8 @@ Add-Type -TypeDefinition $source -ErrorAction Stop
 	@{ guid='{7B396E54-9EC5-4300-BE0A-2482EBAE1A26}'; name='Default Gadgets' } # Win7まで
 ) |
 	ForEach-Object {
-		[string]$result = ""
-		[Win32API.KnownFolder]$folder = New-Object Win32API.KnownFolder $_['guid'], $KF_FLAG_DEFAULT
+		$result = ''
+		$folder = New-Object Win32API.KnownFolder $_['guid'], $KF_FLAG_DEFAULT
 		if ($folder.Result -eq 'OK') {
 			if (!$verbose) { return }
 			$result = $folder.Result

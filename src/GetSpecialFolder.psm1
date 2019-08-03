@@ -174,7 +174,7 @@ function newShellCommand {
 }
 
 function getDirectoryFolderItem {
-	[OutputType([string])]
+	[OutputType([__ComObject])]
 	param ([string]$path)
 	
 	return $shell.NameSpace((Split-Path $path)).Items().Item((Split-Path $path -Leaf))

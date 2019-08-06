@@ -17,7 +17,6 @@ class SpecialFolder {
 	
 	hidden [string]$Dir
 	hidden [__ComObject]$FolderItem
-	hidden [bool]$IsDirectory
 	hidden [PropertyTypes]$PropertyTypes
 	hidden [bool]$IsPropertiesChecked
 	hidden [__ComObject]$PropertiesVerb
@@ -59,25 +58,6 @@ class SpecialFolder {
 	hidden [void]StartExplorer([string]$Verb) {
 		Start-Process explorer.exe $(if ($this.Dir) { $this.Dir } else { $this.Path }) -Verb $Verb
 	}
-	hidden [void]StartCmd([string]$Verb) {
-		if (!$this.IsDirectory) { throw [InvalidOperationException]::new('This is not a directory.') }
-		Start-Process cmd.exe "/k pushd $($this.Path)" -Verb $Verb
-		}
-	hidden [void]StartPowershell([string]$Verb) {
-		if (!$this.IsDirectory) { throw [InvalidOperationException]::new('This is not a directory.') }
-		$startArgs = @{
-			FilePath = if ($script:isPwshInstalled) { 'pwsh.exe' } else { 'powershell.exe' }
-			ArgumentList = "-NoExit -Command `"Push-Location -LiteralPath '$($this.Path)'`""
-			Verb = $Verb
-		}
-		Start-Process @startArgs
-	}
-	hidden [void]StartLinuxShell([string]$Verb) {
-		if (!$script:win10) { throw [InvalidOperationException]::new('WSL is not supported.') }
-		if (!$script:isWslEnabled) { throw [InvalidOperationException]::new('WSL is disabled.') }
-		if (!$this.IsDirectory) { throw [InvalidOperationException]::new('This is not a directory.') }
-		Start-Process cmd.exe "/c pushd $($this.Path) & wsl.exe" -Verb $Verb
-	}
 	hidden [bool]TestProperties() {
 		if ($this.PropertyTypes -eq 'StartProcess') { return $true }
 		if (!$this.FolderItem) { return $false }
@@ -95,6 +75,37 @@ class SpecialFolder {
 			$this.IsPropertiesChecked = $true
 		}
 		return !!$this.PropertiesVerb
+	}
+}
+
+class FileFolder: SpecialFolder {
+	hidden [void]StartCmd([string]$Verb) {
+		Start-Process cmd.exe "/k pushd $($this.Path)" -Verb $Verb
+	}
+	hidden [void]StartPowershell([string]$Verb) {
+		$startArgs = @{
+			FilePath = if ($script:isPwshInstalled) { 'pwsh.exe' } else { 'powershell.exe' }
+			ArgumentList = "-NoExit -Command `"Push-Location -LiteralPath '$($this.Path)'`""
+			Verb = $Verb
+		}
+		Start-Process @startArgs
+	}
+	hidden [void]StartLinuxShell([string]$Verb) {
+		if (!$script:win10) { throw [InvalidOperationException]::new('WSL is not supported.') }
+		if (!$script:isWslEnabled) { throw [InvalidOperationException]::new('WSL is disabled.') }
+		Start-Process cmd.exe "/c pushd $($this.Path) & wsl.exe" -Verb $Verb
+	}
+}
+
+class VirtualFolder: SpecialFolder {
+	hidden [void]StartCmd([string]$Verb) {
+		throw [InvalidOperationException]::new('This is not a directory.')
+	}
+	hidden [void]StartPowershell([string]$Verb) {
+		throw [InvalidOperationException]::new('This is not a directory.')
+	}
+	hidden [void]StartLinuxShell([string]$Verb) {
+		throw [InvalidOperationException]::new('This is not a directory.')
 	}
 }
 
@@ -142,8 +153,7 @@ function newSpecialFolder {
 	}
 	
 	$isDirectory = Test-Path $path -PathType Container
-	
-	return [SpecialFolder]@{
+	$initializer = @{
 		Name = 
 			if ($Option.Name -ne $null) { $Option.Name }
 			elseif ($Dir -match '^shell:(?:(?:\w|\s)+)$') { $Dir.Substring(6) }
@@ -155,10 +165,11 @@ function newSpecialFolder {
 		Path = $path
 		Dir = $Dir
 		FolderItem = $folderItem
-		IsDirectory = $isDirectory
 		PropertyTypes = if ($Option.FolderItemForProperties -or !$isDirectory) { 'Verb' } else { 'StartProcess' }
 		FolderItemForProperties = $Option.FolderItemForProperties
 	}
+	
+	return $(if ($isDirectory) { [FileFolder]$initializer } else { [VirtualFolder]$initializer })
 }
 
 function newShellCommand {
@@ -170,7 +181,7 @@ function newShellCommand {
 	$clsidPath = "Microsoft.PowerShell.Core\Registry::HKEY_CLASSES_ROOT\CLSID\$($Path.Substring($Path.Length - 38))"
 	if (!(Test-Path $clsidPath)) { return }
 	
-	return [SpecialFolder]@{ Name = if ($Name) { $Name } else { (Get-Item $clsidPath).GetValue('') }; Path = $Path }
+	return [VirtualFolder]@{ Name = if ($Name) { $Name } else { (Get-Item $clsidPath).GetValue('') }; Path = $Path }
 }
 
 function getDirectoryFolderItem {

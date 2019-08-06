@@ -42,7 +42,7 @@ function Show-SpecialFolder {
 	
 	function selectInvokedCommand {
 		$item = $dataGrid.SelectedItem
-		if (!$item -or $item.GetType().FullName -ne 'SpecialFolder') { return }
+		if (!$item -or $item.GetType().BaseType.FullName -ne 'SpecialFolder') { return }
 		
 		$modifiers = [Keyboard]::Modifiers
 		if ($modifiers -band [ModifierKeys]::Alt) { & $showProperties }
@@ -119,7 +119,7 @@ function Show-SpecialFolder {
 		}
 		
 		$item = $dataGrid.SelectedItem
-		if ($item.GetType().FullName -ne 'SpecialFolder') {
+		if ($item.GetType().BaseType.FullName -ne 'SpecialFolder') {
 			$e.Handled = $true
 			return
 		}
@@ -135,13 +135,13 @@ function Show-SpecialFolder {
 		
 		if ([Keyboard]::Modifiers -band [ModifierKeys]::Shift) {
 			if ($isExplorerRunasLaunchingUser) { $openAsAdmin.Visibility = 'Visible' }
-			if ($item.IsDirectory) {
+			if ($item.GetType().FullName -eq 'FileFolder') {
 				$cmdEx.Visibility = 'Visible'
 				$powershellEx.Visibility = 'Visible'
 				if ($isWslEnabled) { $wslEx.Visibility = 'Visible' }
 			}
 		} else {
-			if ($item.IsDirectory) {
+			if ($item.GetType().FullName -eq 'FileFolder') {
 				$cmd.Visibility = 'Visible'
 				$powershell.Visibility = 'Visible'
 				if ($isWslEnabled) { $wsl.Visibility = 'Visible' }
@@ -170,7 +170,7 @@ function Show-SpecialFolder {
 	$isShowCategory = $InformationPreference -ne 'Ignore' -and $InformationPreference -ne 'SilentlyContinue'
 	$dataGrid.ItemsSource = Get-SpecialFolder @getSpecialFolderArgs 6>&1 |
 		ForEach-Object {
-			if ($_.GetType().FullName -eq 'SpecialFolder') { $_ }
+			if ($_.GetType().BaseType.FullName -eq 'SpecialFolder') { $_ }
 			elseif ($isShowCategory) { [pscustomobject]@{ Name = $_.ToString().Replace("`n", ''); Path = $null } }
 		}
 	

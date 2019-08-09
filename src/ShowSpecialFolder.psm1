@@ -73,19 +73,19 @@ function Show-SpecialFolder {
 	$startWsl = { $dataGrid.SelectedItem.LinuxShell() }
 	$showProperties = { invokeCommand { $dataGrid.SelectedItem.Properties() } }
 	
-	$window = [Window]([XamlReader]::Parse((Get-Content "$PSScriptRoot/window.xaml" -Raw)))
+	$window = [Window][XamlReader]::Parse((Get-Content "$PSScriptRoot/window.xaml" -Raw))
 	
-	$openAsAdmin = [MenuItem]($window.FindName('openAsAdmin'))
-	$cmd = [MenuItem]($window.FindName('cmd'))
-	$cmdEx= [MenuItem]($window.FindName('cmdEx'))
-	$cmdAsAdmin = [MenuItem]($window.FindName('cmdAsAdmin'))
-	$powershell = [MenuItem]($window.FindName('powershell'))
-	$powershellEx = [MenuItem]($window.FindName('powershellEx'))
-	$powershellAsAdmin = [MenuItem]($window.FindName('powershellAsAdmin'))
-	$wsl = [MenuItem]($window.FindName('wsl'))
-	$wslEx = [MenuItem]($window.FindName('wslEx'))
-	$wslAsAdmin = [MenuItem]($window.FindName('wslAsAdmin'))
-	$properties = [MenuItem]($window.FindName('properties'))
+	$openAsAdmin = [MenuItem]$window.FindName('openAsAdmin')
+	$cmd = [MenuItem]$window.FindName('cmd')
+	$cmdEx= [MenuItem]$window.FindName('cmdEx')
+	$cmdAsAdmin = [MenuItem]$window.FindName('cmdAsAdmin')
+	$powershell = [MenuItem]$window.FindName('powershell')
+	$powershellEx = [MenuItem]$window.FindName('powershellEx')
+	$powershellAsAdmin = [MenuItem]$window.FindName('powershellAsAdmin')
+	$wsl = [MenuItem]$window.FindName('wsl')
+	$wslEx = [MenuItem]$window.FindName('wslEx')
+	$wslAsAdmin = [MenuItem]$window.FindName('wslAsAdmin')
+	$properties = [MenuItem]$window.FindName('properties')
 	
 	$openAsAdmin.Icon = getShieldImage
 	$cmdAsAdmin.Icon = getShieldImage
@@ -99,7 +99,7 @@ function Show-SpecialFolder {
 		# $_.KeyだとAlt単独もAlt+Enterも'System'になるので[Keyboard]::IsKeyDown('Enter')を見ている
 		if (![Keyboard]::IsKeyDown('Enter')) { return }
 		
-		$source = $e.OriginalSource
+		$source = [Control]$e.OriginalSource
 		if ($source.GetType() -eq [DataGridCell]) { $dataGrid.SelectedItem = $source.DataContext }
 		
 		$e.Handled = $true

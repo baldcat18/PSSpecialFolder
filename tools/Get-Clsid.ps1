@@ -11,7 +11,7 @@ param([switch]$All)
 Set-StrictMode -Version Latest
 
 if (!$All) {
-	$dataFile = "$PSScriptRoot/../src/GetSpecialFolder.psm1"
+	$dataFile = "$PSScriptRoot/../src/PSSpecialFolder.psm1"
 	$dataText = Get-Content -LiteralPath $dataFile -Raw
 }
 

@@ -1,9 +1,9 @@
 ﻿# 開発用以外のバージョンをアンロードする
 Get-Module PSSpecialFolder | Remove-Module
 
-$module = Import-Module "$PSScriptRoot/../src/GetSpecialFolder.psm1" -Force -PassThru
+$module = Import-Module "$PSScriptRoot/../src/PSSpecialFolder.psm1" -Force -PassThru
 
-InModuleScope GetSpecialFolder {
+InModuleScope PSSpecialFolder {
 	Describe 'newSpecialFolder Test' {
 		Context 'Null' {
 			It 'Should Null' {

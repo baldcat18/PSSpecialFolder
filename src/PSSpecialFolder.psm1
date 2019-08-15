@@ -1026,12 +1026,16 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:::{018D5C66-4533-4307-9B53-224DE2ED1FE6}')
 	# UsersLibraries
 	Write-Output (newSpecialFolder 'shell:::{031E4825-7B94-4DC3-B131-E946B44C8DD5}')
+	# Taskbar
+	Write-Output (newSpecialFolder 'shell:::{05D7B0F4-2121-4EFF-BF6B-ED3F69B894D9}')
 	# Win10から
 	Write-Output (newSpecialFolder 'shell:::{088E3905-0323-4B02-9826-5D99428E115F}' @{ Name = 'Local Downloads' })
 	# Win10 1709から
 	Write-Output (newSpecialFolder 'shell:::{0DB7E03F-FC29-4DC6-9020-FF41B59E513A}' @{ Name = '3D Object' })
 	# Install New Programs
 	Write-Output (newSpecialFolder 'shell:::{15EAE92E-F17A-4431-9F28-805E482DAFD4}')
+	# Set User Defaults
+	Write-Output (newSpecialFolder 'shell:::{17CD9488-1228-4B2F-88CE-4298E93E0966}')
 	# Win8.1から
 	Write-Output (newSpecialFolder 'shell:::{1CF1260C-4DD0-4EBB-811F-33C572699FDE}' @{ Name = 'My Music' })
 	# User Pinned
@@ -1042,6 +1046,8 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}')
 	# Printers
 	Write-Output (newSpecialFolder 'shell:::{2227A280-3AEA-1069-A2DE-08002B30309D}')
+	# Workspaces Center
+	Write-Output (newSpecialFolder 'shell:::{241D7C96-F8BF-4F85-B01F-E2B043341A4B}')
 	# Win10から
 	Write-Output (newSpecialFolder 'shell:::{24AD3AD4-A569-4530-98E1-AB02F9417AA8}' @{ Name = 'Local Pictures' })
 	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\0' @{ Name = 'All Control Panel Items' })
@@ -1054,6 +1060,8 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:::{3ADD1653-EB32-4CB0-BBD7-DFA0ABB5ACCA}' @{ Name = 'My Pictures' })
 	# Win10から
 	Write-Output (newSpecialFolder 'shell:::{3DFDF296-DBEC-4FB4-81D1-6A3438BCF4DE}' @{ Name = 'Local Music' })
+	# Explorer Browser Results Folder
+	Write-Output (newSpecialFolder 'shell:::{418C8B64-5463-461D-88E0-75E2AFA3C6FA}')
 	# Applications
 	Write-Output (newSpecialFolder 'shell:::{4234D49B-0245-4DF3-B780-3893943456E1}')
 	# Public Folder
@@ -1064,6 +1072,9 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:::{5B934B42-522B-4C34-BBFE-37A3EF7B9C90}')
 	# Recycle Bin
 	Write-Output (newSpecialFolder 'shell:::{645FF040-5081-101B-9F08-00AA002F954E}')
+	# (windows.storage.dll)
+	# Win10からサポｰト
+	Write-Output (newSpecialFolder 'shell:::{679F85CB-0220-4080-B29B-5540CC05AAB6}')
 	# Programs and Features
 	Write-Output (newSpecialFolder 'shell:::{7B81BE6A-CE2B-4676-A29E-EB907A5126C5}')
 	# Network Connections
@@ -1072,6 +1083,8 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:::{863AA9FD-42DF-457B-8E4D-0DE1B8015C60}')
 	# Internet Folder
 	Write-Output (newSpecialFolder 'shell:::{871C5380-42A0-1069-A2EA-08002B30309D}')
+	# (mssvp.dll)
+	Write-Output (newSpecialFolder 'shell:::{89D83576-6BD1-4C86-9454-BEB04E94C819}')
 	# OneDrive
 	# Win8.1のみ
 	Write-Output (newSpecialFolder 'shell:::{8E74D236-7F35-4720-B138-1FED0B85EA75}')
@@ -1083,14 +1096,21 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:::{992CFFA0-F557-101A-88EC-00DD010CCC48}')
 	# Win8.1から
 	Write-Output (newSpecialFolder 'shell:::{A0953C92-50DC-43BF-BE83-3742FED03C9C}' @{ Name = 'My Video' })
+	# Device Center
+	Write-Output (newSpecialFolder 'shell:::{A8A91A66-3A7D-4424-8D24-04E180695C7A}')
 	# Win8.1から
 	Write-Output (newSpecialFolder 'shell:::{A8CDFF1C-4878-43BE-B5FD-F8091C1C60D0}' @{ Name = 'Personal' })
 	# Win8.1 UpdateからWin10 1511まで
 	Write-Output (newSpecialFolder 'shell:::{ADFA80E7-9769-4AD9-992C-55DC57E1008C}' @{ Name = 'StartMenuAllPrograms' })
+	# (cscui.dll)
+	# 企業向けエディションで使用可
+	Write-Output (newSpecialFolder 'shell:::{AFDB1F70-2A4C-11D2-9039-00C04F8EEB3E}')
 	# Win8.1から
 	Write-Output (newSpecialFolder 'shell:::{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}' @{ Name = 'ThisPCDesktopFolder' })
 	# Other Users Folder
 	Write-Output (newSpecialFolder 'shell:::{B4FB3F98-C1EA-428D-A78A-D1F5659CBA93}')
+	# (mssvp.dll)
+	Write-Output (newSpecialFolder 'shell:::{BD7A2E7B-21CB-41B2-A086-B309680C6B7E}')
 	# Microsoft Windows Font Folder
 	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{BD84B380-8CA2-1069-AB1D-08000948F534}')
 	# Administrative Tools
@@ -1099,17 +1119,29 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:::{D3162B92-9365-467A-956B-92703ACA08AF}' @{ Name = 'Local Documents' })
 	# Installed Updates
 	Write-Output (newSpecialFolder 'shell:::{D450A8A1-9568-45C7-9C0E-B4F9FB4537BD}')
+	# Secure Startup
+	Write-Output (newSpecialFolder 'shell:::{D9EF8727-CAC2-4E60-809E-86F80A666C91}')
+	# ECS
+	Write-Output (newSpecialFolder 'shell:::{ECDB0924-4208-451E-8EE0-373C0956DE16}')
 	# Games Explorer
 	# Win10 1709までサポート
 	Write-Output (newSpecialFolder 'shell:::{ED228FDF-9EA8-4870-83B1-96B02CFE0D52}')
 	# Computers and Devices
 	Write-Output (newSpecialFolder 'shell:::{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}')
+	# History Vault
+	Write-Output (newSpecialFolder 'shell:::{F6B6E965-E9B2-444B-9286-10C9152EDBC5}')
 	# This Device
 	# Win10 1703から
 	Write-Output (newSpecialFolder 'shell:::{F8278C54-A712-415B-B593-B77A2BE0DDA9}')
 	# Win10から
 	Write-Output (newSpecialFolder 'shell:::{F86FA3AB-70D2-4FC7-9C99-FCBF05467F3A}' @{ Name = 'Local Videos' })
 	
+	# (shell32.dll#SearchCommand)
+	# Win8から
+	Write-Output (newShellCommand 'shell:::{2559A1F8-21D7-11D4-BDAF-00C04F60B9F0}')
+	# (shell32.dll)
+	# Win8.1から
+	Write-Output (newShellCommand 'shell:::{52205FD8-5DFB-447D-801A-D0B52F2E83E1}')
 	# Control Panel command object for Start menu and desktop
 	Write-Output (newShellCommand 'shell:::{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}')
 	# Default Programs command object for Start menu

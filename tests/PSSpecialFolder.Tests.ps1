@@ -52,7 +52,7 @@ InModuleScope PSSpecialFolder {
 				$folder.TestProperties() | Should -Be $true
 			}
 			It "Properties Name should `"$propertiesName`"" {
-				$folder.Properties.Name | Should -Be $propertiesName
+				$folder.PropertiesVerb.Name | Should -Be $propertiesName
 			}
 		}
 		$recycleBinPath = 'shell:::{645FF040-5081-101B-9F08-00AA002F954E}'
@@ -144,7 +144,7 @@ InModuleScope PSSpecialFolder {
 			}
 			It "Properties Name should `"$propertiesName`"" {
 				$folder.TestProperties() > $null
-				$folder.Properties.Name | Should -Be $propertiesName
+				$folder.PropertiesVerb.Name | Should -Be $propertiesName
 			}
 		}
 	}

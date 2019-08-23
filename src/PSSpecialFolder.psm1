@@ -199,7 +199,7 @@ function getDirectoryFolderItem {
 
 function getSpecialFolder {
 	[OutputType([SpecialFolder[]])]
-	param ([switch]$IncludeShellCommand)
+	param ([bool]$IncludeShellCommand, [bool]$IsDebugging)
 	
 	# Win8.1以降
 	$win81 = $osVersion -gt [version]::new(6, 3)
@@ -768,7 +768,7 @@ function getSpecialFolder {
 	# Previous Versions Results Folder
 	Write-Output (newSpecialFolder 'shell:::{F8C2AB3B-17BC-41DA-9758-339D7DBF2D88}')
 	
-	if (!$IncludeShellCommand -and $DebugPreference -eq 'SilentlyContinue') { return }
+	if (!$IncludeShellCommand) { return }
 	
 	# フォルダー以外のshellコマンド
 	Write-Information "`nCategory: OtherShellCommands`n"
@@ -871,7 +871,7 @@ function getSpecialFolder {
 	# Pen and Touch Control Panel
 	Write-Output (newShellCommand 'shell:::{F82DF8F7-8B9F-442E-A48C-818EA735FF9B}')
 	
-	if ($DebugPreference -eq 'SilentlyContinue') { return }
+	if (!$IsDebugging) { return }
 	
 	# 通常とは違う名前がエクスプローラーのタイトルバーに表示されるフォルダー
 	Write-Information "`nCategory: OtherNames`n"
@@ -1275,7 +1275,11 @@ function Get-SpecialFolder {
 	[OutputType([SpecialFolder[]])]
 	param ([switch]$IncludeShellCommand)
 	
-	return getSpecialFolder -IncludeShellCommand:$IncludeShellCommand |
+	$getSpecialFolderArgs = @{
+		IncludeShellCommand = $IncludeShellCommand -or $PSBoundParameters['Debug']
+		IsDebugging = $PSBoundParameters['Debug']
+	}
+	return getSpecialFolder @getSpecialFolderArgs |
 		Where-Object {
 			if (!$_) { return $false }
 			return $true
@@ -1440,7 +1444,7 @@ function Show-SpecialFolder {
 	
 	$getSpecialFolderArgs = @{
 		IncludeShellCommand = $IncludeShellCommand
-		Debug = $DebugPreference -ne 'SilentlyContinue'
+		Debug = !!$PSBoundParameters['Debug']
 	}
 	$isShowCategory = $InformationPreference -ne 'Ignore' -and $InformationPreference -ne 'SilentlyContinue'
 	$dataGrid.ItemsSource = Get-SpecialFolder @getSpecialFolderArgs 6>&1 |

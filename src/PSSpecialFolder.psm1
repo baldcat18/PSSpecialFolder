@@ -122,10 +122,19 @@ class FolderOption {
 }
 
 $osVersion = [Environment]::OSVersion.Version
+# Win8.1以降
+$win81 = $osVersion -gt [version]::new(6, 3)
 # Win10以降
 $win10 = $osVersion -gt [version]::new(10, 0)
+# Win10 1607以降
+$win10_1607 = $osVersion -gt [version]::new(10, 0, 14393)
 # Win10 1703以降
 $win10_1703 = $osVersion -gt [version]::new(10, 0, 15063)
+# Win10 1803以降
+$win10_1803 = $osVersion -gt [version]::new(10, 0, 17134)
+# Win10 1903以降
+$win10_1903 = $osVersion -gt [version]::new(10, 0, 18362)
+
 
 if ($win10 -and !$win10_1703) {
 	Write-Warning 'The PSSpecialFolder module supports Windows 10 Version 1703+.'
@@ -200,15 +209,6 @@ function getDirectoryFolderItem {
 function getSpecialFolder {
 	[OutputType([SpecialFolder[]])]
 	param ([bool]$IncludeShellCommand, [bool]$IsDebugging)
-	
-	# Win8.1以降
-	$win81 = $osVersion -gt [version]::new(6, 3)
-	# Win10 1607以降
-	$win10_1607 = $osVersion -gt [version]::new(10, 0, 14393)
-	# Win10 1803以降
-	$win10_1803 = $osVersion -gt [version]::new(10, 0, 17134)
-	# Win10 1903以降
-	$win10_1903 = $osVersion -gt [version]::new(10, 0, 18362)
 	
 	$is64bitOS = [Environment]::Is64BitOperatingSystem
 	$isWow64 = $is64bitOS -and ![Environment]::Is64BitProcess

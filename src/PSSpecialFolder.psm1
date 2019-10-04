@@ -1,8 +1,20 @@
-﻿Set-StrictMode -Version Latest
+﻿using namespace System.Windows
+using namespace System.Windows.Controls
+using namespace System.Windows.Input
+using namespace System.Windows.Interop
+using namespace System.Windows.Markup
+
+Set-StrictMode -Version Latest
 
 if ($PSVersionTable['PSVersion'] -ge [version]::new(6, 0) -and !$IsWindows) {
 	throw [PlatformNotSupportedException]::new('The PSSpecialFolder module supports Windows only.')
 	return
+}
+
+enum PropertyTypes {
+	None
+	StartProcess
+	Verb
 }
 
 class SpecialFolder {
@@ -11,28 +23,129 @@ class SpecialFolder {
 	
 	hidden [string]$Dir
 	hidden [__ComObject]$FolderItem
+	hidden [PropertyTypes]$PropertyTypes
+	hidden [bool]$IsPropertiesChecked
+	hidden [__ComObject]$PropertiesVerb
+	hidden [__ComObject]$FolderItemForProperties
+	
+	[void]Open() {
+		$this.StartExplorer('open')
+	}
+	[void]OpenAsAdmin() {
+		$this.StartExplorer('runas')
+	}
+	[void]CopyAsPath() {
+		Set-Clipboard $this.Path
+	}
+	[void]Cmd() {
+		$this.StartCmd('open')
+	}
+	[void]CmdAsAdmin() {
+		$this.StartCmd('runas')
+	}
+	[void]Powershell() {
+		$this.StartPowershell('open')
+	}
+	[void]PowershellAsAdmin() {
+		$this.StartPowershell('runas')
+	}
+	[void]LinuxShell() {
+		$this.StartLinuxShell('open')
+	}
+	[void]LinuxShellAsAdmin() {
+		$this.StartLinuxShell('runas')
+	}
+	[void]Properties() {
+		if ($this.PropertyTypes -eq 'StartProcess') { Start-Process $this.Dir -Verb properties }
+		elseif ($this.TestProperties()) { $this.PropertiesVerb.DoIt() }
+		else { throw [InvalidOperationException]::new('The properties of this folder can''t be shown.') }
+	}
+	
+	hidden [void]StartExplorer([string]$Verb) {
+		Start-Process explorer.exe $(if ($this.Dir) { $this.Dir } else { $this.Path }) -Verb $Verb
+	}
+	hidden [bool]TestProperties() {
+		if ($this.PropertyTypes -eq 'StartProcess') { return $true }
+		if (!$this.FolderItem) { return $false }
+		
+		if (!$this.IsPropertiesChecked) {
+			$item = $this.FolderItemForProperties
+			if ($item -eq $null) { $item = $this.FolderItem }
+			
+			$verbs = $item.Verbs()
+			if ($verbs -and $verbs.Count) {
+				$verb = $verbs.Item($verbs.Count - 1)
+				if ($verb.Name -eq $script:propertiesName) { $this.PropertiesVerb = $verb }
+			}
+			
+			$this.IsPropertiesChecked = $true
+		}
+		return !!$this.PropertiesVerb
+	}
+}
+
+class FileFolder: SpecialFolder {
+	hidden [void]StartCmd([string]$Verb) {
+		Start-Process cmd.exe "/k pushd $($this.Path)" -Verb $Verb
+	}
+	hidden [void]StartPowershell([string]$Verb) {
+		$startArgs = @{
+			FilePath = if ($script:isPwshInstalled) { 'pwsh.exe' } else { 'powershell.exe' }
+			ArgumentList = "-NoExit -Command `"Push-Location -LiteralPath '$($this.Path)'`""
+			Verb = $Verb
+		}
+		Start-Process @startArgs
+	}
+	hidden [void]StartLinuxShell([string]$Verb) {
+		if (!$script:win10) { throw [InvalidOperationException]::new('WSL is not supported.') }
+		if (!$script:isWslEnabled) { throw [InvalidOperationException]::new('WSL is disabled.') }
+		Start-Process cmd.exe "/c pushd $($this.Path) & wsl.exe" -Verb $Verb
+	}
+}
+
+class VirtualFolder: SpecialFolder {
+	hidden [void]StartCmd([string]$Verb) {
+		throw [InvalidOperationException]::new('This is not a directory.')
+	}
+	hidden [void]StartPowershell([string]$Verb) {
+		throw [InvalidOperationException]::new('This is not a directory.')
+	}
+	hidden [void]StartLinuxShell([string]$Verb) {
+		throw [InvalidOperationException]::new('This is not a directory.')
+	}
 }
 
 class FolderOption {
 	[string]$Name
 	[string]$Path
+	[__ComObject]$FolderItemForProperties
 }
 
-function const {
-	param ([string]$Name, $Value, [string]$Description = '')
-	
-	New-Variable -Option Constant -Scope 1 @PSBoundParameters
-}
+$osVersion = [Environment]::OSVersion.Version
+# Win8.1以降
+$win81 = $osVersion -gt [version]::new(6, 3)
+# Win10以降
+$win10 = $osVersion -gt [version]::new(10, 0)
+# Win10 1607以降
+$win10_1607 = $osVersion -gt [version]::new(10, 0, 14393)
+# Win10 1703以降
+$win10_1703 = $osVersion -gt [version]::new(10, 0, 15063)
+# Win10 1803以降
+$win10_1803 = $osVersion -gt [version]::new(10, 0, 17134)
+# Win10 1903以降
+$win10_1903 = $osVersion -gt [version]::new(10, 0, 18362)
 
-const osVersion ([Environment]::OSVersion.Version)
-const win10 ($osVersion -gt [version]::new(10, 0)) 'Win10以降'
-const win10_1703 ($osVersion -gt [version]::new(10, 0, 15063)) 'Win10 1703以降'
 
 if ($win10 -and !$win10_1703) {
 	Write-Warning 'The PSSpecialFolder module supports Windows 10 Version 1703+.'
 }
 
-const shell (New-Object -ComObject Shell.Application)
+$isPwshInstalled = @(Get-Command pwsh.exe -CommandType Application -ErrorAction SilentlyContinue).Length -gt 0
+$isWslEnabled = Test-Path "$([Environment]::GetFolderPath('System'))/wsl.exe"
+
+$shell = New-Object -ComObject Shell.Application
+
+$propertiesName = @($shell.NameSpace(0).Self.Verbs())[-1].Name
 
 function newSpecialFolder {
 	[OutputType([SpecialFolder])]
@@ -42,21 +155,11 @@ function newSpecialFolder {
 	if ($Dir.Substring(0, 2) -eq '\\') { $Dir = 'file:' + $Dir }
 	elseif ($Dir.Substring(0, 6) -ne 'shell:' -and $Dir.Substring(0, 5) -ne 'file:') { $Dir = "file:\\\$Dir" }
 	
-	try { const folder $shell.NameSpace($Dir) }
+	try { $folder = $shell.NameSpace($Dir) }
 	catch { return }
 	
 	if (!$folder) { return }
-	const folderItem $shell.NameSpace($Dir).Self
-	
-	const name $(
-		if ($Option.Name -ne $null) { $Option.Name }
-		elseif ($Dir -match '^shell:(?:(?:\w|\s)+)$') { $Dir.Substring(6) }
-		elseif ($Dir -match '^shell:.*::\{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\}$') {
-			const clsid $Dir.Substring($Dir.Length - 38)
-			(Get-Item "Microsoft.PowerShell.Core\Registry::HKEY_CLASSES_ROOT\CLSID\$clsid").GetValue('')
-		}
-		else { $Dir -replace '^.+\\(.+?)$', '$1' }
-	)
+	$folderItem = $shell.NameSpace($Dir).Self
 	
 	if ($Option.Path -ne $null) { $path = $Option.Path }
 	else {
@@ -64,7 +167,24 @@ function newSpecialFolder {
 		if ($path.Substring(0,2) -eq '::') { $path = "shell:$path" }
 	}
 	
-	return [SpecialFolder]@{ Name = $name; Path = $path; Dir = $Dir; FolderItem = $folderItem }
+	$isDirectory = Test-Path $path -PathType Container
+	$initializer = @{
+		Name = 
+			if ($Option.Name -ne $null) { $Option.Name }
+			elseif ($Dir -match '^shell:(?:(?:\w|\s)+)$') { $Dir.Substring(6) }
+			elseif ($Dir -match '^shell:.*::\{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\}$') {
+				$clsid = $Dir.Substring($Dir.Length - 38)
+				(Get-Item "Microsoft.PowerShell.Core\Registry::HKEY_CLASSES_ROOT\CLSID\$clsid").GetValue('')
+			}
+			else { $Dir -replace '^.+\\(.+?)$', '$1' }
+		Path = $path
+		Dir = $Dir
+		FolderItem = $folderItem
+		PropertyTypes = if ($Option.FolderItemForProperties -or !$isDirectory) { 'Verb' } else { 'StartProcess' }
+		FolderItemForProperties = $Option.FolderItemForProperties
+	}
+	
+	return $(if ($isDirectory) { [FileFolder]$initializer } else { [VirtualFolder]$initializer })
 }
 
 function newShellCommand {
@@ -73,26 +193,29 @@ function newShellCommand {
 	
 	if (!$Path) { return }
 	
-	const clsidPath "Microsoft.PowerShell.Core\Registry::HKEY_CLASSES_ROOT\CLSID\$($Path.Substring($Path.Length - 38))"
+	$clsidPath = "Microsoft.PowerShell.Core\Registry::HKEY_CLASSES_ROOT\CLSID\$($Path.Substring($Path.Length - 38))"
 	if (!(Test-Path $clsidPath)) { return }
 	
-	return [SpecialFolder]@{ Name = if ($Name) { $Name } else { (Get-Item $clsidPath).GetValue('') }; Path = $Path }
+	return [VirtualFolder]@{ Name = if ($Name) { $Name } else { (Get-Item $clsidPath).GetValue('') }; Path = $Path }
+}
+
+function getDirectoryFolderItem {
+	[OutputType([__ComObject])]
+	param ([string]$path)
+	
+	return $shell.NameSpace((Split-Path $path)).Items().Item((Split-Path $path -Leaf))
 }
 
 function getSpecialFolder {
 	[OutputType([SpecialFolder[]])]
-	param ([switch]$IncludeShellCommand)
+	param ([bool]$IncludeShellCommand, [bool]$IsDebugging)
 	
-	const win81 ($osVersion -gt [version]::new(6, 3)) 'Win8.1以降'
-	const win10_1803 ($osVersion -gt [version]::new(10, 0, 17134)) 'Win10 1803以降'
-	const win10_1903 ($osVersion -gt [version]::new(10, 0, 18362)) 'Win10 1903以降'
+	$is64bitOS = [Environment]::Is64BitOperatingSystem
+	$isWow64 = $is64bitOS -and ![Environment]::Is64BitProcess
 	
-	const is64bitOS ([Environment]::Is64BitOperatingSystem)
-	const isWow64 ($is64bitOS -and ![Environment]::Is64BitProcess)
-	
-	const userShellFoldersKey (Get-Item 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders')
-	const currentVersionKey (Get-Item 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion')
-	if ($win81) { const appxKey (Get-Item 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Appx') }
+	$userShellFoldersKey = Get-Item 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders'
+	$currentVersionKey = Get-Item 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion'
+	if ($win81) { $appxKey = Get-Item 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Appx' }
 	
 	Write-Information "Module Version: $((Get-Module PSSpecialFolder).Version.ToString())`n"
 	
@@ -103,7 +226,7 @@ function getSpecialFolder {
 	# shell:ThisDeviceFolder / shell:::{F8278C54-A712-415B-B593-B77A2BE0DDA9} (Win10 1703から)
 	# %USERPROFILE%
 	# %HOMEDRIVE%%HOMEPATH%
-	Write-Output (newSpecialFolder 'shell:UsersFilesFolder')
+	Write-Output (newSpecialFolder 'shell:UsersFilesFolder' @{ FolderItemForProperties = $shell.NameSpace(40).Self })
 	# Win10からサポート
 	# shell:UsersFilesFolder\3D Objects
 	# shell:MyComputerFolder\::{0DB7E03F-FC29-4DC6-9020-FF41B59E513A} (Win10 1709から)
@@ -220,7 +343,7 @@ function getSpecialFolder {
 	
 	# shell:UsersLibrariesFolder
 	# shell:::{031E4825-7B94-4DC3-B131-E946B44C8DD5}
-	Write-Output (newSpecialFolder 'shell:Libraries' @{ Path = $librariesPath })
+	Write-Output (newSpecialFolder 'shell:Libraries' @{ Path = $librariesPath; FolderItemForProperties = getDirectoryFolderItem $librariesPath })
 	# Win10からサポート
 	# shell:Libraries\CameraRoll.library-ms
 	# shell:Libraries\{2B20DF75-1EDA-4039-8097-38798227D5B7}
@@ -645,7 +768,7 @@ function getSpecialFolder {
 	# Previous Versions Results Folder
 	Write-Output (newSpecialFolder 'shell:::{F8C2AB3B-17BC-41DA-9758-339D7DBF2D88}')
 	
-	if (!$IncludeShellCommand -and $DebugPreference -eq 'SilentlyContinue') { return }
+	if (!$IncludeShellCommand) { return }
 	
 	# フォルダー以外のshellコマンド
 	Write-Information "`nCategory: OtherShellCommands`n"
@@ -655,7 +778,7 @@ function getSpecialFolder {
 	Write-Output (newShellCommand 'shell:::{0DF44EAA-FF21-4412-828E-260A8728E7F1}')
 	# Search
 	# Win10 1511まで
-	Write-Output (newShellCommand 'shell:::{2559A1F0-21D7-11D4-BDAF-00C04F60B9F0}')
+	if (!$win10_1607) { Write-Output (newShellCommand 'shell:::{2559A1F0-21D7-11D4-BDAF-00C04F60B9F0}') }
 	# Help and Support
 	# Win8.1まで
 	Write-Output (newShellCommand 'shell:::{2559A1F1-21D7-11D4-BDAF-00C04F60B9F0}')
@@ -665,8 +788,6 @@ function getSpecialFolder {
 	if ($win10_1903) { Write-Output (newShellCommand 'shell:::{2559A1F2-21D7-11D4-BDAF-00C04F60B9F0}') }
 	# Run...
 	Write-Output (newShellCommand 'shell:::{2559A1F3-21D7-11D4-BDAF-00C04F60B9F0}')
-	# E-mail
-	Write-Output (newShellCommand 'shell:::{2559A1F5-21D7-11D4-BDAF-00C04F60B9F0}')
 	# Set Program Access and Defaults
 	Write-Output (newShellCommand 'shell:::{2559A1F7-21D7-11D4-BDAF-00C04F60B9F0}')
 	# Win8から
@@ -680,7 +801,8 @@ function getSpecialFolder {
 	# Windows Sidebar Properties
 	# Win7まで
 	Write-Output (newShellCommand 'shell:::{37EFD44D-EF8D-41B1-940D-96973A50E9E0}')
-	Write-Output (newShellCommand 'shell:::{38A98528-6CBF-4CA9-8DC0-B1E1D10F7B1B}' 'Connect To')
+	# Win8.1まで
+	if (!$win10) { Write-Output (newShellCommand 'shell:::{38A98528-6CBF-4CA9-8DC0-B1E1D10F7B1B}' 'Connect To') }
 	# Phone and Modem Control Panel
 	Write-Output (newShellCommand 'shell:::{40419485-C444-4567-851A-2DD7BFA1684D}')
 	# Open in new window
@@ -749,7 +871,7 @@ function getSpecialFolder {
 	# Pen and Touch Control Panel
 	Write-Output (newShellCommand 'shell:::{F82DF8F7-8B9F-442E-A48C-818EA735FF9B}')
 	
-	if ($DebugPreference -eq 'SilentlyContinue') { return }
+	if (!$IsDebugging) { return }
 	
 	# 通常とは違う名前がエクスプローラーのタイトルバーに表示されるフォルダー
 	Write-Information "`nCategory: OtherNames`n"
@@ -904,12 +1026,16 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:::{018D5C66-4533-4307-9B53-224DE2ED1FE6}')
 	# UsersLibraries
 	Write-Output (newSpecialFolder 'shell:::{031E4825-7B94-4DC3-B131-E946B44C8DD5}')
+	# Taskbar
+	Write-Output (newSpecialFolder 'shell:::{05D7B0F4-2121-4EFF-BF6B-ED3F69B894D9}')
 	# Win10から
 	Write-Output (newSpecialFolder 'shell:::{088E3905-0323-4B02-9826-5D99428E115F}' @{ Name = 'Local Downloads' })
 	# Win10 1709から
 	Write-Output (newSpecialFolder 'shell:::{0DB7E03F-FC29-4DC6-9020-FF41B59E513A}' @{ Name = '3D Object' })
 	# Install New Programs
 	Write-Output (newSpecialFolder 'shell:::{15EAE92E-F17A-4431-9F28-805E482DAFD4}')
+	# Set User Defaults
+	Write-Output (newSpecialFolder 'shell:::{17CD9488-1228-4B2F-88CE-4298E93E0966}')
 	# Win8.1から
 	Write-Output (newSpecialFolder 'shell:::{1CF1260C-4DD0-4EBB-811F-33C572699FDE}' @{ Name = 'My Music' })
 	# User Pinned
@@ -920,6 +1046,8 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}')
 	# Printers
 	Write-Output (newSpecialFolder 'shell:::{2227A280-3AEA-1069-A2DE-08002B30309D}')
+	# Workspaces Center
+	Write-Output (newSpecialFolder 'shell:::{241D7C96-F8BF-4F85-B01F-E2B043341A4B}')
 	# Win10から
 	Write-Output (newSpecialFolder 'shell:::{24AD3AD4-A569-4530-98E1-AB02F9417AA8}' @{ Name = 'Local Pictures' })
 	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\0' @{ Name = 'All Control Panel Items' })
@@ -932,6 +1060,8 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:::{3ADD1653-EB32-4CB0-BBD7-DFA0ABB5ACCA}' @{ Name = 'My Pictures' })
 	# Win10から
 	Write-Output (newSpecialFolder 'shell:::{3DFDF296-DBEC-4FB4-81D1-6A3438BCF4DE}' @{ Name = 'Local Music' })
+	# Explorer Browser Results Folder
+	Write-Output (newSpecialFolder 'shell:::{418C8B64-5463-461D-88E0-75E2AFA3C6FA}')
 	# Applications
 	Write-Output (newSpecialFolder 'shell:::{4234D49B-0245-4DF3-B780-3893943456E1}')
 	# Public Folder
@@ -942,6 +1072,9 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:::{5B934B42-522B-4C34-BBFE-37A3EF7B9C90}')
 	# Recycle Bin
 	Write-Output (newSpecialFolder 'shell:::{645FF040-5081-101B-9F08-00AA002F954E}')
+	# (windows.storage.dll)
+	# Win10からサポｰト
+	Write-Output (newSpecialFolder 'shell:::{679F85CB-0220-4080-B29B-5540CC05AAB6}')
 	# Programs and Features
 	Write-Output (newSpecialFolder 'shell:::{7B81BE6A-CE2B-4676-A29E-EB907A5126C5}')
 	# Network Connections
@@ -950,6 +1083,8 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:::{863AA9FD-42DF-457B-8E4D-0DE1B8015C60}')
 	# Internet Folder
 	Write-Output (newSpecialFolder 'shell:::{871C5380-42A0-1069-A2EA-08002B30309D}')
+	# (mssvp.dll)
+	Write-Output (newSpecialFolder 'shell:::{89D83576-6BD1-4C86-9454-BEB04E94C819}')
 	# OneDrive
 	# Win8.1のみ
 	Write-Output (newSpecialFolder 'shell:::{8E74D236-7F35-4720-B138-1FED0B85EA75}')
@@ -961,14 +1096,21 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:::{992CFFA0-F557-101A-88EC-00DD010CCC48}')
 	# Win8.1から
 	Write-Output (newSpecialFolder 'shell:::{A0953C92-50DC-43BF-BE83-3742FED03C9C}' @{ Name = 'My Video' })
+	# Device Center
+	Write-Output (newSpecialFolder 'shell:::{A8A91A66-3A7D-4424-8D24-04E180695C7A}')
 	# Win8.1から
 	Write-Output (newSpecialFolder 'shell:::{A8CDFF1C-4878-43BE-B5FD-F8091C1C60D0}' @{ Name = 'Personal' })
 	# Win8.1 UpdateからWin10 1511まで
 	Write-Output (newSpecialFolder 'shell:::{ADFA80E7-9769-4AD9-992C-55DC57E1008C}' @{ Name = 'StartMenuAllPrograms' })
+	# (cscui.dll)
+	# 企業向けエディションで使用可
+	Write-Output (newSpecialFolder 'shell:::{AFDB1F70-2A4C-11D2-9039-00C04F8EEB3E}')
 	# Win8.1から
 	Write-Output (newSpecialFolder 'shell:::{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}' @{ Name = 'ThisPCDesktopFolder' })
 	# Other Users Folder
 	Write-Output (newSpecialFolder 'shell:::{B4FB3F98-C1EA-428D-A78A-D1F5659CBA93}')
+	# (mssvp.dll)
+	Write-Output (newSpecialFolder 'shell:::{BD7A2E7B-21CB-41B2-A086-B309680C6B7E}')
 	# Microsoft Windows Font Folder
 	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{BD84B380-8CA2-1069-AB1D-08000948F534}')
 	# Administrative Tools
@@ -977,17 +1119,29 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:::{D3162B92-9365-467A-956B-92703ACA08AF}' @{ Name = 'Local Documents' })
 	# Installed Updates
 	Write-Output (newSpecialFolder 'shell:::{D450A8A1-9568-45C7-9C0E-B4F9FB4537BD}')
+	# Secure Startup
+	Write-Output (newSpecialFolder 'shell:::{D9EF8727-CAC2-4E60-809E-86F80A666C91}')
+	# ECS
+	Write-Output (newSpecialFolder 'shell:::{ECDB0924-4208-451E-8EE0-373C0956DE16}')
 	# Games Explorer
 	# Win10 1709までサポート
 	Write-Output (newSpecialFolder 'shell:::{ED228FDF-9EA8-4870-83B1-96B02CFE0D52}')
 	# Computers and Devices
 	Write-Output (newSpecialFolder 'shell:::{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}')
+	# History Vault
+	Write-Output (newSpecialFolder 'shell:::{F6B6E965-E9B2-444B-9286-10C9152EDBC5}')
 	# This Device
 	# Win10 1703から
 	Write-Output (newSpecialFolder 'shell:::{F8278C54-A712-415B-B593-B77A2BE0DDA9}')
 	# Win10から
 	Write-Output (newSpecialFolder 'shell:::{F86FA3AB-70D2-4FC7-9C99-FCBF05467F3A}' @{ Name = 'Local Videos' })
 	
+	# (shell32.dll#SearchCommand)
+	# Win8から
+	Write-Output (newShellCommand 'shell:::{2559A1F8-21D7-11D4-BDAF-00C04F60B9F0}')
+	# (shell32.dll)
+	# Win8.1から
+	Write-Output (newShellCommand 'shell:::{52205FD8-5DFB-447D-801A-D0B52F2E83E1}')
 	# Control Panel command object for Start menu and desktop
 	Write-Output (newShellCommand 'shell:::{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}')
 	# Default Programs command object for Start menu
@@ -998,6 +1152,14 @@ function getSpecialFolder {
 	
 	Write-Output (newSpecialFolder 'shell:MAPIFolder')
 	Write-Output (newSpecialFolder 'shell:RecordedTVLibrary')
+	
+	# (shell32.dll)
+	# Win8.1から
+	Write-Output (newSpecialFolder 'shell:::{52205FD8-5DFB-447D-801A-D0B52F2E83E1}')
+	# Control Panel command object for Start menu and desktop
+	Write-Output (newSpecialFolder 'shell:::{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}')
+	# Default Programs command object for Start menu
+	Write-Output (newSpecialFolder 'shell:::{E44E5D18-0652-4508-A4E2-8A090067BCB0}')
 	
 	Write-Output (newShellCommand 'shell:::{00020D75-0000-0000-C000-000000000046}')
 	# Desktop
@@ -1027,6 +1189,8 @@ function getSpecialFolder {
 	Write-Output (newShellCommand 'shell:::{1BEF2128-2F96-4500-BA7C-098DC0049CB2}')
 	# CompatContextMenu Class
 	Write-Output (newShellCommand 'shell:::{1D27F844-3A1F-4410-85AC-14651078412D}')
+	# E-mail
+	Write-Output (newShellCommand 'shell:::{2559A1F5-21D7-11D4-BDAF-00C04F60B9F0}')
 	# Location Folder
 	Write-Output (newShellCommand 'shell:::{267CF8A9-F4E3-41E6-95B1-AF881BE130FF}')
 	# Enhanced Storage Context Menu Handler Class
@@ -1119,9 +1283,183 @@ function Get-SpecialFolder {
 	[OutputType([SpecialFolder[]])]
 	param ([switch]$IncludeShellCommand)
 	
-	return getSpecialFolder -IncludeShellCommand:$IncludeShellCommand |
+	$getSpecialFolderArgs = @{
+		IncludeShellCommand = $IncludeShellCommand -or $PSBoundParameters['Debug']
+		IsDebugging = $PSBoundParameters['Debug']
+	}
+	return getSpecialFolder @getSpecialFolderArgs |
 		Where-Object {
 			if (!$_) { return $false }
 			return $true
 		}
+}
+
+function getShieldImage {
+	[OutputType([System.Windows.Controls.Image])]
+	param ()
+	
+	$image = [Image]::new()
+	$image.Source = [Imaging]::CreateBitmapSourceFromHIcon(
+		[System.Drawing.SystemIcons]::Shield.Handle, [Int32Rect]::Empty, $null
+	)
+	return $image
+}
+
+<#
+.SYNOPSIS
+Display the special folders for Windows in a dialog.
+.DESCRIPTION
+Display the special folders for Windows in a dialog. Open the folder to double-click on it. Show context menu to right-click on the folder.
+#>
+function Show-SpecialFolder {
+	[CmdletBinding()]
+	param ([switch]$IncludeShellCommand)
+	
+	# WPFが使えない場合
+	if (($PSVersionTable['PSVersion'].Major -ge 6) -or ($Host.Runspace.ApartmentState -ne 'STA')) {
+		powershell.exe -Sta -Command "Show-SpecialFolder -IncludeShellCommand:`$$IncludeShellCommand"
+		return
+	}
+	
+	$isExplorerRunasLaunchingUser =
+		!((Get-Item 'HKLM:/SOFTWARE/Classes/AppID/{CDCBCFCA-3CDC-436f-A4E2-0E02075250C2}').GetValue('RunAs'))
+	
+	Add-Type -AssemblyName PresentationFramework
+	Add-Type -AssemblyName System.Drawing
+	
+	function selectInvokedCommand {
+		$item = $dataGrid.SelectedItem
+		if (!$item -or $item.GetType().BaseType -ne [SpecialFolder]) { return }
+		
+		$modifiers = [Keyboard]::Modifiers
+		if ($modifiers -band [ModifierKeys]::Alt) { & $showProperties }
+		elseif ($modifiers -band [ModifierKeys]::Control) { invokeCommand $startPowershell }
+		elseif ($modifiers -band [ModifierKeys]::Shift) { invokeCommand $startCmd }
+		else { & $openFolder }
+	}
+	
+	function invokeCommand {
+		param ([scriptblock]$command)
+		
+		$ErrorActionPreference = 'Stop'
+		try { & $command }
+		catch { [MessageBox]::Show($_, $_.Exception.GetType().Name, 'OK', 'Warning') > $null }
+	}
+	
+	function invokeCommandAsAdmin {
+		param ([scriptblock]$command)
+		
+		# 昇格プロンプトで[いいえ]を選んだときのエラｰを無視する
+		$ErrorActionPreference = 'SilentlyContinue'
+		& $command
+	}
+	
+	$openFolder = { $dataGrid.SelectedItem.Open() }
+	$startCmd = { $dataGrid.SelectedItem.Cmd() }
+	$startPowershell = { $dataGrid.SelectedItem.Powershell() }
+	$startWsl = { $dataGrid.SelectedItem.LinuxShell() }
+	$showProperties = { invokeCommand { $dataGrid.SelectedItem.Properties() } }
+	
+	$window = [Window][XamlReader]::Parse((Get-Content "$PSScriptRoot/window.xaml" -Raw))
+	
+	$openAsAdmin = [MenuItem]$window.FindName('openAsAdmin')
+	$cmd = [MenuItem]$window.FindName('cmd')
+	$cmdEx= [MenuItem]$window.FindName('cmdEx')
+	$cmdAsAdmin = [MenuItem]$window.FindName('cmdAsAdmin')
+	$powershell = [MenuItem]$window.FindName('powershell')
+	$powershellEx = [MenuItem]$window.FindName('powershellEx')
+	$powershellAsAdmin = [MenuItem]$window.FindName('powershellAsAdmin')
+	$wsl = [MenuItem]$window.FindName('wsl')
+	$wslEx = [MenuItem]$window.FindName('wslEx')
+	$wslAsAdmin = [MenuItem]$window.FindName('wslAsAdmin')
+	$properties = [MenuItem]$window.FindName('properties')
+	
+	$openAsAdmin.Icon = getShieldImage
+	$cmdAsAdmin.Icon = getShieldImage
+	$powershellAsAdmin.Icon = getShieldImage
+	$wslAsAdmin.Icon = getShieldImage
+	
+	$dataGrid = [DataGrid]($window.FindName('dataGrid'))
+	$dataGrid.add_PreviewKeyDown({
+		param([object]$sender, [KeyEventArgs]$e)
+		
+		# $_.KeyだとAlt単独もAlt+Enterも'System'になるので[Keyboard]::IsKeyDown('Enter')を見ている
+		if (![Keyboard]::IsKeyDown('Enter')) { return }
+		
+		$source = [Control]$e.OriginalSource
+		if ($source.GetType() -eq [DataGridCell]) { $dataGrid.SelectedItem = $source.DataContext }
+		
+		$e.Handled = $true
+		selectInvokedCommand
+	})
+	$dataGrid.add_MouseDoubleClick({
+		param([object]$sender, [MouseButtonEventArgs]$e)
+		
+		if ($e.OriginalSource.GetType() -eq [TextBlock]) { selectInvokedCommand }
+	})
+	$dataGrid.add_ContextMenuOpening({
+		param([object]$sender, [ContextMenuEventArgs]$e)
+		
+		if ($e.OriginalSource.GetType() -ne [TextBlock]) {
+			$e.Handled = $true
+			return
+		}
+		
+		$item = $dataGrid.SelectedItem
+		if ($item.GetType().BaseType -ne [SpecialFolder]) {
+			$e.Handled = $true
+			return
+		}
+		
+		$openAsAdmin.Visibility = 'Collapsed'
+		$cmd.Visibility = 'Collapsed'
+		$cmdEx.Visibility = 'Collapsed'
+		$powershell.Visibility = 'Collapsed'
+		$powershellEx.Visibility = 'Collapsed'
+		$wsl.Visibility = 'Collapsed'
+		$wslEx.Visibility = 'Collapsed'
+		$properties.Visibility = 'Collapsed'
+		
+		if ([Keyboard]::Modifiers -band [ModifierKeys]::Shift) {
+			if ($isExplorerRunasLaunchingUser) { $openAsAdmin.Visibility = 'Visible' }
+			if ($item.GetType() -eq [FileFolder]) {
+				$cmdEx.Visibility = 'Visible'
+				$powershellEx.Visibility = 'Visible'
+				if ($isWslEnabled) { $wslEx.Visibility = 'Visible' }
+			}
+		} else {
+			if ($item.GetType() -eq [FileFolder]) {
+				$cmd.Visibility = 'Visible'
+				$powershell.Visibility = 'Visible'
+				if ($isWslEnabled) { $wsl.Visibility = 'Visible' }
+			}
+		}
+		if ($item.TestProperties()) { $properties.Visibility = 'Visible' }
+	})
+	$window.FindName('open').add_Click($openFolder)
+	$window.FindName('copyAsPath').add_Click({ $dataGrid.SelectedItem.CopyAsPath() })
+	$openAsAdmin.add_Click({ invokeCommandAsAdmin { $dataGrid.SelectedItem.OpenAsAdmin() } })
+	$cmd.add_Click($startCmd)
+	$window.FindName('cmdAsInvoker').add_Click($startCmd)
+	$cmdAsAdmin.add_Click({ invokeCommandAsAdmin { $dataGrid.SelectedItem.CmdAsAdmin() } })
+	$powershell.add_Click($startPowershell)
+	$window.FindName('powershellAsInvoker').add_Click($startPowershell)
+	$powershellAsAdmin.add_Click({ invokeCommandAsAdmin { $dataGrid.SelectedItem.PowershellAsAdmin() } })
+	$wsl.add_Click($startWsl)
+	$window.FindName('wslAsInvoker').add_Click($startWsl)
+	$wslAsAdmin.add_Click({ invokeCommandAsAdmin { $dataGrid.SelectedItem.LinuxShellAsAdmin() } })
+	$properties.add_Click($showProperties)
+	
+	$getSpecialFolderArgs = @{
+		IncludeShellCommand = $IncludeShellCommand
+		Debug = !!$PSBoundParameters['Debug']
+	}
+	$isShowCategory = $InformationPreference -ne 'Ignore' -and $InformationPreference -ne 'SilentlyContinue'
+	$dataGrid.ItemsSource = Get-SpecialFolder @getSpecialFolderArgs 6>&1 |
+		ForEach-Object {
+			if ($_.GetType().BaseType -eq [SpecialFolder]) { $_ }
+			elseif ($isShowCategory) { [pscustomobject]@{ Name = $_.ToString().Replace("`n", ''); Path = $null } }
+		}
+	
+	$window.ShowDialog() > $null
 }

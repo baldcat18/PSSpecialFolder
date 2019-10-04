@@ -1,5 +1,5 @@
 ﻿@{
-	ModuleVersion = '2.3.4'
+	ModuleVersion = '2.4.0'
 	GUID = '958cb972-fb7e-4222-92b1-152d5b95a2a9'
 	Author = 'BaldCat'
 	Copyright = '(c) 2019 BaldCat. All rights reserved.'

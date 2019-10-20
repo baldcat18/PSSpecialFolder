@@ -1187,7 +1187,7 @@ function Get-SpecialFolder {
 	
 	$getSpecialFolderArgs = @{
 		IncludeShellCommand = $IncludeShellCommand -or $PSBoundParameters['Debug']
-		IsDebugging = $PSBoundParameters['Debug']
+		IsDebugging = !!$PSBoundParameters['Debug']
 	}
 	return getSpecialFolder @getSpecialFolderArgs |
 		Where-Object {

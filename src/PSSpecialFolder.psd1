@@ -5,11 +5,10 @@
 	Copyright = '(c) 2019 BaldCat. All rights reserved.'
 	Description = 'PowerShell Module gets the special folders for Windows.'
 	PowerShellVersion = '5.1'
-	NestedModules = @('PSSpecialFolder.psm1')
+	RootModule = 'PSSpecialFolder.psm1'
 	FunctionsToExport = @('Get-SpecialFolder', 'Show-SpecialFolder')
 	PrivateData = @{
 		LicenseUri = 'https://github.com/baldcat18/PSSpecialFolder/blob/master/LICENSE'
-		ProjectUri = 'https://github.com/baldcat18/PSSpecialFolder'
 		PSData = @{ Prerelease = 'alpha'}
 		Tags = @('Folder', 'Windows')
 	}

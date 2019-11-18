@@ -115,12 +115,6 @@ class VirtualFolder: SpecialFolder {
 	}
 }
 
-class FolderOption {
-	[string]$Name
-	[string]$Path
-	[__ComObject]$FolderItemForProperties
-}
-
 $osVersion = [Environment]::OSVersion.Version
 # Win10以降
 $win10 = $osVersion -gt [version]::new(10, 0)
@@ -148,7 +142,9 @@ $propertiesName = @($shell.NameSpace(0).Self.Verbs())[-1].Name
 
 function newSpecialFolder {
 	[OutputType([SpecialFolder])]
-	param ([string]$Dir, [FolderOption]$Option = (@{}))
+	# [string]$Nameだとnullが空文字列に変換されてしまう
+	# https://github.com/PowerShell/PowerShell/issues/4616
+	param ([string]$Dir, [object]$Name = $null, [string]$Path = '', [__ComObject]$FolderItemForProperties = $null)
 	
 	if (!$Dir) { return }
 	if ($Dir.Substring(0, 2) -eq '\\') { $Dir = 'file:' + $Dir }
@@ -160,27 +156,26 @@ function newSpecialFolder {
 	if (!$folder) { return }
 	$folderItem = $shell.NameSpace($Dir).Self
 	
-	if ($Option.Path -ne $null) { $path = $Option.Path }
-	else {
-		$path = $folderItem.Path
-		if ($path.Substring(0,2) -eq '::') { $path = "shell:$path" }
+	if (!$Path)  {
+		$Path = $folderItem.Path
+		if ($Path.Substring(0,2) -eq '::') { $Path = "shell:$Path" }
 	}
 	
 	$isDirectory = Test-Path $path -PathType Container
 	$initializer = @{
 		Name = 
-			if ($Option.Name -ne $null) { $Option.Name }
+			if ($Name -ne $null) { [string]$Name }
 			elseif ($Dir -match '^shell:(?:(?:\w|\s)+)$') { $Dir.Substring(6) }
 			elseif ($Dir -match '^shell:.*::\{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\}$') {
 				$clsid = $Dir.Substring($Dir.Length - 38)
 				(Get-Item "Microsoft.PowerShell.Core\Registry::HKEY_CLASSES_ROOT\CLSID\$clsid").GetValue('')
 			}
 			else { $Dir -replace '^.+\\(.+?)$', '$1' }
-		Path = $path
+		Path = $Path
 		Dir = $Dir
 		FolderItem = $folderItem
-		PropertyTypes = if ($Option.FolderItemForProperties -or !$isDirectory) { 'Verb' } else { 'StartProcess' }
-		FolderItemForProperties = $Option.FolderItemForProperties
+		PropertyTypes = if ($FolderItemForProperties -or !$isDirectory) { 'Verb' } else { 'StartProcess' }
+		FolderItemForProperties = $FolderItemForProperties
 	}
 	
 	return $(if ($isDirectory) { [FileFolder]$initializer } else { [VirtualFolder]$initializer })
@@ -225,7 +220,7 @@ function getSpecialFolder {
 	# shell:ThisDeviceFolder / shell:::{F8278C54-A712-415B-B593-B77A2BE0DDA9} (Win10 1703から)
 	# %USERPROFILE%
 	# %HOMEDRIVE%%HOMEPATH%
-	Write-Output (newSpecialFolder 'shell:UsersFilesFolder' @{ FolderItemForProperties = $shell.NameSpace(40).Self })
+	Write-Output (newSpecialFolder 'shell:UsersFilesFolder' -FolderItemForProperties $shell.NameSpace(40).Self)
 	# Win10からサポート
 	# shell:UsersFilesFolder\3D Objects
 	# shell:MyComputerFolder\::{0DB7E03F-FC29-4DC6-9020-FF41B59E513A} (Win10 1709から)
@@ -236,7 +231,7 @@ function getSpecialFolder {
 	# shell:Local Documents / shell:MyComputerFolder\::{D3162B92-9365-467A-956B-92703ACA08AF} (Win10から)
 	# shell:::{450D8FBA-AD25-11D0-98A8-0800361B1103} ([My Documents])
 	# shell:MyComputerFolder\::{A8CDFF1C-4878-43BE-B5FD-F8091C1C60D0}
-	Write-Output (newSpecialFolder 'shell:Personal' @{ Name = 'My Documents' })
+	Write-Output (newSpecialFolder 'shell:Personal' 'My Documents')
 	# shell:Local Downloads / shell:MyComputerFolder\::{088E3905-0323-4B02-9826-5D99428E115F} (Win10から)
 	# shell:MyComputerFolder\::{374DE290-123F-4565-9164-39C4925E467B}
 	Write-Output (newSpecialFolder 'shell:Downloads')
@@ -336,35 +331,35 @@ function getSpecialFolder {
 	
 	# shell:UsersLibrariesFolder
 	# shell:::{031E4825-7B94-4DC3-B131-E946B44C8DD5}
-	Write-Output (newSpecialFolder 'shell:Libraries' @{ Path = $librariesPath; FolderItemForProperties = getDirectoryFolderItem $librariesPath })
+	Write-Output (newSpecialFolder 'shell:Libraries' -Path $librariesPath -FolderItemForProperties (getDirectoryFolderItem $librariesPath))
 	# Win10からサポート
 	# shell:Libraries\CameraRoll.library-ms
 	# shell:Libraries\{2B20DF75-1EDA-4039-8097-38798227D5B7}
 	$cameraRollLibraryPath = $userShellFoldersKey.GetValue('{2B20DF75-1EDA-4039-8097-38798227D5B7}')
 	if (!$cameraRollLibraryPath) { $cameraRollLibraryPath = "$librariesPath\CameraRoll.library-ms" }
-	Write-Output (newSpecialFolder 'shell:CameraRollLibrary' @{ Path = $cameraRollLibraryPath })
+	Write-Output (newSpecialFolder 'shell:CameraRollLibrary' -Path $cameraRollLibraryPath)
 	# shell:Libraries\{7B0DB17D-9CD2-4A93-9733-46CC89022E7C}
 	$documentsLibraryPath = $userShellFoldersKey.GetValue('{7B0DB17D-9CD2-4A93-9733-46CC89022E7C}')
 	if (!$documentsLibraryPath) { $documentsLibraryPath = "$librariesPath\Documents.library-ms" }
-	Write-Output (newSpecialFolder 'shell:DocumentsLibrary' @{ Path = $documentsLibraryPath })
+	Write-Output (newSpecialFolder 'shell:DocumentsLibrary' -Path $documentsLibraryPath)
 	# shell:Libraries\{2112AB0A-C86A-4FFE-A368-0DE96E47012E}
 	$musicLibraryPath = $userShellFoldersKey.GetValue('{2112AB0A-C86A-4FFE-A368-0DE96E47012E}')
 	if (!$musicLibraryPath) { $musicLibraryPath = "$librariesPath\Music.library-ms" }
-	Write-Output (newSpecialFolder 'shell:MusicLibrary' @{ Path = $musicLibraryPath })
+	Write-Output (newSpecialFolder 'shell:MusicLibrary' -Path $musicLibraryPath)
 	# shell:Libraries\{A990AE9F-A03B-4E80-94BC-9912D7504104}
 	$picturesLibraryPath = $userShellFoldersKey.GetValue('{A990AE9F-A03B-4E80-94BC-9912D7504104}')
 	if (!$picturesLibraryPath) { $picturesLibraryPath = "$librariesPath\Pictures.library-ms" }
-	Write-Output (newSpecialFolder 'shell:PicturesLibrary' @{ Path = $picturesLibraryPath })
+	Write-Output (newSpecialFolder 'shell:PicturesLibrary' -Path $picturesLibraryPath)
 	# Win10からサポート
 	# shell:Libraries\SavedPictures.library-ms
 	# shell:Libraries\{E25B5812-BE88-4BD9-94B0-29233477B6C3}
 	$savedPicturesLibraryPath = $userShellFoldersKey.GetValue('{E25B5812-BE88-4BD9-94B0-29233477B6C3}')
 	if (!$savedPicturesLibraryPath) { $savedPicturesLibraryPath = "$librariesPath\SavedPictures.library-ms" }
-	Write-Output (newSpecialFolder 'shell:SavedPicturesLibrary' @{ Path = $savedPicturesLibraryPath })
+	Write-Output (newSpecialFolder 'shell:SavedPicturesLibrary' -Path $savedPicturesLibraryPath)
 	# shell:::{031E4825-7B94-4DC3-B131-E946B44C8DD5}\{491E922F-5643-4AF4-A7EB-4E7A138D8174}
 	$videosLibraryPath = $userShellFoldersKey.GetValue('{491E922F-5643-4AF4-A7EB-4E7A138D8174}')
 	if (!$videosLibraryPath) { $videosLibraryPath = "$librariesPath\Videos.library-ms" }
-	Write-Output (newSpecialFolder 'shell:VideosLibrary' @{ Path = $videosLibraryPath })
+	Write-Output (newSpecialFolder 'shell:VideosLibrary' -Path $videosLibraryPath)
 	
 	Write-Information "`nCategory: StartMenu`n"
 	
@@ -392,20 +387,20 @@ function getSpecialFolder {
 	# shell:Local AppData\Favorites
 	Write-Output (newSpecialFolder 'shell:AppDataFavorites')
 	# ストアアプリの設定
-	Write-Output (newSpecialFolder 'shell:Local AppData\Packages' @{ Name = 'Settings of the Windows Apps' })
+	Write-Output (newSpecialFolder 'shell:Local AppData\Packages' 'Settings of the Windows Apps')
 	# Win10 1709からサポート
 	# shell:Local AppData\ProgramData
 	Write-Output (newSpecialFolder 'shell:AppDataProgramData')
 	# %TEMP%
 	# %TMP%
-	Write-Output (newSpecialFolder ([System.IO.Path]::GetTempPath()) @{ Name = 'Temporary Folder' })
+	Write-Output (newSpecialFolder ([System.IO.Path]::GetTempPath()) 'Temporary Folder')
 	Write-Output (newSpecialFolder 'shell:Local AppData\VirtualStore')
 		
 	Write-Output (newSpecialFolder 'shell:Application Shortcuts')
 	Write-Output (newSpecialFolder 'shell:CD Burning')
 	# Win10 1809からサポート
 	# 標準ユーザー権限でフォントをインストールした時に自動生成される
-	Write-Output (newSpecialFolder 'shell:Local AppData\Microsoft\Windows\Fonts' @{ Name = 'UserFonts' })
+	Write-Output (newSpecialFolder 'shell:Local AppData\Microsoft\Windows\Fonts' 'UserFonts')
 	Write-Output (newSpecialFolder 'shell:GameTasks')
 	Write-Output (newSpecialFolder 'shell:History')
 	Write-Output (newSpecialFolder 'shell:Cache')
@@ -462,7 +457,7 @@ function getSpecialFolder {
 	# %ALLUSERSPROFILE%\OEM Links
 	Write-Output (newSpecialFolder 'shell:OEM Links')
 		
-	Write-Output (newSpecialFolder $appxKey.GetValue('PackageRepositoryRoot') @{ Name = 'Repositories of the Windows Apps' })
+	Write-Output (newSpecialFolder $appxKey.GetValue('PackageRepositoryRoot') 'Repositories of the Windows Apps')
 	Write-Output (newSpecialFolder 'shell:Device Metadata Store')
 	Write-Output (newSpecialFolder 'shell:PublicGameTasks')
 	# Win10からサポート
@@ -489,11 +484,11 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:Windows')
 	# shell:::{1D2680C9-0E2A-469D-B787-065558BC7D43} ([Fusion Cache]) (.NET3.5まで)
 	# CLSIDを使ってアクセスするとエクスプローラーがクラッシュする
-	Write-Output (newSpecialFolder 'shell:Windows\assembly' @{ Name = '.NET Framework Assemblies' })
-	Write-Output (newSpecialFolder (Get-ItemPropertyValue 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Internet Settings' 'ActiveXCache') @{ Name = 'ActiveX Cache Folder' })
+	Write-Output (newSpecialFolder 'shell:Windows\assembly' '.NET Framework Assemblies')
+	Write-Output (newSpecialFolder (Get-ItemPropertyValue 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Internet Settings' 'ActiveXCache') 'ActiveX Cache Folder')
 	# shell:ControlPanelFolder\::{BD84B380-8CA2-1069-AB1D-08000948F534}
 	Write-Output (newSpecialFolder 'shell:Fonts')
-	Write-Output (newSpecialFolder 'shell:Windows\Offline Web Pages' @{ Name = 'Subscription Folder' })
+	Write-Output (newSpecialFolder 'shell:Windows\Offline Web Pages' 'Subscription Folder')
 	
 	Write-Output (newSpecialFolder 'shell:ResourceDir')
 	# shell:ResourceDir\xxxx (xxxxはロケールIDの16進数4桁 日本語では0411)
@@ -507,7 +502,7 @@ function getSpecialFolder {
 	Write-Information "`nCategory: UserProfiles`n"
 	
 	Write-Output (newSpecialFolder 'shell:UserProfiles')
-	Write-Output (newSpecialFolder (Get-ItemPropertyValue 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList' 'Default') @{ Name = 'DefaultUserProfile' })
+	Write-Output (newSpecialFolder (Get-ItemPropertyValue 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList' 'Default') 'DefaultUserProfile')
 	
 	Write-Information "`nCategory: ProgramFiles`n"
 	
@@ -516,17 +511,17 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:ProgramFiles')
 	if ($is64bitOS) {
 		if (!$isWow64) { Write-Output (newSpecialFolder 'shell:ProgramFilesX86') }
-		else { Write-Output (newSpecialFolder $currentVersionKey.GetValue('ProgramW6432Dir') @{Name = 'ProgramFilesX64'}) }
+		else { Write-Output (newSpecialFolder $currentVersionKey.GetValue('ProgramW6432Dir') 'ProgramFilesX64') }
 	}
 	# shell:ProgramFilesCommonX64 (64ビットアプリのみ)
 	# %CommonProgramFiles%
 	Write-Output (newSpecialFolder 'shell:ProgramFilesCommon')
 	if ($is64bitOS) {
 		if (!$isWow64) { Write-Output (newSpecialFolder 'shell:ProgramFilesCommonX86') }
-		else { Write-Output (newSpecialFolder $currentVersionKey.GetValue('CommonW6432Dir') @{Name = 'ProgramFilesCommonX64'}) }
+		else { Write-Output (newSpecialFolder $currentVersionKey.GetValue('CommonW6432Dir') 'ProgramFilesCommonX64') }
 	}
-	Write-Output (newSpecialFolder $appxKey.GetValue('PackageRoot') @{ Name = 'Windows Apps' })
-	Write-Output (newSpecialFolder 'shell:ProgramFiles\Windows Sidebar\Gadgets' @{ Name = 'Default Gadgets' })
+	Write-Output (newSpecialFolder $appxKey.GetValue('PackageRoot') 'Windows Apps')
+	Write-Output (newSpecialFolder 'shell:ProgramFiles\Windows Sidebar\Gadgets' 'Default Gadgets')
 	Write-Output (newSpecialFolder 'shell:ProgramFiles\Windows Sidebar\Shared Gadgets')
 	
 	Write-Information "`nCategory: Desktop / MyComputer`n"
@@ -538,7 +533,7 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:::{22877A6D-37A1-461A-91B0-DBDA5AAEBC99}')
 	# Win10からサポート
 	# shell:::{4564B25E-30CD-4787-82BA-39E73A750B14} ([Recent Items Instance Folder])
-	Write-Output (newSpecialFolder 'shell:::{3134EF9C-6B18-4996-AD04-ED5912E00EB5}' @{ Name = 'Recent files' })
+	Write-Output (newSpecialFolder 'shell:::{3134EF9C-6B18-4996-AD04-ED5912E00EB5}' 'Recent files')
 	# Portable Devices
 	Write-Output (newSpecialFolder 'shell:::{35786D3C-B075-49B9-88DD-029876E11C01}')
 	# Frequent Places Folder
@@ -546,7 +541,7 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:::{3936E9E4-D92C-4EEE-A85A-BC16D5EA0819}')
 	Write-Output (newSpecialFolder 'shell:RecycleBinFolder')
 	# Win10からサポート
-	Write-Output (newSpecialFolder 'shell:::{679F85CB-0220-4080-B29B-5540CC05AAB6}' @{ Name = 'Quick access' })
+	Write-Output (newSpecialFolder 'shell:::{679F85CB-0220-4080-B29B-5540CC05AAB6}' 'Quick access')
 	# Removable Storage Devices
 	# Win8.1では[PC]と同じなので非表示に
 	if ($win10) { Write-Output (newSpecialFolder 'shell:::{A6482830-08EB-41E2-84C1-73920C2BADB9}') }
@@ -560,21 +555,21 @@ function getSpecialFolder {
 	
 	# Control Panel
 	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}')
-	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\1' @{ Name = 'Appearance and Personalization' })
+	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\1' 'Appearance and Personalization')
 	# shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\4
-	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\2' @{ Name = 'Hardware and Sound' })
-	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\3' @{ Name = 'Network and Internet' })
+	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\2' 'Hardware and Sound')
+	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\3' 'Network and Internet')
 	# shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\10
-	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\5' @{ Name = 'System and Security' })
-	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\6' @{ Name = if ($win10_1803) { 'Clock and Region' } else { 'Clock, Language, and Region' } })
-	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\7' @{ Name = 'Ease of Access' })
-	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\8' @{ Name = 'Programs' })
-	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\9' @{ Name = 'User Accounts' })
+	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\5' 'System and Security')
+	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\6' $(if ($win10_1803) { 'Clock and Region' } else { 'Clock, Language, and Region' }))
+	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\7' 'Ease of Access')
+	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\8' 'Programs')
+	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\9' 'User Accounts')
 	
 	# shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}
 	# shell:::{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}
 	# shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\11
-	Write-Output (newSpecialFolder 'shell:ControlPanelFolder' @{ Name = 'All Control Panel Items' })
+	Write-Output (newSpecialFolder 'shell:ControlPanelFolder' 'All Control Panel Items')
 	
 	# コントロールパネル内の項目はCLSIDだけを指定してもアクセス可能
 	# 例えば[電源オプション]なら shell:::{025A5937-A6BE-4686-A844-36FE4BEC8B6D}
@@ -587,9 +582,9 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:AddNewProgramsFolder')
 	# Set User Defaults
 	# shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}\::{E44E5D18-0652-4508-A4E2-8A090067BCB0}
-	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{17CD9488-1228-4B2F-88CE-4298E93E0966}' @{ Name = 'Default Programs' })
+	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{17CD9488-1228-4B2F-88CE-4298E93E0966}' 'Default Programs')
 	# Workspaces Center
-	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{241D7C96-F8BF-4F85-B01F-E2B043341A4B}' @{ Name = 'RemoteApp and Desktop Connections' })
+	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{241D7C96-F8BF-4F85-B01F-E2B043341A4B}' 'RemoteApp and Desktop Connections')
 	# Windows Update
 	# Win8.1までサポート
 	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{36EEF7DB-88AD-4E81-AD49-0E313F0C35F8}')
@@ -612,7 +607,7 @@ function getSpecialFolder {
 	# System Recovery
 	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{9FE63AFD-59CF-4419-9775-ABCC3849F861}')
 	# Device Center
-	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{A8A91A66-3A7D-4424-8D24-04E180695C7A}' @{ Name = 'Devices and Printers' })
+	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{A8A91A66-3A7D-4424-8D24-04E180695C7A}' 'Devices and Printers')
 	# Windows 7 File Recovery
 	# Win10からサポート
 	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{B98A2BEA-7D42-4558-8BD1-832F41BAC6FD}')
@@ -623,7 +618,7 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{BB64F8A7-BEE7-4E1A-AB8D-7D8273F7FDB6}')
 	# Microsoft Windows Font Folder
 	# shell:Fonts
-	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{BD84B380-8CA2-1069-AB1D-08000948F534}' @{ Path = 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\0\::{BD84B380-8CA2-1069-AB1D-08000948F534}' })
+	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{BD84B380-8CA2-1069-AB1D-08000948F534}' -Path 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\0\::{BD84B380-8CA2-1069-AB1D-08000948F534}')
 	# Language Settings
 	# Win10 1803までサポート
 	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{BF782CC9-5A52-4A17-806C-2A894FFEEAC5}')
@@ -634,20 +629,20 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{C58C4893-3BE0-4B45-ABB5-A63E4B8C8651}')
 	# Administrative Tools
 	# shell:Common Administrative Tools
-	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{D20EA4E1-3957-11D2-A40B-0C5020524153}' @{ Path = 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\0\::{D20EA4E1-3957-11D2-A40B-0C5020524153}' })
+	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{D20EA4E1-3957-11D2-A40B-0C5020524153}' -Path 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\0\::{D20EA4E1-3957-11D2-A40B-0C5020524153}')
 	# Ease of Access
 	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{D555645E-D4F8-4C29-A827-D93C859C4F2A}')
 	# Secure Startup
-	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{D9EF8727-CAC2-4E60-809E-86F80A666C91}' @{ Name = 'BitLocker Drive Encryption' })
+	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{D9EF8727-CAC2-4E60-809E-86F80A666C91}' 'BitLocker Drive Encryption')
 	# Sensors
 	# Win8.1までサポート
-	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{E9950154-C418-419E-A90A-20C5287AE24B}' @{ Name = 'Location Settings' })
+	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{E9950154-C418-419E-A90A-20C5287AE24B}' 'Location Settings')
 	# ECS
-	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{ECDB0924-4208-451E-8EE0-373C0956DE16}' @{ Name = 'Work Folders' })
+	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{ECDB0924-4208-451E-8EE0-373C0956DE16}' 'Work Folders')
 	# Personalization Control Panel
 	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{ED834ED6-4B5A-4BFE-8F11-A626DCB6A921}')
 	# History Vault
-	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{F6B6E965-E9B2-444B-9286-10C9152EDBC5}' @{ Name = 'File History' })
+	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{F6B6E965-E9B2-444B-9286-10C9152EDBC5}' 'File History')
 	# Storage Spaces
 	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{F942C606-0914-47AB-BE56-1321B8035096}')
 	
@@ -661,7 +656,7 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:SyncResultsFolder')
 	
 	# Taskbar
-	Write-Output (newSpecialFolder "shell:$(if ($win10) { '::{21EC2020-3AEA-1069-A2DD-08002B30309D}' } else { 'ControlPanelFolder' })\::{05D7B0F4-2121-4EFF-BF6B-ED3F69B894D9}" @{ Name = 'Notification Area Icons' })
+	Write-Output (newSpecialFolder "shell:$(if ($win10) { '::{21EC2020-3AEA-1069-A2DD-08002B30309D}' } else { 'ControlPanelFolder' })\::{05D7B0F4-2121-4EFF-BF6B-ED3F69B894D9}" 'Notification Area Icons')
 	# shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}\::{863AA9FD-42DF-457B-8E4D-0DE1B8015C60}
 	Write-Output (newSpecialFolder 'shell:PrintersFolder')
 	# Bluetooth Devices
@@ -687,7 +682,7 @@ function getSpecialFolder {
 	# Results Folder
 	Write-Output (newSpecialFolder 'shell:::{2965E715-EB66-4719-B53F-1672673BBEFA}')
 	# Explorer Browser Results Folder
-	Write-Output (newSpecialFolder 'shell:::{418C8B64-5463-461D-88E0-75E2AFA3C6FA},' @{ Name = '' })
+	Write-Output (newSpecialFolder 'shell:::{418C8B64-5463-461D-88E0-75E2AFA3C6FA},' '')
 	Write-Output (newSpecialFolder 'shell:AppsFolder')
 	# Command Folder
 	Write-Output (newSpecialFolder 'shell:::{437FF9C0-A07F-4FA0-AF80-84B6C6440A16}')
@@ -699,7 +694,7 @@ function getSpecialFolder {
 	# Win10 1511までサポート
 	Write-Output (newSpecialFolder 'shell:StartMenuAllPrograms')
 	# 企業向けエディションで使用可
-	Write-Output (newSpecialFolder 'shell:::{AFDB1F70-2A4C-11D2-9039-00C04F8EEB3E}' @{ Name = 'Offline Files Folder' })
+	Write-Output (newSpecialFolder 'shell:::{AFDB1F70-2A4C-11D2-9039-00C04F8EEB3E}' 'Offline Files Folder')
 	# delegate folder that appears in Computer
 	Write-Output (newSpecialFolder 'shell:::{B155BDF8-02F0-451E-9A26-AE317CFD7779}')
 	# AppSuggestedLocations
@@ -806,7 +801,7 @@ function getSpecialFolder {
 	# shell:::{F8278C54-A712-415B-B593-B77A2BE0DDA9} (Win10 1703から)
 	Write-Output (newSpecialFolder 'shell:ThisDeviceFolder')
 	# My Documents (Documents)
-	Write-Output (newSpecialFolder 'shell:::{450D8FBA-AD25-11D0-98A8-0800361B1103}' @{ Name = 'My Documents' })
+	Write-Output (newSpecialFolder 'shell:::{450D8FBA-AD25-11D0-98A8-0800361B1103}' 'My Documents')
 	# Favorites (Links)
 	Write-Output (newSpecialFolder 'shell:::{323CA680-C24D-4099-B94D-446DD2D7249E}')
 	# Common Places FS Folder (Links)
@@ -854,7 +849,7 @@ function getSpecialFolder {
 	if ($win10) { Write-Output (newSpecialFolder 'shell:InternetFolder') }
 	# File Backup Index
 	Write-Output (newSpecialFolder 'shell:::{877CA5AC-CB41-4842-9C69-9136E42D47E2}')
-	Write-Output (newSpecialFolder 'shell:::{89D83576-6BD1-4C86-9454-BEB04E94C819}' @{ Name = 'Microsoft Office Outlook' })
+	Write-Output (newSpecialFolder 'shell:::{89D83576-6BD1-4C86-9454-BEB04E94C819}' 'Microsoft Office Outlook')
 	# DXP
 	Write-Output (newSpecialFolder 'shell:::{8FD8B88D-30E1-4F25-AC2B-553D3D65F0EA}')
 	# Enhanced Storage Data Source
@@ -872,7 +867,7 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:HomeGroupCurrentUserFolder')
 	# Sync Results Delegate Folder
 	Write-Output (newSpecialFolder 'shell:::{BC48B32F-5910-47F5-8570-5074A8A5636A}')
-	Write-Output (newSpecialFolder 'shell:::{BD7A2E7B-21CB-41B2-A086-B309680C6B7E}' @{ Name = 'Offline Files' })
+	Write-Output (newSpecialFolder 'shell:::{BD7A2E7B-21CB-41B2-A086-B309680C6B7E}' 'Offline Files')
 	# DLNA Content Directory Data Source
 	Write-Output (newSpecialFolder 'shell:::{D2035EDF-75CB-4EF1-95A7-410D9EE17170}')
 	# CLSID_StartMenuProviderFolder
@@ -904,34 +899,34 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:Local Music')
 	Write-Output (newSpecialFolder 'shell:Local Pictures')
 	Write-Output (newSpecialFolder 'shell:Local Videos')
-	Write-Output (newSpecialFolder 'shell:UsersFilesFolder\{56784854-C6CB-462B-8169-88E350ACB882}' @{ Name = 'Contacts' })
-	Write-Output (newSpecialFolder 'shell:UsersFilesFolder\{BFB9D5E0-C6A9-404C-B2B2-AE6DB6AF4968}' @{ Name = 'Links' })
-	Write-Output (newSpecialFolder 'shell:UsersFilesFolder\{4C5C32FF-BB9D-43B0-B5B4-2D72E54EAAA4}' @{ Name = 'SavedGames' })
-	Write-Output (newSpecialFolder 'shell:UsersFilesFolder\{7D1D3A04-DEBB-4115-95CF-2F29DA2920DA}' @{ Name = 'Searches' })
+	Write-Output (newSpecialFolder 'shell:UsersFilesFolder\{56784854-C6CB-462B-8169-88E350ACB882}' 'Contacts')
+	Write-Output (newSpecialFolder 'shell:UsersFilesFolder\{BFB9D5E0-C6A9-404C-B2B2-AE6DB6AF4968}' 'Links')
+	Write-Output (newSpecialFolder 'shell:UsersFilesFolder\{4C5C32FF-BB9D-43B0-B5B4-2D72E54EAAA4}' 'SavedGames')
+	Write-Output (newSpecialFolder 'shell:UsersFilesFolder\{7D1D3A04-DEBB-4115-95CF-2F29DA2920DA}' 'Searches')
 	Write-Output (newSpecialFolder 'shell:UsersLibrariesFolder')
-	Write-Output (newSpecialFolder 'shell:Libraries\{2B20DF75-1EDA-4039-8097-38798227D5B7}' @{ Name = 'CameraRollLibrary' })
-	Write-Output (newSpecialFolder 'shell:Libraries\{7B0DB17D-9CD2-4A93-9733-46CC89022E7C}' @{ Name = 'DocumentsLibrary' })
-	Write-Output (newSpecialFolder 'shell:Libraries\{2112AB0A-C86A-4FFE-A368-0DE96E47012E}' @{ Name = 'MusicLibrary' })
-	Write-Output (newSpecialFolder 'shell:Libraries\{A990AE9F-A03B-4E80-94BC-9912D7504104}' @{ Name = 'PicturesLibrary' })
-	Write-Output (newSpecialFolder 'shell:Libraries\{E25B5812-BE88-4BD9-94B0-29233477B6C3}' @{ Name = 'SavedPicturesLibrary' })
-	Write-Output (newSpecialFolder 'shell:Libraries\{491E922F-5643-4AF4-A7EB-4E7A138D8174}' @{ Name = 'VideosLibrary' })
+	Write-Output (newSpecialFolder 'shell:Libraries\{2B20DF75-1EDA-4039-8097-38798227D5B7}' 'CameraRollLibrary')
+	Write-Output (newSpecialFolder 'shell:Libraries\{7B0DB17D-9CD2-4A93-9733-46CC89022E7C}' 'DocumentsLibrary')
+	Write-Output (newSpecialFolder 'shell:Libraries\{2112AB0A-C86A-4FFE-A368-0DE96E47012E}' 'MusicLibrary')
+	Write-Output (newSpecialFolder 'shell:Libraries\{A990AE9F-A03B-4E80-94BC-9912D7504104}' 'PicturesLibrary')
+	Write-Output (newSpecialFolder 'shell:Libraries\{E25B5812-BE88-4BD9-94B0-29233477B6C3}' 'SavedPicturesLibrary')
+	Write-Output (newSpecialFolder 'shell:Libraries\{491E922F-5643-4AF4-A7EB-4E7A138D8174}' 'VideosLibrary')
 	# 64ビットアプリのみ
 	Write-Output (newSpecialFolder 'shell:ProgramFilesX64')
 	# 64ビットアプリのみ
 	Write-Output (newSpecialFolder 'shell:ProgramFilesCommonX64')
 	
-	Write-Output (newSpecialFolder "$Env:USERPROFILE" @{ Name = '%USERPROFILE%' })
-	Write-Output (newSpecialFolder "${Env:HOMEDRIVE}${Env:HOMEPATH}" @{ Name = '%HOMEDRIVE%%HOMEPATH%' })
-	Write-Output (newSpecialFolder "$Env:OneDrive" @{ Name = '%OneDrive%' })
-	Write-Output (newSpecialFolder "$Env:APPDATA" @{ Name = '%APPDATA%' })
-	Write-Output (newSpecialFolder "$Env:LOCALAPPDATA" @{ Name = '%LOCALAPPDATA%' })
-	Write-Output (newSpecialFolder "$Env:PUBLIC" @{ Name = '%PUBLIC%' })
-	Write-Output (newSpecialFolder "$Env:ALLUSERSPROFILE" @{ Name = '%ALLUSERSPROFILE%' })
-	Write-Output (newSpecialFolder "$Env:ProgramData" @{ Name = '%ProgramData%' })
-	Write-Output (newSpecialFolder "$Env:SystemRoot" @{ Name = '%SystemRoot%' })
-	Write-Output (newSpecialFolder "$Env:windir" @{ Name = '%windir%' })
-	Write-Output (newSpecialFolder "$Env:ProgramFiles" @{ Name = '%ProgramFiles%' })
-	Write-Output (newSpecialFolder "$Env:CommonProgramFiles" @{ Name = '%CommonProgramFiles%' })
+	Write-Output (newSpecialFolder "$Env:USERPROFILE" '%USERPROFILE%')
+	Write-Output (newSpecialFolder "${Env:HOMEDRIVE}${Env:HOMEPATH}" '%HOMEDRIVE%%HOMEPATH%')
+	Write-Output (newSpecialFolder "$Env:OneDrive" '%OneDrive%')
+	Write-Output (newSpecialFolder "$Env:APPDATA" '%APPDATA%')
+	Write-Output (newSpecialFolder "$Env:LOCALAPPDATA" '%LOCALAPPDATA%')
+	Write-Output (newSpecialFolder "$Env:PUBLIC" '%PUBLIC%')
+	Write-Output (newSpecialFolder "$Env:ALLUSERSPROFILE" '%ALLUSERSPROFILE%')
+	Write-Output (newSpecialFolder "$Env:ProgramData" '%ProgramData%')
+	Write-Output (newSpecialFolder "$Env:SystemRoot" '%SystemRoot%')
+	Write-Output (newSpecialFolder "$Env:windir" '%windir%')
+	Write-Output (newSpecialFolder "$Env:ProgramFiles" '%ProgramFiles%')
+	Write-Output (newSpecialFolder "$Env:CommonProgramFiles" '%CommonProgramFiles%')
 	
 	# OneDrive
 	# Win10から
@@ -941,14 +936,14 @@ function getSpecialFolder {
 	# Taskbar
 	Write-Output (newSpecialFolder 'shell:::{05D7B0F4-2121-4EFF-BF6B-ED3F69B894D9}')
 	# Win10から
-	Write-Output (newSpecialFolder 'shell:::{088E3905-0323-4B02-9826-5D99428E115F}' @{ Name = 'Local Downloads' })
+	Write-Output (newSpecialFolder 'shell:::{088E3905-0323-4B02-9826-5D99428E115F}' 'Local Downloads')
 	# Win10 1709から
-	Write-Output (newSpecialFolder 'shell:::{0DB7E03F-FC29-4DC6-9020-FF41B59E513A}' @{ Name = '3D Object' })
+	Write-Output (newSpecialFolder 'shell:::{0DB7E03F-FC29-4DC6-9020-FF41B59E513A}' '3D Object')
 	# Install New Programs
 	Write-Output (newSpecialFolder 'shell:::{15EAE92E-F17A-4431-9F28-805E482DAFD4}')
 	# Set User Defaults
 	Write-Output (newSpecialFolder 'shell:::{17CD9488-1228-4B2F-88CE-4298E93E0966}')
-	Write-Output (newSpecialFolder 'shell:::{1CF1260C-4DD0-4EBB-811F-33C572699FDE}' @{ Name = 'My Music' })
+	Write-Output (newSpecialFolder 'shell:::{1CF1260C-4DD0-4EBB-811F-33C572699FDE}' 'My Music')
 	# User Pinned
 	Write-Output (newSpecialFolder 'shell:::{1F3427C8-5C10-4210-AA03-2EE45287D668}')
 	# This PC
@@ -960,15 +955,15 @@ function getSpecialFolder {
 	# Workspaces Center
 	Write-Output (newSpecialFolder 'shell:::{241D7C96-F8BF-4F85-B01F-E2B043341A4B}')
 	# Win10から
-	Write-Output (newSpecialFolder 'shell:::{24AD3AD4-A569-4530-98E1-AB02F9417AA8}' @{ Name = 'Local Pictures' })
-	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\0' @{ Name = 'All Control Panel Items' })
-	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\4' @{ Name = 'Hardware and Sound' })
-	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\10' @{ Name = 'System and Security' })
-	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\11' @{ Name = 'All Control Panel Items' })
-	Write-Output (newSpecialFolder 'shell:::{374DE290-123F-4565-9164-39C4925E467B}' @{ Name = 'Downloads' })
-	Write-Output (newSpecialFolder 'shell:::{3ADD1653-EB32-4CB0-BBD7-DFA0ABB5ACCA}' @{ Name = 'My Pictures' })
+	Write-Output (newSpecialFolder 'shell:::{24AD3AD4-A569-4530-98E1-AB02F9417AA8}' 'Local Pictures')
+	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\0' 'All Control Panel Items')
+	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\4' 'Hardware and Sound')
+	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\10' 'System and Security')
+	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\11' 'All Control Panel Items')
+	Write-Output (newSpecialFolder 'shell:::{374DE290-123F-4565-9164-39C4925E467B}' 'Downloads')
+	Write-Output (newSpecialFolder 'shell:::{3ADD1653-EB32-4CB0-BBD7-DFA0ABB5ACCA}' 'My Pictures')
 	# Win10から
-	Write-Output (newSpecialFolder 'shell:::{3DFDF296-DBEC-4FB4-81D1-6A3438BCF4DE}' @{ Name = 'Local Music' })
+	Write-Output (newSpecialFolder 'shell:::{3DFDF296-DBEC-4FB4-81D1-6A3438BCF4DE}' 'Local Music')
 	# Explorer Browser Results Folder
 	Write-Output (newSpecialFolder 'shell:::{418C8B64-5463-461D-88E0-75E2AFA3C6FA}')
 	# Applications
@@ -1003,16 +998,16 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:::{9C73F5E5-7AE7-4E32-A8E8-8D23B85255BF}')
 	# Network Connections
 	Write-Output (newSpecialFolder 'shell:::{992CFFA0-F557-101A-88EC-00DD010CCC48}')
-	Write-Output (newSpecialFolder 'shell:::{A0953C92-50DC-43BF-BE83-3742FED03C9C}' @{ Name = 'My Video' })
+	Write-Output (newSpecialFolder 'shell:::{A0953C92-50DC-43BF-BE83-3742FED03C9C}' 'My Video')
 	# Device Center
 	Write-Output (newSpecialFolder 'shell:::{A8A91A66-3A7D-4424-8D24-04E180695C7A}')
-	Write-Output (newSpecialFolder 'shell:::{A8CDFF1C-4878-43BE-B5FD-F8091C1C60D0}' @{ Name = 'Personal' })
+	Write-Output (newSpecialFolder 'shell:::{A8CDFF1C-4878-43BE-B5FD-F8091C1C60D0}' 'Personal')
 	# Win10 1511まで
-	Write-Output (newSpecialFolder 'shell:::{ADFA80E7-9769-4AD9-992C-55DC57E1008C}' @{ Name = 'StartMenuAllPrograms' })
+	Write-Output (newSpecialFolder 'shell:::{ADFA80E7-9769-4AD9-992C-55DC57E1008C}' 'StartMenuAllPrograms')
 	# (cscui.dll)
 	# 企業向けエディションで使用可
 	Write-Output (newSpecialFolder 'shell:::{AFDB1F70-2A4C-11D2-9039-00C04F8EEB3E}')
-	Write-Output (newSpecialFolder 'shell:::{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}' @{ Name = 'ThisPCDesktopFolder' })
+	Write-Output (newSpecialFolder 'shell:::{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}' 'ThisPCDesktopFolder')
 	# Other Users Folder
 	Write-Output (newSpecialFolder 'shell:::{B4FB3F98-C1EA-428D-A78A-D1F5659CBA93}')
 	# (mssvp.dll)
@@ -1022,7 +1017,7 @@ function getSpecialFolder {
 	# Administrative Tools
 	Write-Output (newSpecialFolder 'shell:::{D20EA4E1-3957-11D2-A40B-0C5020524153}')
 	# Win10から
-	Write-Output (newSpecialFolder 'shell:::{D3162B92-9365-467A-956B-92703ACA08AF}' @{ Name = 'Local Documents' })
+	Write-Output (newSpecialFolder 'shell:::{D3162B92-9365-467A-956B-92703ACA08AF}' 'Local Documents')
 	# Installed Updates
 	Write-Output (newSpecialFolder 'shell:::{D450A8A1-9568-45C7-9C0E-B4F9FB4537BD}')
 	# Secure Startup
@@ -1040,7 +1035,7 @@ function getSpecialFolder {
 	# Win10 1703から
 	Write-Output (newSpecialFolder 'shell:::{F8278C54-A712-415B-B593-B77A2BE0DDA9}')
 	# Win10から
-	Write-Output (newSpecialFolder 'shell:::{F86FA3AB-70D2-4FC7-9C99-FCBF05467F3A}' @{ Name = 'Local Videos' })
+	Write-Output (newSpecialFolder 'shell:::{F86FA3AB-70D2-4FC7-9C99-FCBF05467F3A}' 'Local Videos')
 	
 	# (shell32.dll#SearchCommand)
 	Write-Output (newShellCommand 'shell:::{2559A1F8-21D7-11D4-BDAF-00C04F60B9F0}')

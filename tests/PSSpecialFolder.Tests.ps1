@@ -122,8 +122,8 @@ InModuleScope PSSpecialFolder {
 			}
 		}
 		$appDataPath = [Environment]::GetFolderPath('ApplicationData')
-		Context "$appDataPath @{ Name = `"AppData`" }" {
-			$folder = newSpecialFolder $appDataPath @{ Name = 'AppData' }
+		Context "$appDataPath `"AppData`"" {
+			$folder = newSpecialFolder $appDataPath 'AppData'
 			It "Name should `"AppData`"" {
 				$folder.Name | Should -Be "AppData"
 			}
@@ -134,8 +134,8 @@ InModuleScope PSSpecialFolder {
 		$librariesPath = (Get-Item 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders').
 			GetValue('{1B3EA5DC-B587-4786-B4EF-BD1DC332AEAE}')
 		if (!$librariesPath) { $librariesPath = "$appDataPath\Microsoft\Windows\Libraries" }
-		Context "shell:Libraries @{ Path = `"$librariesPath`"; FolderItemForProperties = getDirectoryFolderItem $librariesPath }" {
-			$folder = newSpecialFolder shell:Libraries @{ Path = $librariesPath; FolderItemForProperties = getDirectoryFolderItem $librariesPath }
+		Context "shell:Libraries -Path `"$librariesPath`" -FolderItemForProperties (getDirectoryFolderItem $librariesPath)" {
+			$folder = newSpecialFolder shell:Libraries -Path $librariesPath -FolderItemForProperties (getDirectoryFolderItem $librariesPath)
 			It "Name should `"Libraries`"" {
 				$folder.Name | Should -Be 'Libraries'
 			}

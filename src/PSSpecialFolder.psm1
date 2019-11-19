@@ -70,7 +70,7 @@ class SpecialFolder {
 		
 		if (!$this.IsPropertiesChecked) {
 			$item = $this.FolderItemForProperties
-			if ($item -eq $null) { $item = $this.FolderItem }
+			if ($null -eq $item) { $item = $this.FolderItem }
 			
 			$verbs = $item.Verbs()
 			if ($verbs -and $verbs.Count) {
@@ -164,7 +164,7 @@ function newSpecialFolder {
 	$isDirectory = Test-Path $path -PathType Container
 	$initializer = @{
 		Name = 
-			if ($Name -ne $null) { [string]$Name }
+			if ($null -ne $Name) { [string]$Name }
 			elseif ($Dir -match '^shell:(?:(?:\w|\s)+)$') { $Dir.Substring(6) }
 			elseif ($Dir -match '^shell:.*::\{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\}$') {
 				$clsid = $Dir.Substring($Dir.Length - 38)

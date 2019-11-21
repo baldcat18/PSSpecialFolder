@@ -142,9 +142,7 @@ $propertiesName = @($shell.NameSpace(0).Self.Verbs())[-1].Name
 
 function newSpecialFolder {
 	[OutputType([SpecialFolder])]
-	# [string]$Nameだとnullが空文字列に変換されてしまう
-	# https://github.com/PowerShell/PowerShell/issues/4616
-	param ([string]$Dir, [object]$Name = $null, [string]$Path = '', [__ComObject]$FolderItemForProperties = $null)
+	param ([string]$Dir, [string]$Name = '', [string]$Path = '', [__ComObject]$FolderItemForProperties = $null)
 	
 	if (!$Dir) { return }
 	if ($Dir.Substring(0, 2) -eq '\\') { $Dir = 'file:' + $Dir }
@@ -164,7 +162,7 @@ function newSpecialFolder {
 	$isDirectory = Test-Path $path -PathType Container
 	$initializer = @{
 		Name = 
-			if ($null -ne $Name) { [string]$Name }
+			if ($Name) { $Name }
 			elseif ($Dir -match '^shell:(?:(?:\w|\s)+)$') { $Dir.Substring(6) }
 			elseif ($Dir -match '^shell:.*::\{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\}$') {
 				$clsid = $Dir.Substring($Dir.Length - 38)
@@ -681,8 +679,6 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:::{289AF617-1CC3-42A6-926C-E6A863F0E3BA}')
 	# Results Folder
 	Write-Output (newSpecialFolder 'shell:::{2965E715-EB66-4719-B53F-1672673BBEFA}')
-	# Explorer Browser Results Folder
-	Write-Output (newSpecialFolder 'shell:::{418C8B64-5463-461D-88E0-75E2AFA3C6FA},' '')
 	Write-Output (newSpecialFolder 'shell:AppsFolder')
 	# Command Folder
 	Write-Output (newSpecialFolder 'shell:::{437FF9C0-A07F-4FA0-AF80-84B6C6440A16}')

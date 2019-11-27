@@ -163,10 +163,9 @@ function newSpecialFolder {
 	$initializer = @{
 		Name = 
 			if ($Name) { $Name }
-			elseif ($Dir -match '^shell:(?:(?:\w|\s)+)$') { $Dir.Substring(6) }
-			elseif ($Dir -match '^shell:.*::\{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\}$') {
-				$clsid = $Dir.Substring($Dir.Length - 38)
-				(Get-Item "Microsoft.PowerShell.Core\Registry::HKEY_CLASSES_ROOT\CLSID\$clsid").GetValue('')
+			elseif ($Dir -match '^shell:((?:\w|\s)+)$') { $Matches[1] }
+			elseif ($Dir -match '^shell:.*::(\{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\})$') {
+				(Get-Item "Microsoft.PowerShell.Core\Registry::HKEY_CLASSES_ROOT\CLSID\$($Matches[1])").GetValue('')
 			}
 			else { $Dir -replace '^.+\\(.+?)$', '$1' }
 		Path = $Path

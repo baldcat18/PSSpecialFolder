@@ -754,7 +754,7 @@ function getSpecialFolder {
 	Write-Output (newShellCommand 'shell:::{80F3F1D5-FECA-45F3-BC32-752C152E456E}')
 	# Internet Folder
 	# Win10以降では開けないので非表示に
-	if (!$win10) { Write-Output newShellCommand 'shell:InternetFolder' }
+	if (!$win10) { Write-Output (newSpecialFolder 'shell:InternetFolder') }
 	# Indexing Options Control Panel
 	Write-Output (newShellCommand 'shell:::{87D66A43-7B11-4A28-9811-C86EE395ACF7}')
 	# Portable Workspace Creator

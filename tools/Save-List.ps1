@@ -17,8 +17,11 @@ $now = Get-Date -Format yyyyMMdd-HHmmss
 Get-Module PSSpecialFolder | Remove-Module
 
 $module = Import-Module "$PSScriptRoot/../src/PSSpecialFolder.psd1" -PassThru
-
-Get-SpecialFolder -Debug -InformationAction Continue 6>&1 |
+& {
+	$InformationPreference = 'Continue'
+	Write-Information "Module Version: $((Get-Module PSSpecialFolder).Version.ToString())"
+	Get-SpecialFolder -Debug
+} 6>&1 |
 	ForEach-Object {
 		if ($_ -is [System.Management.Automation.InformationRecord]) { [pscustomobject]@{
 			Information = $_.ToString().Replace("`n", '')

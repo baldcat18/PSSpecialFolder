@@ -208,8 +208,6 @@ function getSpecialFolder {
 	$currentVersionKey = Get-Item 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion'
 	$appxKey = Get-Item 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Appx'
 	
-	Write-Information "Module Version: $((Get-Module PSSpecialFolder).Version.ToString())`n"
-	
 	Write-Information 'Category: User''s Files'
 	
 	# shell:Profile

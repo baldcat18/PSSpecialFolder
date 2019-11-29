@@ -145,8 +145,8 @@ function newSpecialFolder {
 	param ([string]$Dir, [string]$Name = '', [string]$Path = '', [__ComObject]$FolderItemForProperties = $null)
 	
 	if (!$Dir) { return }
-	if ($Dir.Substring(0, 2) -eq '\\') { $Dir = 'file:' + $Dir }
-	elseif ($Dir.Substring(0, 6) -ne 'shell:' -and $Dir.Substring(0, 5) -ne 'file:') { $Dir = "file:\\\$Dir" }
+	if ($Dir -match '^\\\\') { $Dir = 'file:' + $Dir }
+	elseif ($Dir -notmatch '^shell:' -and $Dir -notmatch '^file:') { $Dir = "file:\\\$Dir" }
 	
 	try { $folder = $shell.NameSpace($Dir) }
 	catch { return }
@@ -154,10 +154,7 @@ function newSpecialFolder {
 	if (!$folder) { return }
 	$folderItem = $shell.NameSpace($Dir).Self
 	
-	if (!$Path)  {
-		$Path = $folderItem.Path
-		if ($Path.Substring(0,2) -eq '::') { $Path = "shell:$Path" }
-	}
+	if (!$Path) { $Path = $folderItem.Path -replace '^::', 'shell:::' }
 	
 	$isDirectory = Test-Path $path -PathType Container
 	$initializer = @{
@@ -184,7 +181,7 @@ function newShellCommand {
 	
 	if (!$Path) { return }
 	
-	$clsidPath = "Microsoft.PowerShell.Core\Registry::HKEY_CLASSES_ROOT\CLSID\$($Path.Substring($Path.Length - 38))"
+	$clsidPath = "Microsoft.PowerShell.Core\Registry::HKEY_CLASSES_ROOT\CLSID\$($Path.Remove(0, 8))"
 	if (!(Test-Path $clsidPath)) { return }
 	
 	return [VirtualFolder]@{ Name = if ($Name) { $Name } else { (Get-Item $clsidPath).GetValue('') }; Path = $Path }

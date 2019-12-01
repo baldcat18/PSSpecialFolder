@@ -20,7 +20,7 @@ $KF_FLAG_CREATE = [uint32]0x00008000
 
 @(
 	@{ guid='{5E6C858F-0E22-4760-9AFE-EA3317B67173}'; name='Profile' }
-	@{ guid='{31C0DD25-9439-4F12-BF41-7FF4EDA38722}'; name='3D Objects' } # Win10から
+	@{ guid='{31C0DD25-9439-4F12-BF41-7FF4EDA38722}'; name='3D Objects' } # Win10 1507から
 	@{ guid='{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}'; name='Desktop' }
 	@{ guid='{FDD39AD0-238F-46AF-ADB4-6C85480369C7}'; name='Personal' }
 	@{ guid='{374DE290-123F-4565-9164-39C4925E467B}'; name='Downloads' }
@@ -28,16 +28,16 @@ $KF_FLAG_CREATE = [uint32]0x00008000
 	@{ guid='{DE92C1C7-837F-4F69-A3BB-86E631204A23}'; name='Playlists' }
 	@{ guid='{33E28130-4E1E-4676-835A-98395C3BC3BB}'; name='My Pictures' }
 	@{ guid='{AB5FB87B-7CE2-4F83-915D-550846C9537B}'; name='Camera Roll' }
-	@{ guid='{3B193882-D3AD-4eab-965A-69829D1FB59F}'; name='SavedPictures' } # Win10から
+	@{ guid='{3B193882-D3AD-4eab-965A-69829D1FB59F}'; name='SavedPictures' } # Win10 1507から
 	@{ guid='{b7bede81-df94-4682-a7d8-57a52620b86f}'; name='Screenshots' } 
 	@{ guid='{69D2CF90-FC33-4FB7-9A0C-EBB0F0FCB43C}'; name='PhotoAlbums' }
 	@{ guid='{18989B1D-99B5-455B-841C-AB7C74E4DDFC}'; name='My Video' }
-	@{ guid='{EDC0FE71-98D8-4F4A-B920-C8DC133CB165}'; name='Captures' } # Win10から
+	@{ guid='{EDC0FE71-98D8-4F4A-B920-C8DC133CB165}'; name='Captures' } # Win10 1507から
 	@{ guid='{7AD67899-66AF-43BA-9156-6AAD42E6C596}'; name='AppMods' } # Win10 1703から
 	@{ guid='{56784854-C6CB-462b-8169-88E350ACB882}'; name='Contacts' }
 	@{ guid='{1777F761-68AD-4D8A-87BD-30B759FA33DD}'; name='Favorites' }
 	@{ guid='{bfb9d5e0-c6a9-404c-b2b2-ae6db6af4968}'; name='Links' }
-	@{ guid='{2f8b40c2-83ed-48ee-b383-a1f157ec6f9a}'; name='Recorded Calls' } # Win10から
+	@{ guid='{2f8b40c2-83ed-48ee-b383-a1f157ec6f9a}'; name='Recorded Calls' } # Win10 1507から
 	@{ guid='{4C5C32FF-BB9D-43b0-B5B4-2D72E54EAAA4}'; name='SavedGames' }
 	@{ guid='{7d1d3a04-debb-4115-95cf-2f29da2920da}'; name='Searches' }
 	@{ guid='{A52BBA46-E9E1-435f-B3D9-28DAA648C0F6}'; name='OneDrive' }
@@ -60,11 +60,11 @@ $KF_FLAG_CREATE = [uint32]0x00008000
 	@{ guid='{8983036C-27C0-404B-8F08-102D10DCFD74}'; name='SendTo' }
 	@{ guid='{A63293E8-664E-48DB-A079-DF759E0509F7}'; name='Templates' }
 	@{ guid='{1B3EA5DC-B587-4786-B4EF-BD1DC332AEAE}'; name='Libraries' }
-	@{ guid='{2B20DF75-1EDA-4039-8097-38798227D5B7}'; name='CameraRollLibrary' } # Win10から
+	@{ guid='{2B20DF75-1EDA-4039-8097-38798227D5B7}'; name='CameraRollLibrary' } # Win10 1507から
 	@{ guid='{7B0DB17D-9CD2-4A93-9733-46CC89022E7C}'; name='DocumentsLibrary' }
 	@{ guid='{2112AB0A-C86A-4FFE-A368-0DE96E47012E}'; name='MusicLibrary' }
 	@{ guid='{A990AE9F-A03B-4E80-94BC-9912D7504104}'; name='PicturesLibrary' }
-	@{ guid='{E25B5812-BE88-4bd9-94B0-29233477B6C3}'; name='SavedPicturesLibrary' } # Win10から
+	@{ guid='{E25B5812-BE88-4bd9-94B0-29233477B6C3}'; name='SavedPicturesLibrary' } # Win10 1507から
 	@{ guid='{491E922F-5643-4af4-A7EB-4E7A138D8174}'; name='VideosLibrary' }
 	@{ guid='{625B53C3-AB48-4EC1-BA1F-A1EF4146FC19}'; name='Start Menu' }
 	@{ guid='{A77F5D77-2E2B-44C3-A6A2-ABA601054A51}'; name='Programs' }
@@ -73,7 +73,7 @@ $KF_FLAG_CREATE = [uint32]0x00008000
 	@{ guid='{F1B32785-6FBA-4FCF-9D55-7B8E7F157091}'; name='LocalAppData' }
 	@{ guid='{A520A1A4-1780-4FF6-BD18-167343C5AF16}'; name='LocalAppDataLow' }
 	@{ guid='{B2C5E279-7ADD-439F-B28C-C41FE1BBF672}'; name='AppDataDesktop' } # Win10 1709から
-	@{ guid='{DBE8E08E-3053-4BBC-B183-2A7B2B191E59}'; name='Development Files' } # Win10から
+	@{ guid='{DBE8E08E-3053-4BBC-B183-2A7B2B191E59}'; name='Development Files' } # Win10 1507から
 	@{ guid='{7BE16610-1F7F-44AC-BFF0-83E15F2FFCA1}'; name='AppDataDocuments' } # Win10 1709から
 	@{ guid='{7CFBEFBC-DE1F-45AA-B843-A542AC536CC9}'; name='AppDataFavorites' } # Win10 1709から
 	@{ guid='{559D40A3-A036-40FA-AF61-84CB430A4D34}'; name='AppDataProgramData' } # Win10 1709から
@@ -108,14 +108,14 @@ $KF_FLAG_CREATE = [uint32]0x00008000
 	@{ guid='{C1BAE2D0-10DF-4334-BEDD-7AA20B227A9D}'; name='OEM Links' }
 	@{ guid='{5CE4A5E9-E4EB-479D-B89F-130C02886155}'; name='Device Metadata Store' }
 	@{ guid='{DEBF2536-E1A8-4c59-B6A2-414586476AEA}'; name='PublicGameTasks' }
-	@{ guid='{12D4C69E-24AD-4923-BE19-31321C43A767}'; name='RetailDemo' } # Win10から
+	@{ guid='{12D4C69E-24AD-4923-BE19-31321C43A767}'; name='RetailDemo' } # Win10 1507から
 	@{ guid='{E555AB60-153B-4D17-9F04-A5FE99FC15EC}'; name='CommonRingtones' }
 	@{ guid='{B94237E7-57AC-4347-9151-B08C6C32D1F7}'; name='Common Templates' }
 	@{ guid='{A4115719-D62E-491D-AA7C-E74B8BE3B067}'; name='Common Start Menu' }
 	@{ guid='{0139D44E-6AFE-49F2-8690-3DAFCAE6FFB8}'; name='Common Programs' }
 	@{ guid='{D0384E7D-BAC3-4797-8F14-CBA229B392B5}'; name='Common Administrative Tools' }
 	@{ guid='{82A5EA35-D9CD-47C5-9629-E15D2F714E6E}'; name='Common Startup' }
-	@{ guid='{A440879F-87A0-4F7D-B700-0207B966194A}'; name='Common Start Menu Places' } # Win10から
+	@{ guid='{A440879F-87A0-4F7D-B700-0207B966194A}'; name='Common Start Menu Places' } # Win10 1507から
 	@{ guid='{F38BF404-1D43-42F2-9305-67DE0B28FC23}'; name='Windows' }
 	@{ guid='{FD228CB7-AE11-4AE3-864C-16F3910AB8FE}'; name='Fonts' }
 	@{ guid='{8AD10C31-2ADB-4296-A8F7-E4701232C972}'; name='ResourceDir' }

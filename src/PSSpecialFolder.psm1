@@ -213,35 +213,35 @@ function getSpecialFolder {
 	# %USERPROFILE%
 	# %HOMEDRIVE%%HOMEPATH%
 	Write-Output (newSpecialFolder 'shell:UsersFilesFolder' -FolderItemForProperties $shell.NameSpace(40).Self)
-	# Win10からサポート
+	# Win10 1507からサポート
 	# shell:UsersFilesFolder\3D Objects
 	# shell:MyComputerFolder\::{0DB7E03F-FC29-4DC6-9020-FF41B59E513A} (Win10 1709から)
 	# Win10 1507から1703では3D Builderを起動した時に自動生成される
 	Write-Output (newSpecialFolder 'shell:3D Objects')
 	# shell:MyComputerFolder\::{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}
 	Write-Output (newSpecialFolder 'shell:ThisPCDesktopFolder')
-	# shell:Local Documents / shell:MyComputerFolder\::{D3162B92-9365-467A-956B-92703ACA08AF} (Win10から)
+	# shell:Local Documents / shell:MyComputerFolder\::{D3162B92-9365-467A-956B-92703ACA08AF} (Win10 1507から)
 	# shell:::{450D8FBA-AD25-11D0-98A8-0800361B1103} ([My Documents])
 	# shell:MyComputerFolder\::{A8CDFF1C-4878-43BE-B5FD-F8091C1C60D0}
 	Write-Output (newSpecialFolder 'shell:Personal' 'My Documents')
-	# shell:Local Downloads / shell:MyComputerFolder\::{088E3905-0323-4B02-9826-5D99428E115F} (Win10から)
+	# shell:Local Downloads / shell:MyComputerFolder\::{088E3905-0323-4B02-9826-5D99428E115F} (Win10 1507から)
 	# shell:MyComputerFolder\::{374DE290-123F-4565-9164-39C4925E467B}
 	Write-Output (newSpecialFolder 'shell:Downloads')
 	
-	# shell:Local Music / shell:MyComputerFolder\::{3DFDF296-DBEC-4FB4-81D1-6A3438BCF4DE} (Win10から)
+	# shell:Local Music / shell:MyComputerFolder\::{3DFDF296-DBEC-4FB4-81D1-6A3438BCF4DE} (Win10 1507から)
 	# shell:MyComputerFolder\::{1CF1260C-4DD0-4EBB-811F-33C572699FDE}
 	Write-Output (newSpecialFolder 'shell:My Music')
 	# shell:My Music\Playlists
 	# WMPやGroove ミュージックで再生リストを作成する時に自動生成される
 	Write-Output (newSpecialFolder 'shell:Playlists')
 	
-	# shell:Local Pictures / shell:MyComputerFolder\::{24AD3AD4-A569-4530-98E1-AB02F9417AA8} (Win10から)
+	# shell:Local Pictures / shell:MyComputerFolder\::{24AD3AD4-A569-4530-98E1-AB02F9417AA8} (Win10 1507から)
 	# shell:MyComputerFolder\::{3ADD1653-EB32-4CB0-BBD7-DFA0ABB5ACCA}
 	Write-Output (newSpecialFolder 'shell:My Pictures')
 	# shell:My Pictures\Camera Roll
 	# カメラアプリで写真や動画を撮影する時に自動生成される
 	Write-Output (newSpecialFolder 'shell:Camera Roll')
-	# Win10からサポート
+	# Win10 1507からサポート
 	# shell:My Pictures\Saved Pictures
 	Write-Output (newSpecialFolder 'shell:SavedPictures')
 	# shell:My Pictures\Screenshots
@@ -251,10 +251,10 @@ function getSpecialFolder {
 	# 手動でフォルダーを作成しても使用可
 	Write-Output (newSpecialFolder 'shell:PhotoAlbums')
 	
-	# shell:Local Videos / shell:MyComputerFolder\::{F86FA3AB-70D2-4FC7-9C99-FCBF05467F3A} (Win10から)
+	# shell:Local Videos / shell:MyComputerFolder\::{F86FA3AB-70D2-4FC7-9C99-FCBF05467F3A} (Win10 1507から)
 	# shell:MyComputerFolder\::{A0953C92-50DC-43BF-BE83-3742FED03C9C}
 	Write-Output (newSpecialFolder 'shell:My Video')
-	# Win10からサポート
+	# Win10 1507からサポート
 	# shell:My Video\Captures
 	# ゲームバーで動画やスクリーンショットを保存する時に自動生成される
 	Write-Output (newSpecialFolder 'shell:Captures')
@@ -269,7 +269,7 @@ function getSpecialFolder {
 	# shell:::{D34A6CA6-62C2-4C34-8A7C-14709C1AD938} ([Common Places FS Folder])
 	# shell:UsersFilesFolder\{BFB9D5E0-C6A9-404C-B2B2-AE6DB6AF4968}
 	Write-Output (newSpecialFolder 'shell:Links')
-	# Win10からサポート
+	# Win10 1507からサポート
 	# shell:UsersFilesFolder\Recorded Calls
 	Write-Output (newSpecialFolder 'shell:Recorded Calls')
 	# shell:UsersFilesFolder\{4C5C32FF-BB9D-43B0-B5B4-2D72E54EAAA4}
@@ -282,7 +282,7 @@ function getSpecialFolder {
 	# shell:UsersFilesFolder\OneDrive
 	# Win8.1ではMicrosoftアカウントでサインインする時に自動生成される
 	# shell:::{59031A47-3F72-44A7-89C5-5595FE6B30EE}\::{8E74D236-7F35-4720-B138-1FED0B85EA75} (Win8.1のみ)
-	# shell:::{59031A47-3F72-44A7-89C5-5595FE6B30EE}\::{018D5C66-4533-4307-9B53-224DE2ED1FE6} (Win10から)
+	# shell:::{59031A47-3F72-44A7-89C5-5595FE6B30EE}\::{018D5C66-4533-4307-9B53-224DE2ED1FE6} (Win10 1507から)
 	# %OneDrive% (Win10 1607から)
 	Write-Output (newSpecialFolder 'shell:OneDrive')
 	# shell:OneDrive\Documents
@@ -324,7 +324,7 @@ function getSpecialFolder {
 	# shell:UsersLibrariesFolder
 	# shell:::{031E4825-7B94-4DC3-B131-E946B44C8DD5}
 	Write-Output (newSpecialFolder 'shell:Libraries' -Path $librariesPath -FolderItemForProperties (getDirectoryFolderItem $librariesPath))
-	# Win10からサポート
+	# Win10 1507からサポート
 	# shell:Libraries\CameraRoll.library-ms
 	# shell:Libraries\{2B20DF75-1EDA-4039-8097-38798227D5B7}
 	$cameraRollLibraryPath = $userShellFoldersKey.GetValue('{2B20DF75-1EDA-4039-8097-38798227D5B7}')
@@ -342,7 +342,7 @@ function getSpecialFolder {
 	$picturesLibraryPath = $userShellFoldersKey.GetValue('{A990AE9F-A03B-4E80-94BC-9912D7504104}')
 	if (!$picturesLibraryPath) { $picturesLibraryPath = "$librariesPath\Pictures.library-ms" }
 	Write-Output (newSpecialFolder 'shell:PicturesLibrary' -Path $picturesLibraryPath)
-	# Win10からサポート
+	# Win10 1507からサポート
 	# shell:Libraries\SavedPictures.library-ms
 	# shell:Libraries\{E25B5812-BE88-4BD9-94B0-29233477B6C3}
 	$savedPicturesLibraryPath = $userShellFoldersKey.GetValue('{E25B5812-BE88-4BD9-94B0-29233477B6C3}')
@@ -369,7 +369,7 @@ function getSpecialFolder {
 	# Win10 1709からサポート
 	# shell:Local AppData\Desktop
 	Write-Output (newSpecialFolder 'shell:AppDataDesktop')
-	# Win10からサポート
+	# Win10 1507からサポート
 	# shell:Local AppData\DevelopmentFiles
 	Write-Output (newSpecialFolder 'shell:Development Files')
 	# Win10 1709からサポート
@@ -422,7 +422,7 @@ function getSpecialFolder {
 	
 	# shell:::{4336A54D-038B-4685-AB02-99BB52D3FB8B}
 	# shell:ThisDeviceFolder (Win10 1507から1607まで)
-	# shell:::{5B934B42-522B-4C34-BBFE-37A3EF7B9C90} (Win10から)
+	# shell:::{5B934B42-522B-4C34-BBFE-37A3EF7B9C90} (Win10 1507から)
 	# %PUBLIC%
 	Write-Output (newSpecialFolder 'shell:Public')
 	# shell:Public\AccountPictures
@@ -452,7 +452,7 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder $appxKey.GetValue('PackageRepositoryRoot') 'Repositories of the Windows Apps')
 	Write-Output (newSpecialFolder 'shell:Device Metadata Store')
 	Write-Output (newSpecialFolder 'shell:PublicGameTasks')
-	# Win10からサポート
+	# Win10 1507からサポート
 	# shell:Common AppData\Microsoft\Windows\RetailDemo
 	# 市販デモ モードで使用される
 	Write-Output (newSpecialFolder 'shell:Retail Demo')
@@ -466,7 +466,7 @@ function getSpecialFolder {
 	# shell:ControlPanelFolder\::{D20EA4E1-3957-11D2-A40B-0C5020524153}
 	Write-Output (newSpecialFolder 'shell:Common Administrative Tools')
 	Write-Output (newSpecialFolder 'shell:Common Startup')
-	# Win10からサポート
+	# Win10 1507からサポート
 	Write-Output (newSpecialFolder 'shell:Common Start Menu Places')
 	
 	Write-Information "`nCategory: Windows`n"
@@ -523,16 +523,16 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:MyComputerFolder')
 	# Recent Places Folder
 	Write-Output (newSpecialFolder 'shell:::{22877A6D-37A1-461A-91B0-DBDA5AAEBC99}')
-	# Win10からサポート
+	# Win10 1507からサポート
 	# shell:::{4564B25E-30CD-4787-82BA-39E73A750B14} ([Recent Items Instance Folder])
 	Write-Output (newSpecialFolder 'shell:::{3134EF9C-6B18-4996-AD04-ED5912E00EB5}' 'Recent files')
 	# Portable Devices
 	Write-Output (newSpecialFolder 'shell:::{35786D3C-B075-49B9-88DD-029876E11C01}')
 	# Frequent Places Folder
-	# Win10からサポート
+	# Win10 1507からサポート
 	Write-Output (newSpecialFolder 'shell:::{3936E9E4-D92C-4EEE-A85A-BC16D5EA0819}')
 	Write-Output (newSpecialFolder 'shell:RecycleBinFolder')
-	# Win10からサポート
+	# Win10 1507からサポート
 	Write-Output (newSpecialFolder 'shell:::{679F85CB-0220-4080-B29B-5540CC05AAB6}' 'Quick access')
 	# Removable Storage Devices
 	# Win8.1では[PC]と同じなので非表示に
@@ -540,7 +540,7 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:HomeGroupFolder')
 	Write-Output (newSpecialFolder 'shell:NetworkPlacesFolder')
 	# Removable Drives
-	# Win10からサポート
+	# Win10 1507からサポート
 	Write-Output (newSpecialFolder 'shell:::{F5FB2C77-0E2F-4A16-A381-3E560C68BC83}')
 	
 	Write-Information "`nCategory: ControlPanel`n"
@@ -601,12 +601,12 @@ function getSpecialFolder {
 	# Device Center
 	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{A8A91A66-3A7D-4424-8D24-04E180695C7A}' 'Devices and Printers')
 	# Windows 7 File Recovery
-	# Win10からサポート
+	# Win10 1507からサポート
 	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{B98A2BEA-7D42-4558-8BD1-832F41BAC6FD}')
 	# System
 	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{BB06C0E4-D293-4F75-8A90-CB05B6477EEE}')
 	# Action Center CPL (Win8.1まで)
-	# Security and Maintenance CPL (Win10から)
+	# Security and Maintenance CPL (Win10 1507から)
 	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{BB64F8A7-BEE7-4E1A-AB8D-7D8273F7FDB6}')
 	# Microsoft Windows Font Folder
 	# shell:Fonts
@@ -803,7 +803,7 @@ function getSpecialFolder {
 	# CLSIDを使ってアクセスするとエクスプローラーがクラッシュする
 	Write-Output (newSpecialFolder 'shell:::{1D2680C9-0E2A-469D-B787-065558BC7D43}')
 	# Recent Items Instance Folder (Recent files)
-	# Win10から
+	# Win10 1507から
 	Write-Output (newSpecialFolder 'shell:::{4564B25E-30CD-4787-82BA-39E73A750B14}')
 	# Sync Setup Folder (SyncSetupFolder)
 	Write-Output (newSpecialFolder 'shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}\::{2E9E59C0-B437-4981-A647-9C34B9B90891}')
@@ -919,13 +919,13 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder "$Env:CommonProgramFiles" '%CommonProgramFiles%')
 	
 	# OneDrive
-	# Win10から
+	# Win10 1507から
 	Write-Output (newSpecialFolder 'shell:::{018D5C66-4533-4307-9B53-224DE2ED1FE6}')
 	# UsersLibraries
 	Write-Output (newSpecialFolder 'shell:::{031E4825-7B94-4DC3-B131-E946B44C8DD5}')
 	# Taskbar
 	Write-Output (newSpecialFolder 'shell:::{05D7B0F4-2121-4EFF-BF6B-ED3F69B894D9}')
-	# Win10から
+	# Win10 1507から
 	Write-Output (newSpecialFolder 'shell:::{088E3905-0323-4B02-9826-5D99428E115F}' 'Local Downloads')
 	# Win10 1709から
 	Write-Output (newSpecialFolder 'shell:::{0DB7E03F-FC29-4DC6-9020-FF41B59E513A}' '3D Object')
@@ -944,7 +944,7 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:::{2227A280-3AEA-1069-A2DE-08002B30309D}')
 	# Workspaces Center
 	Write-Output (newSpecialFolder 'shell:::{241D7C96-F8BF-4F85-B01F-E2B043341A4B}')
-	# Win10から
+	# Win10 1507から
 	Write-Output (newSpecialFolder 'shell:::{24AD3AD4-A569-4530-98E1-AB02F9417AA8}' 'Local Pictures')
 	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\0' 'All Control Panel Items')
 	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\4' 'Hardware and Sound')
@@ -952,7 +952,7 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\11' 'All Control Panel Items')
 	Write-Output (newSpecialFolder 'shell:::{374DE290-123F-4565-9164-39C4925E467B}' 'Downloads')
 	Write-Output (newSpecialFolder 'shell:::{3ADD1653-EB32-4CB0-BBD7-DFA0ABB5ACCA}' 'My Pictures')
-	# Win10から
+	# Win10 1507から
 	Write-Output (newSpecialFolder 'shell:::{3DFDF296-DBEC-4FB4-81D1-6A3438BCF4DE}' 'Local Music')
 	# Explorer Browser Results Folder
 	Write-Output (newSpecialFolder 'shell:::{418C8B64-5463-461D-88E0-75E2AFA3C6FA}')
@@ -967,7 +967,7 @@ function getSpecialFolder {
 	# Recycle Bin
 	Write-Output (newSpecialFolder 'shell:::{645FF040-5081-101B-9F08-00AA002F954E}')
 	# (windows.storage.dll)
-	# Win10からサポｰト
+	# Win10 1507からサポｰト
 	Write-Output (newSpecialFolder 'shell:::{679F85CB-0220-4080-B29B-5540CC05AAB6}')
 	# Programs and Features
 	Write-Output (newSpecialFolder 'shell:::{7B81BE6A-CE2B-4676-A29E-EB907A5126C5}')
@@ -1006,7 +1006,7 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{BD84B380-8CA2-1069-AB1D-08000948F534}')
 	# Administrative Tools
 	Write-Output (newSpecialFolder 'shell:::{D20EA4E1-3957-11D2-A40B-0C5020524153}')
-	# Win10から
+	# Win10 1507から
 	Write-Output (newSpecialFolder 'shell:::{D3162B92-9365-467A-956B-92703ACA08AF}' 'Local Documents')
 	# Installed Updates
 	Write-Output (newSpecialFolder 'shell:::{D450A8A1-9568-45C7-9C0E-B4F9FB4537BD}')
@@ -1024,7 +1024,7 @@ function getSpecialFolder {
 	# This Device
 	# Win10 1703から
 	Write-Output (newSpecialFolder 'shell:::{F8278C54-A712-415B-B593-B77A2BE0DDA9}')
-	# Win10から
+	# Win10 1507から
 	Write-Output (newSpecialFolder 'shell:::{F86FA3AB-70D2-4FC7-9C99-FCBF05467F3A}' 'Local Videos')
 	
 	# (shell32.dll#SearchCommand)
@@ -1092,7 +1092,7 @@ function getSpecialFolder {
 	# Win10 1607まで
 	Write-Output (newShellCommand 'shell:::{4F289A46-2BBB-4AE8-9EDA-E5E034707A71}')
 	# This PC
-	# Win10から
+	# Win10 1507から
 	Write-Output (newShellCommand 'shell:::{5E5F29CE-E0A8-49D3-AF32-7A7BDC173478}')
 	# (dsuiext.dll)
 	Write-Output (newShellCommand 'shell:::{62AE1F9A-126A-11D0-A14B-0800361B1103}')

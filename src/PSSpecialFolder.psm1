@@ -37,17 +37,17 @@ class SpecialFolder {
 	[void]CopyAsPath() {
 		Set-Clipboard $this.Path
 	}
-	[void]Cmd() {
-		$this.StartCmd('open')
-	}
-	[void]CmdAsAdmin() {
-		$this.StartCmd('runas')
-	}
 	[void]Powershell() {
 		$this.StartPowershell('open')
 	}
 	[void]PowershellAsAdmin() {
 		$this.StartPowershell('runas')
+	}
+	[void]Cmd() {
+		$this.StartCmd('open')
+	}
+	[void]CmdAsAdmin() {
+		$this.StartCmd('runas')
 	}
 	[void]LinuxShell() {
 		$this.StartLinuxShell('open')
@@ -85,9 +85,6 @@ class SpecialFolder {
 }
 
 class FileFolder: SpecialFolder {
-	hidden [void]StartCmd([string]$Verb) {
-		Start-Process cmd.exe "/k pushd $($this.Path)" -Verb $Verb
-	}
 	hidden [void]StartPowershell([string]$Verb) {
 		$startArgs = @{
 			FilePath = if ($script:isPwshInstalled) { 'pwsh.exe' } else { 'powershell.exe' }
@@ -95,6 +92,9 @@ class FileFolder: SpecialFolder {
 			Verb = $Verb
 		}
 		Start-Process @startArgs
+	}
+	hidden [void]StartCmd([string]$Verb) {
+		Start-Process cmd.exe "/k pushd $($this.Path)" -Verb $Verb
 	}
 	hidden [void]StartLinuxShell([string]$Verb) {
 		if (!$script:win10) { throw [InvalidOperationException]::new('WSL is not supported.') }
@@ -104,10 +104,10 @@ class FileFolder: SpecialFolder {
 }
 
 class VirtualFolder: SpecialFolder {
-	hidden [void]StartCmd([string]$Verb) {
+	hidden [void]StartPowershell([string]$Verb) {
 		throw [InvalidOperationException]::new('This is not a directory.')
 	}
-	hidden [void]StartPowershell([string]$Verb) {
+	hidden [void]StartCmd([string]$Verb) {
 		throw [InvalidOperationException]::new('This is not a directory.')
 	}
 	hidden [void]StartLinuxShell([string]$Verb) {
@@ -1242,28 +1242,28 @@ function Show-SpecialFolder {
 	}
 	
 	$openFolder = { $dataGrid.SelectedItem.Open() }
-	$startCmd = { $dataGrid.SelectedItem.Cmd() }
 	$startPowershell = { $dataGrid.SelectedItem.Powershell() }
+	$startCmd = { $dataGrid.SelectedItem.Cmd() }
 	$startWsl = { $dataGrid.SelectedItem.LinuxShell() }
 	$showProperties = { invokeCommand { $dataGrid.SelectedItem.Properties() } }
 	
 	$window = [Window][XamlReader]::Parse((Get-Content "$PSScriptRoot/window.xaml" -Raw))
 	
 	$openAsAdmin = [MenuItem]$window.FindName('openAsAdmin')
-	$cmd = [MenuItem]$window.FindName('cmd')
-	$cmdEx= [MenuItem]$window.FindName('cmdEx')
-	$cmdAsAdmin = [MenuItem]$window.FindName('cmdAsAdmin')
 	$powershell = [MenuItem]$window.FindName('powershell')
 	$powershellEx = [MenuItem]$window.FindName('powershellEx')
 	$powershellAsAdmin = [MenuItem]$window.FindName('powershellAsAdmin')
+	$cmd = [MenuItem]$window.FindName('cmd')
+	$cmdEx= [MenuItem]$window.FindName('cmdEx')
+	$cmdAsAdmin = [MenuItem]$window.FindName('cmdAsAdmin')
 	$wsl = [MenuItem]$window.FindName('wsl')
 	$wslEx = [MenuItem]$window.FindName('wslEx')
 	$wslAsAdmin = [MenuItem]$window.FindName('wslAsAdmin')
 	$properties = [MenuItem]$window.FindName('properties')
 	
 	$openAsAdmin.Icon = getShieldImage
-	$cmdAsAdmin.Icon = getShieldImage
 	$powershellAsAdmin.Icon = getShieldImage
+	$cmdAsAdmin.Icon = getShieldImage
 	$wslAsAdmin.Icon = getShieldImage
 	
 	$dataGrid = [DataGrid]($window.FindName('dataGrid'))
@@ -1299,10 +1299,10 @@ function Show-SpecialFolder {
 		}
 		
 		$openAsAdmin.Visibility = 'Collapsed'
-		$cmd.Visibility = 'Collapsed'
-		$cmdEx.Visibility = 'Collapsed'
 		$powershell.Visibility = 'Collapsed'
 		$powershellEx.Visibility = 'Collapsed'
+		$cmd.Visibility = 'Collapsed'
+		$cmdEx.Visibility = 'Collapsed'
 		$wsl.Visibility = 'Collapsed'
 		$wslEx.Visibility = 'Collapsed'
 		$properties.Visibility = 'Collapsed'
@@ -1326,12 +1326,12 @@ function Show-SpecialFolder {
 	$window.FindName('open').add_Click($openFolder)
 	$window.FindName('copyAsPath').add_Click({ $dataGrid.SelectedItem.CopyAsPath() })
 	$openAsAdmin.add_Click({ invokeCommandAsAdmin { $dataGrid.SelectedItem.OpenAsAdmin() } })
-	$cmd.add_Click($startCmd)
-	$window.FindName('cmdAsInvoker').add_Click($startCmd)
-	$cmdAsAdmin.add_Click({ invokeCommandAsAdmin { $dataGrid.SelectedItem.CmdAsAdmin() } })
 	$powershell.add_Click($startPowershell)
 	$window.FindName('powershellAsInvoker').add_Click($startPowershell)
 	$powershellAsAdmin.add_Click({ invokeCommandAsAdmin { $dataGrid.SelectedItem.PowershellAsAdmin() } })
+	$cmd.add_Click($startCmd)
+	$window.FindName('cmdAsInvoker').add_Click($startCmd)
+	$cmdAsAdmin.add_Click({ invokeCommandAsAdmin { $dataGrid.SelectedItem.CmdAsAdmin() } })
 	$wsl.add_Click($startWsl)
 	$window.FindName('wslAsInvoker').add_Click($startWsl)
 	$wslAsAdmin.add_Click({ invokeCommandAsAdmin { $dataGrid.SelectedItem.LinuxShellAsAdmin() } })

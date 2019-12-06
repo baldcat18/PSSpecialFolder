@@ -6,7 +6,10 @@ using namespace System.Windows.Markup
 
 Set-StrictMode -Version Latest
 
-if ($PSVersionTable['PSVersion'] -ge [version]::new(6, 0) -and !$IsWindows) {
+$isPwsh = $PSVersionTable['PSVersion'].Major -ge 6
+$isWslEnabled = Test-Path "$([Environment]::GetFolderPath('System'))/wsl.exe"
+
+if ($isPwsh -and !$IsWindows) {
 	throw [PlatformNotSupportedException]::new('The PSSpecialFolder module supports Windows only.')
 	return
 }
@@ -87,7 +90,7 @@ class SpecialFolder {
 class FileFolder: SpecialFolder {
 	hidden [void]StartPowershell([string]$Verb) {
 		$startArgs = @{
-			FilePath = if ($script:isPwshInstalled) { 'pwsh.exe' } else { 'powershell.exe' }
+			FilePath = if ($script:isPwsh) { 'pwsh.exe' } else { 'powershell.exe' }
 			ArgumentList = "-NoExit -Command `"Push-Location -LiteralPath '$($this.Path)'`""
 			Verb = $Verb
 		}
@@ -133,11 +136,7 @@ if ($win10 -and !$win10_1709) {
 	Write-Warning 'The PSSpecialFolder module supports Windows 10 Version 1709+.'
 }
 
-$isPwshInstalled = @(Get-Command pwsh.exe -CommandType Application -ErrorAction SilentlyContinue).Length -gt 0
-$isWslEnabled = Test-Path "$([Environment]::GetFolderPath('System'))/wsl.exe"
-
 $shell = New-Object -ComObject Shell.Application
-
 $propertiesName = @($shell.NameSpace(0).Self.Verbs())[-1].Name
 
 function newSpecialFolder {

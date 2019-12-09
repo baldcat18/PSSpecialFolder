@@ -1203,7 +1203,7 @@ function Show-SpecialFolder {
 	
 	# WPFが使えない場合
 	if (($PSVersionTable['PSVersion'].Major -ge 6) -or ($Host.Runspace.ApartmentState -ne 'STA')) {
-		powershell.exe -Sta -Command "Show-SpecialFolder -IncludeShellCommand:`$$IncludeShellCommand"
+		throw 'Show-SpecialFolder can''t be started because this function needs WPF.'
 		return
 	}
 	

@@ -213,7 +213,6 @@ function getSpecialFolder {
 	# %HOMEDRIVE%%HOMEPATH%
 	Write-Output (newSpecialFolder 'shell:UsersFilesFolder' -FolderItemForProperties $shell.NameSpace(40).Self)
 	# Win10 1507からサポート
-	# shell:UsersFilesFolder\3D Objects
 	# shell:MyComputerFolder\::{0DB7E03F-FC29-4DC6-9020-FF41B59E513A} (Win10 1709から)
 	# Win10 1507から1703では3D Builderを起動した時に自動生成される
 	Write-Output (newSpecialFolder 'shell:3D Objects')
@@ -230,36 +229,28 @@ function getSpecialFolder {
 	# shell:Local Music / shell:MyComputerFolder\::{3DFDF296-DBEC-4FB4-81D1-6A3438BCF4DE} (Win10 1507から)
 	# shell:MyComputerFolder\::{1CF1260C-4DD0-4EBB-811F-33C572699FDE}
 	Write-Output (newSpecialFolder 'shell:My Music')
-	# shell:My Music\Playlists
 	# WMPやGroove ミュージックで再生リストを作成する時に自動生成される
 	Write-Output (newSpecialFolder 'shell:Playlists')
 	
 	# shell:Local Pictures / shell:MyComputerFolder\::{24AD3AD4-A569-4530-98E1-AB02F9417AA8} (Win10 1507から)
 	# shell:MyComputerFolder\::{3ADD1653-EB32-4CB0-BBD7-DFA0ABB5ACCA}
 	Write-Output (newSpecialFolder 'shell:My Pictures')
-	# shell:My Pictures\Camera Roll
 	# カメラアプリで写真や動画を撮影する時に自動生成される
 	Write-Output (newSpecialFolder 'shell:Camera Roll')
 	# Win10 1507からサポート
-	# shell:My Pictures\Saved Pictures
 	Write-Output (newSpecialFolder 'shell:SavedPictures')
-	# shell:My Pictures\Screenshots
 	# Win＋PrtScrでスクリーンショットを保存する時に自動生成される
 	Write-Output (newSpecialFolder 'shell:Screenshots')
-	# shell:My Pictures\Slide Shows
-	# 手動でフォルダーを作成しても使用可
 	Write-Output (newSpecialFolder 'shell:PhotoAlbums')
 	
 	# shell:Local Videos / shell:MyComputerFolder\::{F86FA3AB-70D2-4FC7-9C99-FCBF05467F3A} (Win10 1507から)
 	# shell:MyComputerFolder\::{A0953C92-50DC-43BF-BE83-3742FED03C9C}
 	Write-Output (newSpecialFolder 'shell:My Video')
 	# Win10 1507からサポート
-	# shell:My Video\Captures
 	# ゲームバーで動画やスクリーンショットを保存する時に自動生成される
 	Write-Output (newSpecialFolder 'shell:Captures')
 	
 	# Win10 1703からサポート
-	# shell:UsersFilesFolder\AppMods
 	Write-Output (newSpecialFolder 'shell:AppMods')
 	# shell:UsersFilesFolder\{56784854-C6CB-462B-8169-88E350ACB882}
 	Write-Output (newSpecialFolder 'shell:Contacts')
@@ -269,7 +260,6 @@ function getSpecialFolder {
 	# shell:UsersFilesFolder\{BFB9D5E0-C6A9-404C-B2B2-AE6DB6AF4968}
 	Write-Output (newSpecialFolder 'shell:Links')
 	# Win10 1507からサポート
-	# shell:UsersFilesFolder\Recorded Calls
 	Write-Output (newSpecialFolder 'shell:Recorded Calls')
 	# shell:UsersFilesFolder\{4C5C32FF-BB9D-43B0-B5B4-2D72E54EAAA4}
 	Write-Output (newSpecialFolder 'shell:SavedGames')
@@ -278,19 +268,14 @@ function getSpecialFolder {
 	
 	Write-Information "`nCategory: OneDrive`n"
 	
-	# shell:UsersFilesFolder\OneDrive
 	# Win8.1ではMicrosoftアカウントでサインインする時に自動生成される
 	# shell:::{59031A47-3F72-44A7-89C5-5595FE6B30EE}\::{8E74D236-7F35-4720-B138-1FED0B85EA75} (Win8.1のみ)
 	# shell:::{59031A47-3F72-44A7-89C5-5595FE6B30EE}\::{018D5C66-4533-4307-9B53-224DE2ED1FE6} (Win10 1507から)
 	# %OneDrive% (Win10 1607から)
 	Write-Output (newSpecialFolder 'shell:OneDrive')
-	# shell:OneDrive\Documents
 	Write-Output (newSpecialFolder $(if ($win10) { 'shell:OneDriveDocuments' } else { 'shell:SkyDriveDocuments' }))
-	# shell:OneDrive\Music
 	Write-Output (newSpecialFolder $(if ($win10) { 'shell:OneDriveMusic' } else { 'shell:SkyDriveMusic' }))
-	# shell:OneDrive\Pictures
 	Write-Output (newSpecialFolder $(if ($win10) { 'shell:OneDrivePictures' } else { 'shell:SkyDrivePictures' }))
-	# shell:OneDrive\Pictures\Camera Roll
 	Write-Output (newSpecialFolder $(if ($win10) { 'shell:OneDriveCameraRoll' } else { 'shell:SkyDriveCameraRoll' }))
 	
 	Write-Information "`nCategory: AppData`n"
@@ -324,7 +309,6 @@ function getSpecialFolder {
 	# shell:::{031E4825-7B94-4DC3-B131-E946B44C8DD5}
 	Write-Output (newSpecialFolder 'shell:Libraries' -Path $librariesPath -FolderItemForProperties (getDirectoryFolderItem $librariesPath))
 	# Win10 1507からサポート
-	# shell:Libraries\CameraRoll.library-ms
 	# shell:Libraries\{2B20DF75-1EDA-4039-8097-38798227D5B7}
 	$cameraRollLibraryPath = $userShellFoldersKey.GetValue('{2B20DF75-1EDA-4039-8097-38798227D5B7}')
 	if (!$cameraRollLibraryPath) { $cameraRollLibraryPath = "$librariesPath\CameraRoll.library-ms" }
@@ -342,7 +326,6 @@ function getSpecialFolder {
 	if (!$picturesLibraryPath) { $picturesLibraryPath = "$librariesPath\Pictures.library-ms" }
 	Write-Output (newSpecialFolder 'shell:PicturesLibrary' -Path $picturesLibraryPath)
 	# Win10 1507からサポート
-	# shell:Libraries\SavedPictures.library-ms
 	# shell:Libraries\{E25B5812-BE88-4BD9-94B0-29233477B6C3}
 	$savedPicturesLibraryPath = $userShellFoldersKey.GetValue('{E25B5812-BE88-4BD9-94B0-29233477B6C3}')
 	if (!$savedPicturesLibraryPath) { $savedPicturesLibraryPath = "$librariesPath\SavedPictures.library-ms" }
@@ -366,21 +349,16 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:LocalAppDataLow')
 		
 	# Win10 1709からサポート
-	# shell:Local AppData\Desktop
 	Write-Output (newSpecialFolder 'shell:AppDataDesktop')
 	# Win10 1507からサポート
-	# shell:Local AppData\DevelopmentFiles
 	Write-Output (newSpecialFolder 'shell:Development Files')
 	# Win10 1709からサポート
-	# shell:Local AppData\Documents
 	Write-Output (newSpecialFolder 'shell:AppDataDocuments')
 	# Win10 1709からサポート
-	# shell:Local AppData\Favorites
 	Write-Output (newSpecialFolder 'shell:AppDataFavorites')
 	# ストアアプリの設定
 	Write-Output (newSpecialFolder 'shell:Local AppData\Packages' 'Settings of the Windows Apps')
 	# Win10 1709からサポート
-	# shell:Local AppData\ProgramData
 	Write-Output (newSpecialFolder 'shell:AppDataProgramData')
 	# %TEMP%
 	# %TMP%
@@ -397,24 +375,18 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:Cache')
 	Write-Output (newSpecialFolder 'shell:Cookies')
 	Write-Output (newSpecialFolder 'shell:Ringtones')
-	# shell:Local AppData\Microsoft\Windows\RoamedTileImages
 	Write-Output (newSpecialFolder 'shell:Roamed Tile Images')
 	Write-Output (newSpecialFolder 'shell:Roaming Tiles')
 	Write-Output (newSpecialFolder 'shell:Local AppData\Microsoft\Windows\WinX')
 		
-	# shell:Local AppData\Microsoft\Windows\ConnectedSearch\History
 	Write-Output (newSpecialFolder 'shell:SearchHistoryFolder')
-	# shell:Local AppData\Microsoft\Windows\ConnectedSearch\Templates
 	Write-Output (newSpecialFolder 'shell:SearchTemplatesFolder')
 		
 	Write-Output (newSpecialFolder 'shell:Local AppData\Microsoft\Windows Sidebar\Gadgets')
-	# shell:Local AppData\Microsoft\Windows Photo Gallery\Original Images
 	# フォトギャラリーでファイルを編集する時に自動生成される
 	Write-Output (newSpecialFolder 'shell:Original Images')
 		
-	# shell:Local AppData\Programs
 	Write-Output (newSpecialFolder 'shell:UserProgramFiles')
-	# shell:Local AppData\Programs\Common
 	Write-Output (newSpecialFolder 'shell:UserProgramFilesCommon')
 	
 	Write-Information "`nCategory: Public`n"
@@ -424,20 +396,16 @@ function getSpecialFolder {
 	# shell:::{5B934B42-522B-4C34-BBFE-37A3EF7B9C90} (Win10 1507から)
 	# %PUBLIC%
 	Write-Output (newSpecialFolder 'shell:Public')
-	# shell:Public\AccountPictures
 	Write-Output (newSpecialFolder 'shell:PublicAccountPictures')
 	Write-Output (newSpecialFolder 'shell:Common Desktop')
 	Write-Output (newSpecialFolder 'shell:Common Documents')
 	Write-Output (newSpecialFolder 'shell:CommonDownloads')
 	Write-Output (newSpecialFolder 'shell:PublicLibraries')
 	Write-Output (newSpecialFolder 'shell:CommonMusic')
-	# shell:CommonMusic\Sample Music
 	Write-Output (newSpecialFolder 'shell:SampleMusic')
 	Write-Output (newSpecialFolder 'shell:CommonPictures')
-	# shell:CommonPictures\Sample Pictures
 	Write-Output (newSpecialFolder 'shell:SamplePictures')
 	Write-Output (newSpecialFolder 'shell:CommonVideo')
-	# shell:CommonVideo\Sample Videos
 	Write-Output (newSpecialFolder 'shell:SampleVideos')
 	
 	Write-Information "`nCategory: ProgramData`n"
@@ -445,14 +413,12 @@ function getSpecialFolder {
 	# %ALLUSERSPROFILE%
 	# %ProgramData%
 	Write-Output (newSpecialFolder 'shell:Common AppData')
-	# %ALLUSERSPROFILE%\OEM Links
 	Write-Output (newSpecialFolder 'shell:OEM Links')
 		
 	Write-Output (newSpecialFolder $appxKey.GetValue('PackageRepositoryRoot') 'Repositories of the Windows Apps')
 	Write-Output (newSpecialFolder 'shell:Device Metadata Store')
 	Write-Output (newSpecialFolder 'shell:PublicGameTasks')
 	# Win10 1507からサポート
-	# shell:Common AppData\Microsoft\Windows\RetailDemo
 	# 市販デモ モードで使用される
 	Write-Output (newSpecialFolder 'shell:Retail Demo')
 	Write-Output (newSpecialFolder 'shell:CommonRingtones')
@@ -482,7 +448,6 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:Windows\Offline Web Pages' 'Subscription Folder')
 	
 	Write-Output (newSpecialFolder 'shell:ResourceDir')
-	# shell:ResourceDir\xxxx (xxxxはロケールIDの16進数4桁 日本語では0411)
 	Write-Output (newSpecialFolder 'shell:LocalizedResourcesDir')
 	
 	Write-Output (newSpecialFolder $(if (!$isWow64) { 'shell:System' } else { 'shell:SystemX86' } ) )

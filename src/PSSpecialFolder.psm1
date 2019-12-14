@@ -8,6 +8,8 @@ Set-StrictMode -Version Latest
 
 $isPwsh = $PSVersionTable['PSVersion'].Major -ge 6
 $isWslEnabled = Test-Path "$([Environment]::GetFolderPath('System'))/wsl.exe"
+$canFolderBeOpenedAsAdmin =
+	!((Get-Item 'HKLM:/SOFTWARE/Classes/AppID/{CDCBCFCA-3CDC-436f-A4E2-0E02075250C2}').GetValue('RunAs'))
 
 if ($isPwsh -and !$IsWindows) {
 	throw [PlatformNotSupportedException]::new('The PSSpecialFolder module supports Windows only.')
@@ -33,9 +35,6 @@ class SpecialFolder {
 	
 	[void]Open() {
 		$this.StartExplorer('open')
-	}
-	[void]OpenAsAdmin() {
-		$this.StartExplorer('runas')
 	}
 	[void]CopyAsPath() {
 		Set-Clipboard $this.Path
@@ -85,6 +84,12 @@ class SpecialFolder {
 		}
 		return !!$this.PropertiesVerb
 	}
+}
+
+if ($canFolderBeOpenedAsAdmin -and !([SpecialFolder]::new() | Get-Member -Name OpenAsAdmin)) {
+	Update-TypeData `
+		-TypeName SpecialFolder -MemberName OpenAsAdmin -MemberType ScriptMethod `
+		-Value { $this.StartExplorer('runas') }
 }
 
 class FileFolder: SpecialFolder {
@@ -1172,9 +1177,6 @@ function Show-SpecialFolder {
 		return
 	}
 	
-	$isExplorerRunasLaunchingUser =
-		!((Get-Item 'HKLM:/SOFTWARE/Classes/AppID/{CDCBCFCA-3CDC-436f-A4E2-0E02075250C2}').GetValue('RunAs'))
-	
 	Add-Type -AssemblyName PresentationFramework
 	Add-Type -AssemblyName System.Drawing
 	
@@ -1272,7 +1274,7 @@ function Show-SpecialFolder {
 		$properties.Visibility = 'Collapsed'
 		
 		if ([Keyboard]::Modifiers -band [ModifierKeys]::Shift) {
-			if ($isExplorerRunasLaunchingUser) { $openAsAdmin.Visibility = 'Visible' }
+			if ($canFolderBeOpenedAsAdmin) { $openAsAdmin.Visibility = 'Visible' }
 			if ($item.GetType() -eq [FileFolder]) {
 				$cmdEx.Visibility = 'Visible'
 				$powershellEx.Visibility = 'Visible'

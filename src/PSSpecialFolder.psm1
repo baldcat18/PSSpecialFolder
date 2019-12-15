@@ -222,7 +222,7 @@ function getSpecialFolder {
 	# Win10 1507から1703では3D Builderを起動した時に自動生成される
 	Write-Output (newSpecialFolder 'shell:3D Objects')
 	# shell:MyComputerFolder\::{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}
-	Write-Output (newSpecialFolder 'shell:ThisPCDesktopFolder')
+	Write-Output (newSpecialFolder 'shell:ThisPCDesktopFolder' 'DesktopFolder')
 	# shell:Local Documents / shell:MyComputerFolder\::{D3162B92-9365-467A-956B-92703ACA08AF} (Win10 1507から)
 	# shell:::{450D8FBA-AD25-11D0-98A8-0800361B1103} ([My Documents])
 	# shell:MyComputerFolder\::{A8CDFF1C-4878-43BE-B5FD-F8091C1C60D0}

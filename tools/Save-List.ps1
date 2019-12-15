@@ -17,6 +17,8 @@ $now = Get-Date -Format yyyyMMdd-HHmmss
 Get-Module PSSpecialFolder | Remove-Module
 
 $module = Import-Module "$PSScriptRoot/../src/PSSpecialFolder.psd1" -PassThru
+$encoding = if ($PSVersionTable['PSVersion'] -ge '6.0') { 'utf8BOM' } else { 'utf8' }
+
 & {
 	$InformationPreference = 'Continue'
 	Write-Information "Module Version: $((Get-Module PSSpecialFolder).Version.ToString())"
@@ -38,7 +40,7 @@ $module = Import-Module "$PSScriptRoot/../src/PSSpecialFolder.psd1" -PassThru
 	ConvertTo-Html -As List -Head '<meta charset="UTF-8">' |
 	# ps5.1では必要 (https://github.com/PowerShell/PowerShell/pull/2184)
 	ForEach-Object { $_.ToString().Replace('<td>*:</td>', '<td>Information:</td>') } |
-	Out-File "$PSScriptRoot/$osVersion $cpu $edition $now.html" -Encoding utf8
+	Out-File "$PSScriptRoot/$osVersion $cpu $edition $now.html" -Encoding $encoding
 
 Remove-Module $module
 

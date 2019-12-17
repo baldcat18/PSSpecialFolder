@@ -62,6 +62,9 @@ class SpecialFolder {
 		elseif ($this.TestProperties()) { $this.PropertiesVerb.DoIt() }
 		else { throw [InvalidOperationException]::new('The properties of this folder can''t be shown.') }
 	}
+	[string]ToString() {
+		return "$($this.Name) [$($this.Path)]"
+	}
 	
 	hidden [void]StartExplorer([string]$Verb) {
 		Start-Process explorer.exe $(if ($this.Dir) { $this.Dir } else { $this.Path }) -Verb $Verb

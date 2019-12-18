@@ -12,7 +12,7 @@ $canFolderBeOpenedAsAdmin =
 	!((Get-Item 'HKLM:/SOFTWARE/Classes/AppID/{CDCBCFCA-3CDC-436f-A4E2-0E02075250C2}').GetValue('RunAs'))
 
 if ($isPwsh -and !$IsWindows) {
-	throw [PlatformNotSupportedException]::new('The PSSpecialFolder module supports Windows only.')
+	throw [PlatformNotSupportedException]'The PSSpecialFolder module supports Windows only.'
 	return
 }
 
@@ -60,7 +60,7 @@ class SpecialFolder {
 	[void]Properties() {
 		if ($this.PropertyTypes -eq 'StartProcess') { Start-Process $this.Dir -Verb properties }
 		elseif ($this.TestProperties()) { $this.PropertiesVerb.DoIt() }
-		else { throw [InvalidOperationException]::new('The properties of this folder can''t be shown.') }
+		else { throw [InvalidOperationException]'The properties of this folder can''t be shown.' }
 	}
 	[string]ToString() {
 		return "$($this.Name) [$($this.Path)]"
@@ -108,36 +108,36 @@ class FileFolder: SpecialFolder {
 		Start-Process cmd.exe "/k pushd $($this.Path)" -Verb $Verb
 	}
 	hidden [void]StartLinuxShell([string]$Verb) {
-		if (!$script:win10) { throw [InvalidOperationException]::new('WSL is not supported.') }
-		if (!$script:isWslEnabled) { throw [InvalidOperationException]::new('WSL is disabled.') }
+		if (!$script:win10) { throw [InvalidOperationException]'WSL is not supported.' }
+		if (!$script:isWslEnabled) { throw [InvalidOperationException]'WSL is disabled.' }
 		Start-Process cmd.exe "/c pushd $($this.Path) & wsl.exe" -Verb $Verb
 	}
 }
 
 class VirtualFolder: SpecialFolder {
 	hidden [void]StartPowershell([string]$Verb) {
-		throw [InvalidOperationException]::new('This is not a directory.')
+		throw [InvalidOperationException]'This is not a directory.'
 	}
 	hidden [void]StartCmd([string]$Verb) {
-		throw [InvalidOperationException]::new('This is not a directory.')
+		throw [InvalidOperationException]'This is not a directory.'
 	}
 	hidden [void]StartLinuxShell([string]$Verb) {
-		throw [InvalidOperationException]::new('This is not a directory.')
+		throw [InvalidOperationException]'This is not a directory.'
 	}
 }
 
 $osVersion = [Environment]::OSVersion.Version
 # Win10以降
-$win10 = $osVersion -gt [version]::new(10, 0)
+$win10 = $osVersion -gt [version]'10.0'
 # Win10 1709以降
-$win10_1709 = $osVersion -gt [version]::new(10, 0, 16299)
+$win10_1709 = $osVersion -gt [version]'10.0.16299'
 # Win10 1803以降
-$win10_1803 = $osVersion -gt [version]::new(10, 0, 17134)
+$win10_1803 = $osVersion -gt [version]'10.0.17134'
 # Win10 1903以降
-$win10_1903 = $osVersion -gt [version]::new(10, 0, 18362)
+$win10_1903 = $osVersion -gt [version]'10.0.18362'
 
 
-if ($osVersion -lt [version]::new(6, 3)) {
+if ($osVersion -lt [version]'6.3') {
 	Write-Warning 'The PSSpecialFolder module supports Windows 8.1 and 10.'
 }
 if ($win10 -and !$win10_1709) {

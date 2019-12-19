@@ -7,6 +7,8 @@ using namespace System.Windows.Markup
 Set-StrictMode -Version Latest
 
 $isPwsh = $PSVersionTable['PSVersion'].Major -ge 6
+$powershellPath =
+	if ($isPwsh -and (Get-Command pwsh.exe -ErrorAction SilentlyContinue)) { 'pwsh.exe' } else { 'powershell.exe' }
 $isWslEnabled = Test-Path "$([Environment]::GetFolderPath('System'))/wsl.exe"
 $canFolderBeOpenedAsAdmin =
 	!((Get-Item 'HKLM:/SOFTWARE/Classes/AppID/{CDCBCFCA-3CDC-436f-A4E2-0E02075250C2}').GetValue('RunAs'))
@@ -98,7 +100,7 @@ if ($canFolderBeOpenedAsAdmin -and !([SpecialFolder]::new() | Get-Member -Name O
 class FileFolder: SpecialFolder {
 	hidden [void]StartPowershell([string]$Verb) {
 		$startArgs = @{
-			FilePath = if ($script:isPwsh) { 'pwsh.exe' } else { 'powershell.exe' }
+			FilePath = $script:powershellPath
 			ArgumentList = "-NoExit -Command `"Push-Location -LiteralPath '$($this.Path)'`""
 			Verb = $Verb
 		}

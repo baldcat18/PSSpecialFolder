@@ -38,9 +38,6 @@ class SpecialFolder {
 	[void]Open() {
 		$this.StartExplorer('open')
 	}
-	[void]CopyAsPath() {
-		Set-Clipboard $this.Path
-	}
 	[void]Powershell() {
 		$this.StartPowershell('open')
 	}
@@ -1295,7 +1292,7 @@ function Show-SpecialFolder {
 		if ($item.TestProperties()) { $properties.Visibility = 'Visible' }
 	})
 	$window.FindName('open').add_Click($openFolder)
-	$window.FindName('copyAsPath').add_Click({ $dataGrid.SelectedItem.CopyAsPath() })
+	$window.FindName('copyAsPath').add_Click({ Set-Clipboard $dataGrid.SelectedItem.Path })
 	$openAsAdmin.add_Click({ invokeCommandAsAdmin { $dataGrid.SelectedItem.OpenAsAdmin() } })
 	$powershell.add_Click($startPowershell)
 	$window.FindName('powershellAsInvoker').add_Click($startPowershell)

@@ -1184,7 +1184,7 @@ function Show-SpecialFolder {
 	
 	function selectInvokedCommand {
 		$item = $dataGrid.SelectedItem
-		if (!$item -or $item.GetType().BaseType -ne [SpecialFolder]) { return }
+		if (!$item -or $item -isnot [SpecialFolder]) { return }
 		
 		$modifiers = [Keyboard]::Modifiers
 		if ($modifiers -band [ModifierKeys]::Alt) { & $showProperties }
@@ -1242,7 +1242,7 @@ function Show-SpecialFolder {
 		if (![Keyboard]::IsKeyDown('Enter')) { return }
 		
 		$source = [Control]$e.OriginalSource
-		if ($source.GetType() -eq [DataGridCell]) { $dataGrid.SelectedItem = $source.DataContext }
+		if ($source -is [DataGridCell]) { $dataGrid.SelectedItem = $source.DataContext }
 		
 		$e.Handled = $true
 		selectInvokedCommand
@@ -1250,18 +1250,18 @@ function Show-SpecialFolder {
 	$dataGrid.add_MouseDoubleClick({
 		param([object]$sender, [MouseButtonEventArgs]$e)
 		
-		if ($e.OriginalSource.GetType() -eq [TextBlock]) { selectInvokedCommand }
+		if ($e.OriginalSource -is [TextBlock]) { selectInvokedCommand }
 	})
 	$dataGrid.add_ContextMenuOpening({
 		param([object]$sender, [ContextMenuEventArgs]$e)
 		
-		if ($e.OriginalSource.GetType() -ne [TextBlock]) {
+		if ($e.OriginalSource -isnot [TextBlock]) {
 			$e.Handled = $true
 			return
 		}
 		
 		$item = $dataGrid.SelectedItem
-		if ($item.GetType().BaseType -ne [SpecialFolder]) {
+		if ($item -isnot [SpecialFolder]) {
 			$e.Handled = $true
 			return
 		}
@@ -1277,13 +1277,13 @@ function Show-SpecialFolder {
 		
 		if ([Keyboard]::Modifiers -band [ModifierKeys]::Shift) {
 			if ($canFolderBeOpenedAsAdmin) { $openAsAdmin.Visibility = 'Visible' }
-			if ($item.GetType() -eq [FileFolder]) {
+			if ($item -is [FileFolder]) {
 				$cmdEx.Visibility = 'Visible'
 				$powershellEx.Visibility = 'Visible'
 				if ($isWslEnabled) { $wslEx.Visibility = 'Visible' }
 			}
 		} else {
-			if ($item.GetType() -eq [FileFolder]) {
+			if ($item -is [FileFolder]) {
 				$cmd.Visibility = 'Visible'
 				$powershell.Visibility = 'Visible'
 				if ($isWslEnabled) { $wsl.Visibility = 'Visible' }
@@ -1308,7 +1308,7 @@ function Show-SpecialFolder {
 	$isShowCategory = $InformationPreference -ne 'Ignore' -and $InformationPreference -ne 'SilentlyContinue'
 	$dataGrid.ItemsSource = Get-SpecialFolder @PSBoundParameters 6>&1 |
 		ForEach-Object {
-			if ($_.GetType().BaseType -eq [SpecialFolder]) { $_ }
+			if ($_ -is [SpecialFolder]) { $_ }
 			elseif ($isShowCategory) { [pscustomobject]@{ Name = $_.ToString().Replace("`n", ''); Path = $null } }
 		}
 	

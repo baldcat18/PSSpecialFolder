@@ -113,18 +113,6 @@ class FileFolder: SpecialFolder {
 	}
 }
 
-class VirtualFolder: SpecialFolder {
-	hidden [void]StartPowershell([string]$Verb) {
-		throw [InvalidOperationException]'This is not a directory.'
-	}
-	hidden [void]StartCmd([string]$Verb) {
-		throw [InvalidOperationException]'This is not a directory.'
-	}
-	hidden [void]StartLinuxShell([string]$Verb) {
-		throw [InvalidOperationException]'This is not a directory.'
-	}
-}
-
 $osVersion = [Environment]::OSVersion.Version
 # Win10以降
 $win10 = $osVersion -gt [version]'10.0'
@@ -178,7 +166,7 @@ function newSpecialFolder {
 		FolderItemForProperties = $FolderItemForProperties
 	}
 	
-	return $(if ($isDirectory) { [FileFolder]$initializer } else { [VirtualFolder]$initializer })
+	return $(if ($isDirectory) { [FileFolder]$initializer } else { [SpecialFolder]$initializer })
 }
 
 function newShellCommand {
@@ -190,7 +178,7 @@ function newShellCommand {
 	$clsidPath = "Microsoft.PowerShell.Core\Registry::HKEY_CLASSES_ROOT\CLSID\$($Path.Remove(0, 8))"
 	if (!(Test-Path $clsidPath)) { return }
 	
-	return [VirtualFolder]@{ Name = if ($Name) { $Name } else { (Get-Item $clsidPath).GetValue('') }; Path = $Path }
+	return [SpecialFolder]@{ Name = if ($Name) { $Name } else { (Get-Item $clsidPath).GetValue('') }; Path = $Path }
 }
 
 function getDirectoryFolderItem {
@@ -1210,8 +1198,16 @@ function Show-SpecialFolder {
 	}
 	
 	$openFolder = { $dataGrid.SelectedItem.Open() }
-	$startPowershell = { $dataGrid.SelectedItem.Powershell() }
-	$startCmd = { $dataGrid.SelectedItem.Cmd() }
+	$startPowershell = {
+		$item = $dataGrid.SelectedItem
+		if ($item -is [FileFolder]) { $item.Powershell() }
+		else { throw [InvalidOperationException]'This is not a directory.' }
+	}
+	$startCmd = {
+		$item = $dataGrid.SelectedItem
+		if ($item -is [FileFolder]) { $item.Cmd() }
+		else { throw [InvalidOperationException]'This is not a directory.' }
+	}
 	$startWsl = { $dataGrid.SelectedItem.LinuxShell() }
 	$showProperties = { invokeCommand { $dataGrid.SelectedItem.Properties() } }
 	

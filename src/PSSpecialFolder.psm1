@@ -38,24 +38,6 @@ class SpecialFolder {
 	[void]Open() {
 		$this.StartExplorer('open')
 	}
-	[void]Powershell() {
-		$this.StartPowershell('open')
-	}
-	[void]PowershellAsAdmin() {
-		$this.StartPowershell('runas')
-	}
-	[void]Cmd() {
-		$this.StartCmd('open')
-	}
-	[void]CmdAsAdmin() {
-		$this.StartCmd('runas')
-	}
-	[void]LinuxShell() {
-		$this.StartLinuxShell('open')
-	}
-	[void]LinuxShellAsAdmin() {
-		$this.StartLinuxShell('runas')
-	}
 	[void]Properties() {
 		if ($this.PropertyTypes -eq 'StartProcess') { Start-Process $this.Dir -Verb properties }
 		elseif ($this.TestProperties()) { $this.PropertiesVerb.DoIt() }
@@ -95,6 +77,25 @@ if ($canFolderBeOpenedAsAdmin -and !([SpecialFolder]::new() | Get-Member -Name O
 }
 
 class FileFolder: SpecialFolder {
+	[void]Powershell() {
+		$this.StartPowershell('open')
+	}
+	[void]PowershellAsAdmin() {
+		$this.StartPowershell('runas')
+	}
+	[void]Cmd() {
+		$this.StartCmd('open')
+	}
+	[void]CmdAsAdmin() {
+		$this.StartCmd('runas')
+	}
+	[void]LinuxShell() {
+		$this.StartLinuxShell('open')
+	}
+	[void]LinuxShellAsAdmin() {
+		$this.StartLinuxShell('runas')
+	}
+	
 	hidden [void]StartPowershell([string]$Verb) {
 		$startArgs = @{
 			FilePath = $script:powershellPath

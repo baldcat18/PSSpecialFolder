@@ -32,8 +32,8 @@ InModuleScope PSSpecialFolder {
 			It 'PropertyTypes should StartProcess' {
 				$folder.PropertyTypes | Should -Be 'StartProcess'
 			}
-			It 'TestProperties() should true' {
-				$folder.TestProperties() | Should -Be $true
+			It 'HasProperties() should true' {
+				$folder.HasProperties() | Should -Be $true
 			}
 		}
 		Context 'shell:MyComputerFolder' {
@@ -48,8 +48,8 @@ InModuleScope PSSpecialFolder {
 			It 'PropertyTypes should Verb' {
 				$folder.PropertyTypes | Should -Be 'Verb'
 			}
-			It 'TestProperties() should true' {
-				$folder.TestProperties() | Should -Be $true
+			It 'HasProperties() should true' {
+				$folder.HasProperties() | Should -Be $true
 			}
 			It "Properties Name should `"$propertiesName`"" {
 				$folder.PropertiesVerb.Name | Should -Be $propertiesName
@@ -74,8 +74,8 @@ InModuleScope PSSpecialFolder {
 			It "Path should `"$powerOptionsPath`"" {
 				$folder.Path | Should -Be $powerOptionsPath
 			}
-			It 'TestProperties() should false' {
-				$folder.TestProperties() | Should -Be $false
+			It 'HasProperties() should false' {
+				$folder.HasProperties() | Should -Be $false
 			}
 		}
 		$controlPanelPath = 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\0'
@@ -143,7 +143,7 @@ InModuleScope PSSpecialFolder {
 				$folder.Path | Should -Be $librariesPath
 			}
 			It "Properties Name should `"$propertiesName`"" {
-				$folder.TestProperties() > $null
+				$folder.HasProperties() > $null
 				$folder.PropertiesVerb.Name | Should -Be $propertiesName
 			}
 		}

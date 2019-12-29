@@ -40,7 +40,7 @@ class SpecialFolder {
 	}
 	[void]Properties() {
 		if ($this.PropertyTypes -eq 'StartProcess') { Start-Process $this.Dir -Verb properties }
-		elseif ($this.TestProperties()) { $this.PropertiesVerb.DoIt() }
+		elseif ($this.HasProperties()) { $this.PropertiesVerb.DoIt() }
 		else { throw [InvalidOperationException]'The properties of this folder can''t be shown.' }
 	}
 	[string]ToString() {
@@ -50,7 +50,7 @@ class SpecialFolder {
 	hidden [void]StartExplorer([string]$Verb) {
 		Start-Process explorer.exe $(if ($this.Dir) { $this.Dir } else { $this.Path }) -Verb $Verb
 	}
-	hidden [bool]TestProperties() {
+	hidden [bool]HasProperties() {
 		if ($this.PropertyTypes -eq 'StartProcess') { return $true }
 		if (!$this.FolderItem) { return $false }
 		
@@ -1286,7 +1286,7 @@ function Show-SpecialFolder {
 				if ($isWslEnabled) { $wsl.Visibility = 'Visible' }
 			}
 		}
-		if ($item.TestProperties()) { $properties.Visibility = 'Visible' }
+		if ($item.HasProperties()) { $properties.Visibility = 'Visible' }
 	})
 	$window.FindName('open').add_Click($openFolder)
 	$window.FindName('copyAsPath').add_Click({ Set-Clipboard $dataGrid.SelectedItem.Path })

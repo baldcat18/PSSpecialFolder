@@ -172,14 +172,17 @@ function newSpecialFolder {
 
 function newShellCommand {
 	[OutputType([SpecialFolder])]
-	param ([string]$Path, [string]$Name = '')
+	param ([string]$Clsid, [string]$Name = '')
 	
-	if (!$Path) { return }
+	if (!$Clsid) { return }
 	
-	$clsidPath = "Microsoft.PowerShell.Core\Registry::HKEY_CLASSES_ROOT\CLSID\$($Path.Remove(0, 8))"
-	if (!(Test-Path $clsidPath)) { return }
+	$path = "Microsoft.PowerShell.Core\Registry::HKEY_CLASSES_ROOT\CLSID\$Clsid"
+	if (!(Test-Path $path)) { return }
 	
-	return [SpecialFolder]@{ Name = if ($Name) { $Name } else { (Get-Item $clsidPath).GetValue('') }; Path = $Path }
+	return [SpecialFolder]@{
+		Name = if ($Name) { $Name } else { (Get-Item $path).GetValue('') }
+		Path = "shell:::$Clsid"
+	}
 }
 
 function getDirectoryFolderItem {
@@ -660,85 +663,85 @@ function getSpecialFolder {
 	Write-Information "`nCategory: OtherShellCommands`n"
 	
 	# Taskbar
-	Write-Output (newShellCommand 'shell:::{0DF44EAA-FF21-4412-828E-260A8728E7F1}')
+	Write-Output (newShellCommand '{0DF44EAA-FF21-4412-828E-260A8728E7F1}')
 	# Search
 	# Win10 1511まで
-	if (!$win10_1709) { Write-Output (newShellCommand 'shell:::{2559A1F0-21D7-11D4-BDAF-00C04F60B9F0}') }
+	if (!$win10_1709) { Write-Output (newShellCommand '{2559A1F0-21D7-11D4-BDAF-00C04F60B9F0}') }
 	# Help and Support
 	# Win8.1まで
-	Write-Output (newShellCommand 'shell:::{2559A1F1-21D7-11D4-BDAF-00C04F60B9F0}')
+	Write-Output (newShellCommand '{2559A1F1-21D7-11D4-BDAF-00C04F60B9F0}')
 	# Windows Security
 	# Ctrl+Alt+Delと同じ
 	# Win10 1809までCLSIDは定義されているが利用できないので非表示に
-	if ($win10_1903) { Write-Output (newShellCommand 'shell:::{2559A1F2-21D7-11D4-BDAF-00C04F60B9F0}') }
+	if ($win10_1903) { Write-Output (newShellCommand '{2559A1F2-21D7-11D4-BDAF-00C04F60B9F0}') }
 	# Run...
-	Write-Output (newShellCommand 'shell:::{2559A1F3-21D7-11D4-BDAF-00C04F60B9F0}')
+	Write-Output (newShellCommand '{2559A1F3-21D7-11D4-BDAF-00C04F60B9F0}')
 	# Set Program Access and Defaults
-	Write-Output (newShellCommand 'shell:::{2559A1F7-21D7-11D4-BDAF-00C04F60B9F0}')
-	Write-Output (newShellCommand 'shell:::{2559A1F8-21D7-11D4-BDAF-00C04F60B9F0}' $(if ($win10) { 'Cortana' } else { 'Search' }))
+	Write-Output (newShellCommand '{2559A1F7-21D7-11D4-BDAF-00C04F60B9F0}')
+	Write-Output (newShellCommand '{2559A1F8-21D7-11D4-BDAF-00C04F60B9F0}' $(if ($win10) { 'Cortana' } else { 'Search' }))
 	# Show Desktop
 	# Win+Dと同じ
-	Write-Output (newShellCommand 'shell:::{3080F90D-D7AD-11D9-BD98-0000947B0257}')
+	Write-Output (newShellCommand '{3080F90D-D7AD-11D9-BD98-0000947B0257}')
 	# Window Switcher
 	# Win8.1ではCtrl+Alt+Tab、Win10 1607以降ではWin+Tabと同じ (Win10 1507/1511では使用不可)
-	Write-Output (newShellCommand 'shell:::{3080F90E-D7AD-11D9-BD98-0000947B0257}')
+	Write-Output (newShellCommand '{3080F90E-D7AD-11D9-BD98-0000947B0257}')
 	# Win8.1まで
-	if (!$win10) { Write-Output (newShellCommand 'shell:::{38A98528-6CBF-4CA9-8DC0-B1E1D10F7B1B}' 'Connect To') }
+	if (!$win10) { Write-Output (newShellCommand '{38A98528-6CBF-4CA9-8DC0-B1E1D10F7B1B}' 'Connect To') }
 	# Phone and Modem Control Panel
-	Write-Output (newShellCommand 'shell:::{40419485-C444-4567-851A-2DD7BFA1684D}')
+	Write-Output (newShellCommand '{40419485-C444-4567-851A-2DD7BFA1684D}')
 	# Open in new window
-	Write-Output (newShellCommand 'shell:::{52205FD8-5DFB-447D-801A-D0B52F2E83E1}' 'File Explorer')
+	Write-Output (newShellCommand '{52205FD8-5DFB-447D-801A-D0B52F2E83E1}' 'File Explorer')
 	# Mobility Center Control Panel
-	Write-Output (newShellCommand 'shell:::{5EA4F148-308C-46D7-98A9-49041B1DD468}')
+	Write-Output (newShellCommand '{5EA4F148-308C-46D7-98A9-49041B1DD468}')
 	# Region and Language
-	Write-Output (newShellCommand 'shell:::{62D8ED13-C9D0-4CE8-A914-47DD628FB1B0}')
+	Write-Output (newShellCommand '{62D8ED13-C9D0-4CE8-A914-47DD628FB1B0}')
 	# Windows Features
-	Write-Output (newShellCommand 'shell:::{67718415-C450-4F3C-BF8A-B487642DC39B}')
+	Write-Output (newShellCommand '{67718415-C450-4F3C-BF8A-B487642DC39B}')
 	# Mouse Control Panel
-	Write-Output (newShellCommand 'shell:::{6C8EEC18-8D75-41B2-A177-8831D59D2D50}')
+	Write-Output (newShellCommand '{6C8EEC18-8D75-41B2-A177-8831D59D2D50}')
 	# Folder Options
-	Write-Output (newShellCommand 'shell:::{6DFD7C5C-2451-11D3-A299-00C04F8EF6AF}')
+	Write-Output (newShellCommand '{6DFD7C5C-2451-11D3-A299-00C04F8EF6AF}')
 	# Keyboard Control Panel
-	Write-Output (newShellCommand 'shell:::{725BE8F7-668E-4C7B-8F90-46BDB0936430}')
+	Write-Output (newShellCommand '{725BE8F7-668E-4C7B-8F90-46BDB0936430}')
 	# Device Manager
-	Write-Output (newShellCommand 'shell:::{74246BFC-4C96-11D0-ABEF-0020AF6B0B7A}')
+	Write-Output (newShellCommand '{74246BFC-4C96-11D0-ABEF-0020AF6B0B7A}')
 	# User Accounts
 	# netplwiz.exe / control.exe userpasswords2
-	Write-Output (newShellCommand 'shell:::{7A9D77BD-5403-11D2-8785-2E0420524153}')
+	Write-Output (newShellCommand '{7A9D77BD-5403-11D2-8785-2E0420524153}')
 	# Tablet PC Settings Control Panel
-	Write-Output (newShellCommand 'shell:::{80F3F1D5-FECA-45F3-BC32-752C152E456E}')
+	Write-Output (newShellCommand '{80F3F1D5-FECA-45F3-BC32-752C152E456E}')
 	# Internet Folder
 	# Win10以降では開けないので非表示に
 	if (!$win10) { Write-Output (newSpecialFolder 'shell:InternetFolder') }
 	# Indexing Options Control Panel
-	Write-Output (newShellCommand 'shell:::{87D66A43-7B11-4A28-9811-C86EE395ACF7}')
+	Write-Output (newShellCommand '{87D66A43-7B11-4A28-9811-C86EE395ACF7}')
 	# Portable Workspace Creator
 	# Enterpriseで使用可
 	# Win10 1607以降ではProでも使用可
-	Write-Output (newShellCommand 'shell:::{8E0C279D-0BD1-43C3-9EBD-31C3DC5B8A77}')
+	Write-Output (newShellCommand '{8E0C279D-0BD1-43C3-9EBD-31C3DC5B8A77}')
 	# Infrared
 	# Win10 1607から1809まで
-	Write-Output (newShellCommand 'shell:::{A0275511-0E86-4ECA-97C2-ECD8F1221D08}')
+	Write-Output (newShellCommand '{A0275511-0E86-4ECA-97C2-ECD8F1221D08}')
 	# Internet Options
-	Write-Output (newShellCommand 'shell:::{A3DD4F92-658A-410F-84FD-6FBBBEF2FFFE}')
+	Write-Output (newShellCommand '{A3DD4F92-658A-410F-84FD-6FBBBEF2FFFE}')
 	# Color Management
-	Write-Output (newShellCommand 'shell:::{B2C761C6-29BC-4F19-9251-E6195265BAF1}')
+	Write-Output (newShellCommand '{B2C761C6-29BC-4F19-9251-E6195265BAF1}')
 	# Windows Anytime Upgrade
 	# Win8.1まで
-	Write-Output (newShellCommand 'shell:::{BE122A0E-4503-11DA-8BDE-F66BAD1E3F3A}')
+	Write-Output (newShellCommand '{BE122A0E-4503-11DA-8BDE-F66BAD1E3F3A}')
 	# Text to Speech Control Panel
-	Write-Output (newShellCommand 'shell:::{D17D1D6D-CC3F-4815-8FE3-607E7D5D10B3}')
+	Write-Output (newShellCommand '{D17D1D6D-CC3F-4815-8FE3-607E7D5D10B3}')
 	# Add Network Place
-	Write-Output (newShellCommand 'shell:::{D4480A50-BA28-11D1-8E75-00C04FA31A86}')
+	Write-Output (newShellCommand '{D4480A50-BA28-11D1-8E75-00C04FA31A86}')
 	# Windows Defender
 	# Win10 1607まで
-	Write-Output (newShellCommand 'shell:::{D8559EB9-20C0-410E-BEDA-7ED416AECC2A}')
+	Write-Output (newShellCommand '{D8559EB9-20C0-410E-BEDA-7ED416AECC2A}')
 	# Date and Time Control Panel
-	Write-Output (newShellCommand 'shell:::{E2E7934B-DCE5-43C4-9576-7FE4F75E7480}')
+	Write-Output (newShellCommand '{E2E7934B-DCE5-43C4-9576-7FE4F75E7480}')
 	# Sound Control Panel
-	Write-Output (newShellCommand 'shell:::{F2DDFC82-8F12-4CDD-B7DC-D4FE1425AA4D}')
+	Write-Output (newShellCommand '{F2DDFC82-8F12-4CDD-B7DC-D4FE1425AA4D}')
 	# Pen and Touch Control Panel
-	Write-Output (newShellCommand 'shell:::{F82DF8F7-8B9F-442E-A48C-818EA735FF9B}')
+	Write-Output (newShellCommand '{F82DF8F7-8B9F-442E-A48C-818EA735FF9B}')
 	
 	if (!$IsDebugging) { return }
 	
@@ -988,13 +991,13 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:::{F86FA3AB-70D2-4FC7-9C99-FCBF05467F3A}' 'Local Videos')
 	
 	# (shell32.dll#SearchCommand)
-	Write-Output (newShellCommand 'shell:::{2559A1F8-21D7-11D4-BDAF-00C04F60B9F0}')
+	Write-Output (newShellCommand '{2559A1F8-21D7-11D4-BDAF-00C04F60B9F0}')
 	# (shell32.dll)
-	Write-Output (newShellCommand 'shell:::{52205FD8-5DFB-447D-801A-D0B52F2E83E1}')
+	Write-Output (newShellCommand '{52205FD8-5DFB-447D-801A-D0B52F2E83E1}')
 	# Control Panel command object for Start menu and desktop
-	Write-Output (newShellCommand 'shell:::{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}')
+	Write-Output (newShellCommand '{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}')
 	# Default Programs command object for Start menu
-	Write-Output (newShellCommand 'shell:::{E44E5D18-0652-4508-A4E2-8A090067BCB0}')
+	Write-Output (newShellCommand '{E44E5D18-0652-4508-A4E2-8A090067BCB0}')
 	
 	# フォルダーとして使えないshellコマンド
 	Write-Information "`nCategory: Unusable`n"
@@ -1009,114 +1012,114 @@ function getSpecialFolder {
 	# Default Programs command object for Start menu
 	Write-Output (newSpecialFolder 'shell:::{E44E5D18-0652-4508-A4E2-8A090067BCB0}')
 	
-	Write-Output (newShellCommand 'shell:::{00020D75-0000-0000-C000-000000000046}')
+	Write-Output (newShellCommand '{00020D75-0000-0000-C000-000000000046}')
 	# Desktop
-	Write-Output (newShellCommand 'shell:::{00021400-0000-0000-C000-000000000046}')
+	Write-Output (newShellCommand '{00021400-0000-0000-C000-000000000046}')
 	# Shortcut
-	Write-Output (newShellCommand 'shell:::{00021401-0000-0000-C000-000000000046}')
+	Write-Output (newShellCommand '{00021401-0000-0000-C000-000000000046}')
 	# Win10 1507から1703まで
-	Write-Output (newShellCommand 'shell:::{047EA9A0-93BB-415F-A1C3-D7AEB3DD5087}')
+	Write-Output (newShellCommand '{047EA9A0-93BB-415F-A1C3-D7AEB3DD5087}')
 	# Open With Context Menu Handler
-	Write-Output (newShellCommand 'shell:::{09799AFB-AD67-11D1-ABCD-00C04FC30936}')
+	Write-Output (newShellCommand '{09799AFB-AD67-11D1-ABCD-00C04FC30936}')
 	# Folder Shortcut
-	Write-Output (newShellCommand 'shell:::{0AFACED1-E828-11D1-9187-B532F1E9575D}')
+	Write-Output (newShellCommand '{0AFACED1-E828-11D1-9187-B532F1E9575D}')
 	# (windows.storage.dll)
-	Write-Output (newShellCommand 'shell:::{0C39A5CF-1A7A-40C8-BA74-8900E6DF5FCD}')
+	Write-Output (newShellCommand '{0C39A5CF-1A7A-40C8-BA74-8900E6DF5FCD}')
 	# (dsuiext.dll)
-	Write-Output (newShellCommand 'shell:::{0D45D530-764B-11D0-A1CA-00AA00C16E65}')
+	Write-Output (newShellCommand '{0D45D530-764B-11D0-A1CA-00AA00C16E65}')
 	# Shell File System Folder
-	Write-Output (newShellCommand 'shell:::{0E5AAE11-A475-4C5B-AB00-C66DE400274E}')
+	Write-Output (newShellCommand '{0E5AAE11-A475-4C5B-AB00-C66DE400274E}')
 	# Device Center Print Context Menu Extension
-	Write-Output (newShellCommand 'shell:::{0E6DAA63-DD4E-47CE-BF9D-FDB72ECE4A0D}')
+	Write-Output (newShellCommand '{0E6DAA63-DD4E-47CE-BF9D-FDB72ECE4A0D}')
 	# IE History and Feeds Shell Data Source for Windows Search
-	Write-Output (newShellCommand 'shell:::{11016101-E366-4D22-BC06-4ADA335C892B}')
+	Write-Output (newShellCommand '{11016101-E366-4D22-BC06-4ADA335C892B}')
 	# OpenMediaSharing
-	Write-Output (newShellCommand 'shell:::{17FC1A80-140E-4290-A64F-4A29A951A867}')
+	Write-Output (newShellCommand '{17FC1A80-140E-4290-A64F-4A29A951A867}')
 	# CLSID_DBFolderBoth
-	Write-Output (newShellCommand 'shell:::{1BEF2128-2F96-4500-BA7C-098DC0049CB2}')
+	Write-Output (newShellCommand '{1BEF2128-2F96-4500-BA7C-098DC0049CB2}')
 	# CompatContextMenu Class
-	Write-Output (newShellCommand 'shell:::{1D27F844-3A1F-4410-85AC-14651078412D}')
+	Write-Output (newShellCommand '{1D27F844-3A1F-4410-85AC-14651078412D}')
 	# E-mail
-	Write-Output (newShellCommand 'shell:::{2559A1F5-21D7-11D4-BDAF-00C04F60B9F0}')
+	Write-Output (newShellCommand '{2559A1F5-21D7-11D4-BDAF-00C04F60B9F0}')
 	# Location Folder
-	Write-Output (newShellCommand 'shell:::{267CF8A9-F4E3-41E6-95B1-AF881BE130FF}')
+	Write-Output (newShellCommand '{267CF8A9-F4E3-41E6-95B1-AF881BE130FF}')
 	# Enhanced Storage Context Menu Handler Class
-	Write-Output (newShellCommand 'shell:::{2854F705-3548-414C-A113-93E27C808C85}')
+	Write-Output (newShellCommand '{2854F705-3548-414C-A113-93E27C808C85}')
 	# System Restore
-	Write-Output (newShellCommand 'shell:::{3F6BC534-DFA1-4AB4-AE54-EF25A74E0107}')
+	Write-Output (newShellCommand '{3F6BC534-DFA1-4AB4-AE54-EF25A74E0107}')
 	# Start Menu Folder
-	Write-Output (newShellCommand 'shell:::{48E7CAAB-B918-4E58-A94D-505519C795DC}')
+	Write-Output (newShellCommand '{48E7CAAB-B918-4E58-A94D-505519C795DC}')
 	# IGD Property Page
-	Write-Output (newShellCommand 'shell:::{4A1E5ACD-A108-4100-9E26-D2FAFA1BA486}')
+	Write-Output (newShellCommand '{4A1E5ACD-A108-4100-9E26-D2FAFA1BA486}')
 	# LzhCompressedFolder2
 	# Win10 1607まで
-	Write-Output (newShellCommand 'shell:::{4F289A46-2BBB-4AE8-9EDA-E5E034707A71}')
+	Write-Output (newShellCommand '{4F289A46-2BBB-4AE8-9EDA-E5E034707A71}')
 	# This PC
 	# Win10 1507から
-	Write-Output (newShellCommand 'shell:::{5E5F29CE-E0A8-49D3-AF32-7A7BDC173478}')
+	Write-Output (newShellCommand '{5E5F29CE-E0A8-49D3-AF32-7A7BDC173478}')
 	# (dsuiext.dll)
-	Write-Output (newShellCommand 'shell:::{62AE1F9A-126A-11D0-A14B-0800361B1103}')
+	Write-Output (newShellCommand '{62AE1F9A-126A-11D0-A14B-0800361B1103}')
 	# Search Connector Folder
-	Write-Output (newShellCommand 'shell:::{72B36E70-8700-42D6-A7F7-C9AB3323EE51}')
+	Write-Output (newShellCommand '{72B36E70-8700-42D6-A7F7-C9AB3323EE51}')
 	# CryptPKO Class
-	Write-Output (newShellCommand 'shell:::{7444C717-39BF-11D1-8CD9-00C04FC29D45}')
+	Write-Output (newShellCommand '{7444C717-39BF-11D1-8CD9-00C04FC29D45}')
 	# Temporary Internet Files
-	Write-Output (newShellCommand 'shell:::{7BD29E00-76C1-11CF-9DD0-00A0C9034933}')
+	Write-Output (newShellCommand '{7BD29E00-76C1-11CF-9DD0-00A0C9034933}')
 	# Temporary Internet Files
-	Write-Output (newShellCommand 'shell:::{7BD29E01-76C1-11CF-9DD0-00A0C9034933}')
+	Write-Output (newShellCommand '{7BD29E01-76C1-11CF-9DD0-00A0C9034933}')
 	# Briefcase (Win10 1607まで)
 	#  (Win10 1703から)
-	Write-Output (newShellCommand 'shell:::{85BBD920-42A0-1069-A2E4-08002B30309D}')
+	Write-Output (newShellCommand '{85BBD920-42A0-1069-A2E4-08002B30309D}')
 	# Shortcut
-	Write-Output (newShellCommand 'shell:::{85CFCCAF-2D14-42B6-80B6-F40F65D016E7}')
+	Write-Output (newShellCommand '{85CFCCAF-2D14-42B6-80B6-F40F65D016E7}')
 	# Mobile Broadband Profile Settings Editor
-	Write-Output (newShellCommand 'shell:::{87630419-6216-4FF8-A1F0-143562D16D5C}')
+	Write-Output (newShellCommand '{87630419-6216-4FF8-A1F0-143562D16D5C}')
 	# Compressed (zipped) Folder SendTo Target
-	Write-Output (newShellCommand 'shell:::{888DCA60-FC0A-11CF-8F0F-00C04FD7D062}')
+	Write-Output (newShellCommand '{888DCA60-FC0A-11CF-8F0F-00C04FD7D062}')
 	# ActiveX Cache Folder
-	Write-Output (newShellCommand 'shell:::{88C6C381-2E85-11D0-94DE-444553540000}')
+	Write-Output (newShellCommand '{88C6C381-2E85-11D0-94DE-444553540000}')
 	# Libraries delegate folder that appears in Users Files Folder
-	Write-Output (newShellCommand 'shell:::{896664F7-12E1-490F-8782-C0835AFD98FC}')
+	Write-Output (newShellCommand '{896664F7-12E1-490F-8782-C0835AFD98FC}')
 	# Windows Search Service Media Center Namespace Extension Handler
 	# Win10 1607まで
-	Write-Output (newShellCommand 'shell:::{98D99750-0B8A-4C59-9151-589053683D73}')
+	Write-Output (newShellCommand '{98D99750-0B8A-4C59-9151-589053683D73}')
 	# MAPI Shell Context Menu
-	Write-Output (newShellCommand 'shell:::{9D3C0751-A13F-46A6-B833-B46A43C30FE8}')
+	Write-Output (newShellCommand '{9D3C0751-A13F-46A6-B833-B46A43C30FE8}')
 	# Previous Versions
-	Write-Output (newShellCommand 'shell:::{9DB7A13C-F208-4981-8353-73CC61AE2783}')
+	Write-Output (newShellCommand '{9DB7A13C-F208-4981-8353-73CC61AE2783}')
 	# Mail Service
-	Write-Output (newShellCommand 'shell:::{9E56BE60-C50F-11CF-9A2C-00A0C90A90CE}')
+	Write-Output (newShellCommand '{9E56BE60-C50F-11CF-9A2C-00A0C90A90CE}')
 	# Desktop Shortcut
-	Write-Output (newShellCommand 'shell:::{9E56BE61-C50F-11CF-9A2C-00A0C90A90CE}')
+	Write-Output (newShellCommand '{9E56BE61-C50F-11CF-9A2C-00A0C90A90CE}')
 	# DevicePairingFolder Initialization
-	Write-Output (newShellCommand 'shell:::{AEE2420F-D50E-405C-8784-363C582BF45A}')
+	Write-Output (newShellCommand '{AEE2420F-D50E-405C-8784-363C582BF45A}')
 	# CLSID_DBFolder
-	Write-Output (newShellCommand 'shell:::{B2952B16-0E07-4E5A-B993-58C52CB94CAE}')
+	Write-Output (newShellCommand '{B2952B16-0E07-4E5A-B993-58C52CB94CAE}')
 	# Device Center Scan Context Menu Extension
-	Write-Output (newShellCommand 'shell:::{B5A60A9E-A4C7-4A93-AC6E-0B76D1D87DC4}')
+	Write-Output (newShellCommand '{B5A60A9E-A4C7-4A93-AC6E-0B76D1D87DC4}')
 	# DeviceCenter Initialization
-	Write-Output (newShellCommand 'shell:::{C2B136E2-D50E-405C-8784-363C582BF43E}')
+	Write-Output (newShellCommand '{C2B136E2-D50E-405C-8784-363C582BF43E}')
 	# Win10 1507から1607まで
-	Write-Output (newShellCommand 'shell:::{D9AC5E73-BB10-467B-B884-AA1E475C51F5}')
+	Write-Output (newShellCommand '{D9AC5E73-BB10-467B-B884-AA1E475C51F5}')
 	# delegate folder that appears in Users Files Folder
-	Write-Output (newShellCommand 'shell:::{DFFACDC5-679F-4156-8947-C5C76BC0B67F}')
+	Write-Output (newShellCommand '{DFFACDC5-679F-4156-8947-C5C76BC0B67F}')
 	# CompressedFolder
-	Write-Output (newShellCommand 'shell:::{E88DCCE0-B7B3-11D1-A9F0-00AA0060FA31}')
+	Write-Output (newShellCommand '{E88DCCE0-B7B3-11D1-A9F0-00AA0060FA31}')
 	# MyDocs Drop Target
-	Write-Output (newShellCommand 'shell:::{ECF03A32-103D-11D2-854D-006008059367}')
+	Write-Output (newShellCommand '{ECF03A32-103D-11D2-854D-006008059367}')
 	# Shell File System Folder
-	Write-Output (newShellCommand 'shell:::{F3364BA0-65B9-11CE-A9BA-00AA004AE837}')
+	Write-Output (newShellCommand '{F3364BA0-65B9-11CE-A9BA-00AA004AE837}')
 	# Sticky Notes Namespace Extension for Windows Desktop Search
 	# Win10 1607まで
-	Write-Output (newShellCommand 'shell:::{F3F5824C-AD58-4728-AF59-A1EBE3392799}')
+	Write-Output (newShellCommand '{F3F5824C-AD58-4728-AF59-A1EBE3392799}')
 	# Subscription Folder
-	Write-Output (newShellCommand 'shell:::{F5175861-2688-11D0-9C5E-00AA00A45957}')
+	Write-Output (newShellCommand '{F5175861-2688-11D0-9C5E-00AA00A45957}')
 	# Internet Shortcut
-	Write-Output (newShellCommand 'shell:::{FBF23B40-E3F0-101B-8488-00AA003E56F8}')
+	Write-Output (newShellCommand '{FBF23B40-E3F0-101B-8488-00AA003E56F8}')
 	# History
-	Write-Output (newShellCommand 'shell:::{FF393560-C2A7-11CF-BFF4-444553540000}')
+	Write-Output (newShellCommand '{FF393560-C2A7-11CF-BFF4-444553540000}')
 	# Windows Photo Viewer Image Verbs
-	Write-Output (newShellCommand 'shell:::{FFE2A43C-56B9-4BF5-9A79-CC6D4285608A}')
+	Write-Output (newShellCommand '{FFE2A43C-56B9-4BF5-9A79-CC6D4285608A}')
 }
 
 <#

@@ -5,6 +5,7 @@
 	Copyright = '(c) 2019 BaldCat. All rights reserved.'
 	Description = 'PowerShell Module gets the special folders for Windows 8.1 and 10 (Version 1709 or later).'
 	PowerShellVersion = '5.1'
+	CompatiblePSEditions = @('Core', 'Desktop')
 	RootModule = 'PSSpecialFolder.psm1'
 	FunctionsToExport = @('Get-SpecialFolder', 'Show-SpecialFolder')
 	PrivateData = @{

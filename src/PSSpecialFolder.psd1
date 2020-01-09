@@ -8,6 +8,8 @@
 	CompatiblePSEditions = @('Core', 'Desktop')
 	RootModule = 'PSSpecialFolder.psm1'
 	FunctionsToExport = @('Get-SpecialFolder', 'Show-SpecialFolder')
+	CmdletsToExport = @()
+	AliasesToExport = @()
 	PrivateData = @{
 		LicenseUri = 'https://github.com/baldcat18/PSSpecialFolder/blob/master/LICENSE'
 		PSData = @{ Prerelease = 'alpha'}

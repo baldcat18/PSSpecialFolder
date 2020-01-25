@@ -70,7 +70,8 @@ class SpecialFolder {
 	}
 }
 
-if ($canFolderBeOpenedAsAdmin -and !([SpecialFolder]::new() | Get-Member -Name OpenAsAdmin)) {
+Get-TypeData SpecialFolder | Remove-TypeData
+if ($canFolderBeOpenedAsAdmin) {
 	Update-TypeData `
 		-TypeName SpecialFolder -MemberName OpenAsAdmin -MemberType ScriptMethod `
 		-Value { $this.StartExplorer('runas') }

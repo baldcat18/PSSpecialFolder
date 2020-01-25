@@ -1,3 +1,4 @@
 *.html
-*.txt
-.vscode/
+/.vscode/
+/src/LICENSE.txt
+/tools/Save-List_diff.ps1

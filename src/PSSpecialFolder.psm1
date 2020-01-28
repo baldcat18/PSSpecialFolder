@@ -1145,6 +1145,7 @@ function Get-SpecialFolder {
 		}
 }
 
+# 1つのリソースは1つのメニューにか設定できないので、必要な項目ごとに使用する
 function getShieldImage {
 	[OutputType([System.Windows.Controls.Image])]
 	param ()

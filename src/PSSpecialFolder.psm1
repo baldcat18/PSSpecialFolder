@@ -1176,6 +1176,10 @@ function Show-SpecialFolder {
 	Add-Type -AssemblyName PresentationFramework
 	Add-Type -AssemblyName System.Drawing
 	
+	# SendKeys用
+	# GUIにWPFを使っているのでWinFormsのSendKeysは使ってない
+	$wsh = New-Object -ComObject WScript.Shell
+	
 	function selectInvokedCommand {
 		$item = $dataGrid.SelectedItem
 		if (!$item -or $item -isnot [SpecialFolder]) { return }
@@ -1239,6 +1243,14 @@ function Show-SpecialFolder {
 	$dataGrid = [DataGrid]($window.FindName('dataGrid'))
 	$dataGrid.add_PreviewKeyDown({
 		param([object]$sender, [KeyEventArgs]$e)
+		
+		# Home/End単独で一番上/一番下に移動できるようにする
+		if (!([Keyboard]::Modifiers -band [ModifierKeys]::Control)) {
+			switch ($e.Key) {
+				'Home' { $wsh.SendKeys('^{HOME}') }
+				'End' { $wsh.SendKeys('^{END}') }
+			}
+		}
 		
 		# $_.KeyだとAlt単独もAlt+Enterも'System'になるので[Keyboard]::IsKeyDown('Enter')を見ている
 		if (![Keyboard]::IsKeyDown('Enter')) { return }

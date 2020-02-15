@@ -7,8 +7,15 @@ using namespace System.Windows.Markup
 Set-StrictMode -Version Latest
 
 $isPwsh = $PSVersionTable['PSVersion'].Major -ge 6
-$powershellPath =
-	if ($isPwsh -and (Get-Command pwsh.exe -ErrorAction SilentlyContinue)) { 'pwsh.exe' } else { 'powershell.exe' }
+
+# pwsh.exeがあるフォルダーにパスが通っていない場合もあるのでAPIから取得する
+$powershellPath = [System.Diagnostics.Process]::GetCurrentProcess().Path
+# ISEなど場合もあるので名前を明示する
+if ($powershellPath -notmatch '\\(?:powershell|pwsh)\.exe$') {
+	$powershellPath =
+		if ($isPwsh -and (Get-Command pwsh.exe -ErrorAction SilentlyContinue)) { 'pwsh.exe' } else { 'powershell.exe' }
+}
+
 $isWslEnabled = Test-Path "$([Environment]::GetFolderPath('System'))/wsl.exe"
 $canFolderBeOpenedAsAdmin =
 	!((Get-Item 'HKLM:/SOFTWARE/Classes/AppID/{CDCBCFCA-3CDC-436f-A4E2-0E02075250C2}').GetValue('RunAs'))

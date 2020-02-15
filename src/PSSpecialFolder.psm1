@@ -7,6 +7,10 @@ using namespace System.Windows.Markup
 Set-StrictMode -Version Latest
 
 $isPwsh = $PSVersionTable['PSVersion'].Major -ge 6
+if ($isPwsh -and !$IsWindows) {
+	throw [PlatformNotSupportedException]'The PSSpecialFolder module supports Windows only.'
+	return
+}
 
 # pwsh.exeがあるフォルダーにパスが通っていない場合もあるのでAPIから取得する
 $powershellPath = [System.Diagnostics.Process]::GetCurrentProcess().Path
@@ -19,11 +23,6 @@ if ($powershellPath -notmatch '\\(?:powershell|pwsh)\.exe$') {
 $isWslEnabled = Test-Path "$([Environment]::GetFolderPath('System'))/wsl.exe"
 $canFolderBeOpenedAsAdmin =
 	!((Get-Item 'HKLM:/SOFTWARE/Classes/AppID/{CDCBCFCA-3CDC-436f-A4E2-0E02075250C2}').GetValue('RunAs'))
-
-if ($isPwsh -and !$IsWindows) {
-	throw [PlatformNotSupportedException]'The PSSpecialFolder module supports Windows only.'
-	return
-}
 
 enum PropertyTypes {
 	None

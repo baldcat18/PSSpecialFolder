@@ -1275,11 +1275,6 @@ function Show-SpecialFolder {
 	$dataGrid.add_ContextMenuOpening({
 		param([object]$sender, [ContextMenuEventArgs]$e)
 		
-		if ($e.OriginalSource -isnot [TextBlock]) {
-			$e.Handled = $true
-			return
-		}
-		
 		$item = $dataGrid.SelectedItem
 		if ($item -isnot [SpecialFolder]) {
 			$e.Handled = $true

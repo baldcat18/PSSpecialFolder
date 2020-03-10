@@ -677,10 +677,6 @@ function getSpecialFolder {
 	# Help and Support
 	# Win8.1まで
 	Write-Output (newShellCommand '{2559A1F1-21D7-11D4-BDAF-00C04F60B9F0}')
-	# Windows Security
-	# Ctrl+Alt+Delと同じ
-	# Win10 1809までCLSIDは定義されているが利用できないので非表示に
-	if ($win10_1903) { Write-Output (newShellCommand '{2559A1F2-21D7-11D4-BDAF-00C04F60B9F0}') }
 	# Run...
 	Write-Output (newShellCommand '{2559A1F3-21D7-11D4-BDAF-00C04F60B9F0}')
 	# Set Program Access and Defaults
@@ -1046,6 +1042,8 @@ function getSpecialFolder {
 	Write-Output (newShellCommand '{1BEF2128-2F96-4500-BA7C-098DC0049CB2}')
 	# CompatContextMenu Class
 	Write-Output (newShellCommand '{1D27F844-3A1F-4410-85AC-14651078412D}')
+	# Windows Security
+	Write-Output (newShellCommand '{2559A1F2-21D7-11D4-BDAF-00C04F60B9F0}')
 	# E-mail
 	Write-Output (newShellCommand '{2559A1F5-21D7-11D4-BDAF-00C04F60B9F0}')
 	# Location Folder

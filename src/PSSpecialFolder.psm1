@@ -1173,7 +1173,7 @@ function Show-SpecialFolder {
 	
 	# WPFが使えない場合
 	if (($PSVersionTable['PSVersion'].Major -ge 6) -or ($Host.Runspace.ApartmentState -ne 'STA')) {
-		throw 'Show-SpecialFolder can''t be started because this function needs WPF.'
+		throw [NotSupportedException]'Show-SpecialFolder can''t be started because this function needs WPF.'
 		return
 	}
 	

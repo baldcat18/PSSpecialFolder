@@ -1,2 +1,37 @@
-# PSSpecialFolder
-PowerShell Module gets the special folders for Windows.
+﻿# PSSpecialFolder
+
+Windows で使われている特殊フォルダーのフルパスを取得する PowerShell モジュールです。
+
+## 最小 PowerShell バージョン
+
+5.1
+
+## サポートする Windows バージョン
+
+Windows 8.1 Update<br>
+Windows 10 バージョン 1809、1903、1909
+
+Windows 10 Insider Preview ビルド 19041 でも動作すると思います。
+
+Windows 10 バージョン 1803 でも動作すると思いますが、動作確認していません。
+
+## 提供する関数
+
+### Get-SpecialFolder
+
+Windows で使われている特殊フォルダーのフルパスを取得します。
+
+### Show-SpecialFolder
+
+Windows で使われている特殊フォルダーのフルパスをダイアログ上に表示します。
+
+ダブルクリックすると、そのフォルダーを開きます。
+
+右クリックすると、コンテキストメニューが表示されます。
+フォルダーのパスをクリップボードにコピー、PowerShell やコマンドプロンプトの起動、フォルダーのプロパティの表示ができます。
+
+この関数は WPF を利用しているので、PowerShell Core 6.x では使用できません。
+
+## インストール
+
+Install-Module -Name PSSpecialFolder -AllowPrerelease

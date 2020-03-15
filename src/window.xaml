@@ -25,15 +25,15 @@
 					<MenuItem Header="_Open" Name="open" />
 					<MenuItem Header="Path _as copy" Name="copyAsPath" />
 					<MenuItem Header="Open as _Administrator" Name="openAsAdmin" />
-					<MenuItem Header="Open Command _Prompt here" Name="cmd" />
-					<MenuItem Header="Command _Prompt" Name="cmdEx">
-						<MenuItem Header="Open _here" Name="cmdAsInvoker" />
-						<MenuItem Header="Open here as _Administrator" Name="cmdAsAdmin" />
-					</MenuItem>
 					<MenuItem Header="Open Power_Shell here" Name="powershell" />
 					<MenuItem Header="Power_Shell" Name="powershellEx">
 						<MenuItem Header="Open _here" Name="powershellAsInvoker" />
 						<MenuItem Header="Open here as _Administrator" Name="powershellAsAdmin" />
+					</MenuItem>
+					<MenuItem Header="Open Command _Prompt here" Name="cmd" />
+					<MenuItem Header="Command _Prompt" Name="cmdEx">
+						<MenuItem Header="Open _here" Name="cmdAsInvoker" />
+						<MenuItem Header="Open here as _Administrator" Name="cmdAsAdmin" />
 					</MenuItem>
 					<MenuItem Header="Open _Linux shell here" Name="wsl" />
 					<MenuItem Header="_Linux shell" Name="wslEx">

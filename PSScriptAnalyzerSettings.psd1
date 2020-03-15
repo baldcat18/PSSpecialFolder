@@ -7,7 +7,5 @@
 	}
 	ExcludeRules = @(
 		'PSAvoidTrailingWhitespace'
-		'PSAvoidUsingPositionalParameters'
-		'PSPossibleIncorrectComparisonWithNull'
 	)
 }

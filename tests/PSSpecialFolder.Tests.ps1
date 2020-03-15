@@ -32,8 +32,8 @@ InModuleScope PSSpecialFolder {
 			It 'PropertyTypes should StartProcess' {
 				$folder.PropertyTypes | Should -Be 'StartProcess'
 			}
-			It 'TestProperties() should true' {
-				$folder.TestProperties() | Should -Be $true
+			It 'HasProperties() should true' {
+				$folder.HasProperties() | Should -Be $true
 			}
 		}
 		Context 'shell:MyComputerFolder' {
@@ -48,8 +48,8 @@ InModuleScope PSSpecialFolder {
 			It 'PropertyTypes should Verb' {
 				$folder.PropertyTypes | Should -Be 'Verb'
 			}
-			It 'TestProperties() should true' {
-				$folder.TestProperties() | Should -Be $true
+			It 'HasProperties() should true' {
+				$folder.HasProperties() | Should -Be $true
 			}
 			It "Properties Name should `"$propertiesName`"" {
 				$folder.PropertiesVerb.Name | Should -Be $propertiesName
@@ -74,8 +74,8 @@ InModuleScope PSSpecialFolder {
 			It "Path should `"$powerOptionsPath`"" {
 				$folder.Path | Should -Be $powerOptionsPath
 			}
-			It 'TestProperties() should false' {
-				$folder.TestProperties() | Should -Be $false
+			It 'HasProperties() should false' {
+				$folder.HasProperties() | Should -Be $false
 			}
 		}
 		$controlPanelPath = 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\0'
@@ -122,8 +122,8 @@ InModuleScope PSSpecialFolder {
 			}
 		}
 		$appDataPath = [Environment]::GetFolderPath('ApplicationData')
-		Context "$appDataPath @{ Name = `"AppData`" }" {
-			$folder = newSpecialFolder $appDataPath @{ Name = 'AppData' }
+		Context "$appDataPath `"AppData`"" {
+			$folder = newSpecialFolder $appDataPath 'AppData'
 			It "Name should `"AppData`"" {
 				$folder.Name | Should -Be "AppData"
 			}
@@ -134,8 +134,8 @@ InModuleScope PSSpecialFolder {
 		$librariesPath = (Get-Item 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders').
 			GetValue('{1B3EA5DC-B587-4786-B4EF-BD1DC332AEAE}')
 		if (!$librariesPath) { $librariesPath = "$appDataPath\Microsoft\Windows\Libraries" }
-		Context "shell:Libraries @{ Path = `"$librariesPath`"; FolderItemForProperties = getDirectoryFolderItem $librariesPath }" {
-			$folder = newSpecialFolder shell:Libraries @{ Path = $librariesPath; FolderItemForProperties = getDirectoryFolderItem $librariesPath }
+		Context "shell:Libraries -Path `"$librariesPath`" -FolderItemForProperties (getDirectoryFolderItem $librariesPath)" {
+			$folder = newSpecialFolder shell:Libraries -Path $librariesPath -FolderItemForProperties (getDirectoryFolderItem $librariesPath)
 			It "Name should `"Libraries`"" {
 				$folder.Name | Should -Be 'Libraries'
 			}
@@ -143,7 +143,7 @@ InModuleScope PSSpecialFolder {
 				$folder.Path | Should -Be $librariesPath
 			}
 			It "Properties Name should `"$propertiesName`"" {
-				$folder.TestProperties() > $null
+				$folder.HasProperties() > $null
 				$folder.PropertiesVerb.Name | Should -Be $propertiesName
 			}
 		}
@@ -155,32 +155,32 @@ InModuleScope PSSpecialFolder {
 				newShellCommand $null | Should -BeFalse
 			}
 		}
-		Context 'shell:::{00000000-0000-0000-0000-000000000000}' {
+		Context '{00000000-0000-0000-0000-000000000000}' {
 			It 'Should Null' {
-				newShellCommand 'shell:::{00000000-0000-0000-0000-000000000000}' | Should -BeFalse
+				newShellCommand '{00000000-0000-0000-0000-000000000000}' | Should -BeFalse
 			}
 		}
-		$runPath = 'shell:::{2559A1F3-21D7-11D4-BDAF-00C04F60B9F0}'
-		Context "$runPath (Run...)" {
-			$folder = newShellCommand $runPath
+		$runClsid = '{2559A1F3-21D7-11D4-BDAF-00C04F60B9F0}'
+		Context "$runClsid (Run...)" {
+			$folder = newShellCommand $runClsid
 			It 'Name should "Run..."' {
 				$folder.Name | Should -Be 'Run...'
 			}
-			It "Path should `"$runPath`"" {
-				$folder.Path | Should -Be $runPath
+			It "Path should `"shell:::$runClsid`"" {
+				$folder.Path | Should -Be "shell:::$runClsid"
 			}
 			It 'PropertyTypes should None' {
 				$folder.PropertyTypes | Should -Be 'None'
 			}
 		}
-		$fileExplorerPath = 'shell:::{52205FD8-5DFB-447D-801A-D0B52F2E83E1}'
-		Context "$fileExplorerPath `"File Explorer`"" {
-			$folder = newShellCommand $fileExplorerPath 'File Explorer'
+		$fileExplorerClsid = '{52205FD8-5DFB-447D-801A-D0B52F2E83E1}'
+		Context "$fileExplorerClsid `"File Explorer`"" {
+			$folder = newShellCommand $fileExplorerClsid 'File Explorer'
 			It 'Name should "File Explorer"' {
 				$folder.Name | Should -Be 'File Explorer'
 			}
-			It "Path should `"$fileExplorerPath`"" {
-				$folder.Path | Should -Be $fileExplorerPath
+			It "Path should `"shell:::$fileExplorerClsid`"" {
+				$folder.Path | Should -Be "shell:::$fileExplorerClsid"
 			}
 		}
 	}

@@ -23,7 +23,7 @@ reg.exe export HKCR\CLSID $regFile /y > $null
 
 Get-Content -LiteralPath $regFile |
 	Where-Object { $_ -match '^\[HKEY_CLASSES_ROOT\\CLSID\\({.+?})\\(?:ShellFolder|shell(?:ex)?)\]$' } |
-	ForEach-Object { $matches[1].ToUpper() } |
+	ForEach-Object { $Matches[1].ToUpper() } |
 	Get-Unique |
 	Where-Object { $All -or !$datatext.Contains($_) } |
 	ForEach-Object {

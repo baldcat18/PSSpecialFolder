@@ -11,7 +11,7 @@
 	CmdletsToExport = @()
 	AliasesToExport = @()
 	PrivateData = @{
-		LicenseUri = 'https://github.com/baldcat18/PSSpecialFolder/blob/master/LICENSE'
+		LicenseUri = 'https://github.com/baldcat18/PSSpecialFolder/blob/master/LICENSE.txt'
 		PSData = @{ Prerelease = 'alpha2'}
 		Tags = @('Folder', 'Windows')
 	}

@@ -12,7 +12,7 @@
 	AliasesToExport = @()
 	PrivateData = @{
 		LicenseUri = 'https://github.com/baldcat18/PSSpecialFolder/blob/master/LICENSE'
-		PSData = @{ Prerelease = 'beta'}
+		PSData = @{ Prerelease = 'alpha2'}
 		Tags = @('Folder', 'Windows')
 	}
 }

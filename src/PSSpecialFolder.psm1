@@ -128,8 +128,6 @@ $win10 = $osVersion -gt [version]'10.0'
 $win10_1709 = $osVersion -gt [version]'10.0.16299'
 # Win10 1803以降
 $win10_1803 = $osVersion -gt [version]'10.0.17134'
-# Win10 1903以降
-$win10_1903 = $osVersion -gt [version]'10.0.18362'
 
 
 if ($osVersion -lt [version]'6.3') {

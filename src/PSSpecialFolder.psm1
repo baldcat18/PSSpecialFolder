@@ -1317,11 +1317,10 @@ function Show-SpecialFolder {
 	$wslAsAdmin.add_Click({ invokeCommandAsAdmin { $dataGrid.SelectedItem.LinuxShellAsAdmin() } })
 	$properties.add_Click($showProperties)
 	
-	$isShowCategory = $InformationPreference -ne 'Ignore' -and $InformationPreference -ne 'SilentlyContinue'
 	$dataGrid.ItemsSource = Get-SpecialFolder @PSBoundParameters 6>&1 |
 		ForEach-Object {
 			if ($_ -is [SpecialFolder]) { $_ }
-			elseif ($isShowCategory) { [pscustomobject]@{ Name = $_.ToString().Replace("`n", ''); Path = $null } }
+			else { [pscustomobject]@{ Name = $_.ToString().Replace("`n", ''); Path = $null } }
 		}
 	
 	$window.ShowDialog() > $null

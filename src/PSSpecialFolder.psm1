@@ -1007,13 +1007,6 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:MAPIFolder')
 	Write-Output (newSpecialFolder 'shell:RecordedTVLibrary')
 	
-	# (shell32.dll)
-	Write-Output (newSpecialFolder 'shell:::{52205FD8-5DFB-447D-801A-D0B52F2E83E1}')
-	# Control Panel command object for Start menu and desktop
-	Write-Output (newSpecialFolder 'shell:::{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}')
-	# Default Programs command object for Start menu
-	Write-Output (newSpecialFolder 'shell:::{E44E5D18-0652-4508-A4E2-8A090067BCB0}')
-	
 	Write-Output (newShellCommand '{00020D75-0000-0000-C000-000000000046}')
 	# Desktop
 	Write-Output (newShellCommand '{00021400-0000-0000-C000-000000000046}')

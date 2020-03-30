@@ -19,8 +19,12 @@ Get-Module PSSpecialFolder | Remove-Module
 $module = Import-Module "$PSScriptRoot/../src/PSSpecialFolder.psd1" -PassThru
 $encoding = if ($PSVersionTable['PSVersion'] -ge '6.0') { 'utf8BOM' } else { 'utf8' }
 
+$shell = New-Object -ComObject Shell.Application
+
+$InformationPreference = 'Continue'
+$DebugPreference = 'Continue'
+
 & {
-	$InformationPreference = 'Continue'
 	Write-Information "Module Version: $((Get-Module PSSpecialFolder).Version.ToString())"
 	Get-SpecialFolder -Debug
 } 6>&1 |
@@ -28,7 +32,11 @@ $encoding = if ($PSVersionTable['PSVersion'] -ge '6.0') { 'utf8BOM' } else { 'ut
 		if ($_ -is [System.Management.Automation.InformationRecord]) { [pscustomobject]@{
 			Information = $_.ToString().Replace("`n", '')
 		} }
-		elseif (!$_.FolderItem) { $_ }
+		elseif (!$_.FolderItem) {
+			$folder = try { $shell.NameSpace($_.Path) } catch { $null }
+			if ($folder) { Write-Debug "$($folder.Self.Name): $($_.Path)" }
+			$_
+		}
 		else { [pscustomobject]@{
 			Name = $_.Name
 			Dir = $_.Dir

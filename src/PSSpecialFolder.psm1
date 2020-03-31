@@ -782,6 +782,9 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:::{1FA9085F-25A2-489B-85D4-86326EEDCD87}')
 	# Sync Center Conflict Folder
 	Write-Output (newSpecialFolder 'shell:::{289978AC-A101-4341-A817-21EBA7FD046D}')
+	# FileHistoryDataSource
+	# ファイル履歴を有効にすると利用可
+	Write-Output (newSpecialFolder 'shell:::{2F6CE85C-F9EE-43CA-90C7-8A9BD53A2467}')
 	# LayoutFolder
 	Write-Output (newSpecialFolder 'shell:::{328B0346-7EAF-4BBE-A479-7CB88A095F5B}')
 	# Explorer Browser Results Folder
@@ -838,11 +841,6 @@ function getSpecialFolder {
 	# Sync Setup Delegate Folder
 	Write-Output (newSpecialFolder 'shell:::{F1390A9A-A3F4-4E5D-9C5F-98F3BD8D935C}')
 	Write-Output (newSpecialFolder 'shell:CSCFolder')
-	
-	# FileHistoryDataSource
-	# ファイル履歴を有効にすると利用可
-	# スクリプトのホストプログラムのプロセスが残り続ける
-	# Write-Output (newSpecialFolder 'shell:::{2F6CE85C-F9EE-43CA-90C7-8A9BD53A2467}')
 	
 	# 上にあるのとは違うデータでフォルダーの情報を取得する
 	# CSIDLは扱わない
@@ -1117,6 +1115,7 @@ function getSpecialFolder {
 	Write-Output (newShellCommand '{FF393560-C2A7-11CF-BFF4-444553540000}')
 	# Windows Photo Viewer Image Verbs
 	Write-Output (newShellCommand '{FFE2A43C-56B9-4BF5-9A79-CC6D4285608A}')
+	Write-Output (newSpecialFolder '{2F6CE85C-F9EE-43CA-90C7-8A9BD53A2467}')
 }
 
 <#

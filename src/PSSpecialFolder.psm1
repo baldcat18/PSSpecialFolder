@@ -146,7 +146,7 @@ function newSpecialFolder {
 	
 	if (!$Dir) { return }
 	if ($Dir -match '^\\\\') { $Dir = 'file:' + $Dir }
-	elseif ($Dir -notmatch '^shell:' -and $Dir -notmatch '^file:') { $Dir = "file:\\\$Dir" }
+	elseif ($Dir -notmatch '^(?:file|shell):') { $Dir = "file:\\\$Dir" }
 	
 	try { $folder = $shell.NameSpace($Dir) }
 	catch { return }
@@ -1133,11 +1133,7 @@ function Get-SpecialFolder {
 		IncludeShellCommand = $IncludeShellCommand -or $PSBoundParameters['Debug']
 		IsDebugging = !!$PSBoundParameters['Debug']
 	}
-	return getSpecialFolder @getSpecialFolderArgs |
-		Where-Object {
-			if (!$_) { return $false }
-			return $true
-		}
+	return getSpecialFolder @getSpecialFolderArgs | Where-Object { $_ }
 }
 
 # 1つのリソースは1つのメニューにか設定できないので、必要な項目ごとに使用する
@@ -1223,7 +1219,7 @@ function Show-SpecialFolder {
 	$powershellEx = [MenuItem]$window.FindName('powershellEx')
 	$powershellAsAdmin = [MenuItem]$window.FindName('powershellAsAdmin')
 	$cmd = [MenuItem]$window.FindName('cmd')
-	$cmdEx= [MenuItem]$window.FindName('cmdEx')
+	$cmdEx = [MenuItem]$window.FindName('cmdEx')
 	$cmdAsAdmin = [MenuItem]$window.FindName('cmdAsAdmin')
 	$wsl = [MenuItem]$window.FindName('wsl')
 	$wslEx = [MenuItem]$window.FindName('wslEx')

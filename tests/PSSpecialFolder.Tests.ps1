@@ -7,7 +7,7 @@ InModuleScope PSSpecialFolder {
 	$IsDebugging = $false
 	# UseDeclaredVarsMoreThanAssignments警告が出ないようにするためのダミー
 	$IsDebugging > $null
-	
+
 	Describe 'newSpecialFolder Test' {
 		Context 'Null' {
 			It 'Should Null' {
@@ -135,7 +135,7 @@ InModuleScope PSSpecialFolder {
 				$folder.Path | Should -Be $appDataPath
 			}
 		}
-		$librariesPath = (Get-Item 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders').
+		$librariesPath = (Get-Item 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders').`
 			GetValue('{1B3EA5DC-B587-4786-B4EF-BD1DC332AEAE}')
 		if (!$librariesPath) { $librariesPath = "$appDataPath\Microsoft\Windows\Libraries" }
 		Context "shell:Libraries -Path `"$librariesPath`" -FolderItemForProperties (getDirectoryFolderItem $librariesPath)" {
@@ -188,9 +188,9 @@ InModuleScope PSSpecialFolder {
 			}
 		}
 	}
-	
+
 	$IsDebugging = $true
-	
+
 	Describe 'IsDebugging' {
 		Context 'shell:ThisPCDesktopFolder "DesktopFolder"' {
 			$folder = newSpecialFolder shell:ThisPCDesktopFolder 'DesktopFolder'

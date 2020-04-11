@@ -4,6 +4,10 @@ Get-Module PSSpecialFolder | Remove-Module
 $module = Import-Module "$PSScriptRoot/../src/PSSpecialFolder.psm1" -Force -PassThru
 
 InModuleScope PSSpecialFolder {
+	$IsDebugging = $false
+	# UseDeclaredVarsMoreThanAssignments警告が出ないようにするためのダミー
+	$IsDebugging > $null
+
 	Describe 'newSpecialFolder Test' {
 		Context 'Null' {
 			It 'Should Null' {
@@ -131,7 +135,7 @@ InModuleScope PSSpecialFolder {
 				$folder.Path | Should -Be $appDataPath
 			}
 		}
-		$librariesPath = (Get-Item 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders').
+		$librariesPath = (Get-Item 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders').`
 			GetValue('{1B3EA5DC-B587-4786-B4EF-BD1DC332AEAE}')
 		if (!$librariesPath) { $librariesPath = "$appDataPath\Microsoft\Windows\Libraries" }
 		Context "shell:Libraries -Path `"$librariesPath`" -FolderItemForProperties (getDirectoryFolderItem $librariesPath)" {
@@ -181,6 +185,29 @@ InModuleScope PSSpecialFolder {
 			}
 			It "Path should `"shell:::$fileExplorerClsid`"" {
 				$folder.Path | Should -Be "shell:::$fileExplorerClsid"
+			}
+		}
+	}
+
+	$IsDebugging = $true
+
+	Describe 'IsDebugging' {
+		Context 'shell:ThisPCDesktopFolder "DesktopFolder"' {
+			$folder = newSpecialFolder shell:ThisPCDesktopFolder 'DesktopFolder'
+			It 'Name should "DesktopFolder"' {
+				$folder.Name | Should -Be 'DesktopFolder'
+			}
+		}
+		Context 'shell:::{05D7B0F4-2121-4EFF-BF6B-ED3F69B894D9} "Notification Area Icons"' {
+			$folder = newSpecialFolder 'shell:::{05D7B0F4-2121-4EFF-BF6B-ED3F69B894D9}' 'Notification Area Icons'
+			It 'Name should "Notification Area Icons (Taskbar)"' {
+				$folder.Name | Should -Be 'Notification Area Icons (Taskbar)'
+			}
+		}
+		Context '{52205FD8-5DFB-447D-801A-D0B52F2E83E1} "File Explorer"' {
+			$folder = newShellCommand '{52205FD8-5DFB-447D-801A-D0B52F2E83E1}' 'File Explorer'
+			It 'Name should "File Explorer" (@C:\Windows\system32\shell32.dll,-22067)' {
+				$folder.Name | Should -Be 'File Explorer (@C:\Windows\system32\shell32.dll,-22067)'
 			}
 		}
 	}

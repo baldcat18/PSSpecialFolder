@@ -1101,7 +1101,6 @@ function getSpecialFolder {
 	Write-Output (newShellCommand '{FF393560-C2A7-11CF-BFF4-444553540000}')
 	# Windows Photo Viewer Image Verbs
 	Write-Output (newShellCommand '{FFE2A43C-56B9-4BF5-9A79-CC6D4285608A}')
-	Write-Output (newSpecialFolder '{2F6CE85C-F9EE-43CA-90C7-8A9BD53A2467}')
 }
 
 <#

@@ -678,7 +678,7 @@ function getSpecialFolder {
 	if (!$IncludeShellCommand) { return }
 
 	# フォルダー以外のshellコマンド
-	Write-Information "`nCategory: OtherShellCommands`n"
+	Write-Information "`nCategory: ShellCommandsExceptFolders`n"
 
 	# Taskbar
 	Write-Output (newShellCommand '{0DF44EAA-FF21-4412-828E-260A8728E7F1}')

@@ -6,15 +6,13 @@ PSSpecialFolderプロジェクトに対するテストを実行する
 [CmdletBinding()]
 param()
 
-Push-Location $PSScriptRoot/..
+$projPath = (Resolve-Path $PSScriptRoot\..).Path
 
 Write-Output 'Test-ModuleManifest:'
-Test-ModuleManifest src/PSSpecialFolder.psd1
+Test-ModuleManifest $projPath\src\PSSpecialFolder.psd1
 
 Write-Output "`nInvoke-ScriptAnalyzer:"
-Invoke-ScriptAnalyzer -Path . -Recurse | Format-List RuleName, Severity, Message, ScriptPath, Line, Extent
+Invoke-ScriptAnalyzer -Path $projPath -Recurse | Format-List RuleName, Severity, Message, ScriptPath, Line, Extent
 
 Write-Output "`nInvoke-Pester:"
-Invoke-Pester tests
-
-Pop-Location
+Invoke-Pester $projPath\tests

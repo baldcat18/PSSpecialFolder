@@ -3,6 +3,8 @@ Get-Module PSSpecialFolder | Remove-Module
 
 $module = Import-Module "$PSScriptRoot/../src/PSSpecialFolder.psm1" -Force -PassThru
 
+Import-Module Pester -MinimumVersion 4.5.0 -ErrorAction Stop
+
 InModuleScope PSSpecialFolder {
 	$IsDebugging = $false
 	# UseDeclaredVarsMoreThanAssignments警告が出ないようにするためのダミー

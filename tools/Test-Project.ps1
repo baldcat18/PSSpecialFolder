@@ -19,4 +19,4 @@ if ($analyzeResult.Length) {
 }
 
 Write-Output "`nInvoke-Pester:"
-Invoke-Pester $projPath\tests
+Invoke-Pester $projPath\tests -Show Failed, Summary

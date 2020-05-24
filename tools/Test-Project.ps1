@@ -3,6 +3,8 @@
 PSSpecialFolderプロジェクトに対するテストを実行する
 #>
 
+#Requires -Module @{ ModuleName = 'Pester'; ModuleVersion = '4.0.0' }
+
 [CmdletBinding()]
 param()
 

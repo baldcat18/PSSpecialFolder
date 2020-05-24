@@ -1,9 +1,9 @@
-﻿# 開発用以外のバージョンをアンロードする
+﻿#Requires -Module @{ ModuleName = 'Pester'; ModuleVersion = '4.0.0' }
+
+# 開発用以外のバージョンをアンロードする
 Get-Module PSSpecialFolder | Remove-Module
 
 $module = Import-Module "$PSScriptRoot/../src/PSSpecialFolder.psm1" -Force -PassThru
-
-Import-Module Pester -MinimumVersion 4.5.0 -ErrorAction Stop
 
 InModuleScope PSSpecialFolder {
 	$IsDebugging = $false

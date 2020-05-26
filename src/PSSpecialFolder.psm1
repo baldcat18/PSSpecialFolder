@@ -4,6 +4,11 @@ using namespace System.Windows.Input
 using namespace System.Windows.Interop
 using namespace System.Windows.Markup
 
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+	'PSReviewUnusedParameter', 's', Scope = 'Function', Target = 'Show-SpecialFolder'
+)]
+param()
+
 Set-StrictMode -Version Latest
 
 $isPwsh = $PSVersionTable['PSVersion'].Major -ge 6
@@ -1219,7 +1224,7 @@ function Show-SpecialFolder {
 	$dataGrid = [DataGrid]($window.FindName('dataGrid'))
 	$dataGrid.add_PreviewKeyDown(
 		{
-			param([object]$sender, [KeyEventArgs]$e)
+			param([object]$s, [KeyEventArgs]$e)
 
 			# Home/End単独で一番上/一番下に移動できるようにする
 			if (!([Keyboard]::Modifiers -band [ModifierKeys]::Control)) {
@@ -1241,14 +1246,14 @@ function Show-SpecialFolder {
 	)
 	$dataGrid.add_MouseDoubleClick(
 		{
-			param([object]$sender, [MouseButtonEventArgs]$e)
+			param([object]$s, [MouseButtonEventArgs]$e)
 
 			if ($e.OriginalSource -is [TextBlock]) { selectInvokedCommand }
 		}
 	)
 	$dataGrid.add_ContextMenuOpening(
 		{
-			param([object]$sender, [ContextMenuEventArgs]$e)
+			param([object]$s, [ContextMenuEventArgs]$e)
 
 			$item = $dataGrid.SelectedItem
 			if ($item -isnot [SpecialFolder]) {

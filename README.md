@@ -9,9 +9,7 @@ Windows で使われている特殊フォルダーのフルパスを取得する
 ## サポートする Windows バージョン
 
 Windows 8.1 Update<br>
-Windows 10 バージョン 1809、1903、1909
-
-Windows 10 Insider Preview ビルド 19041 でも動作すると思います。
+Windows 10 バージョン 1809、1903、1909、2004
 
 Windows 10 バージョン 1803 でも動作すると思いますが、動作確認していません。
 

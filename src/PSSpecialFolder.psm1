@@ -4,6 +4,11 @@ using namespace System.Windows.Input
 using namespace System.Windows.Interop
 using namespace System.Windows.Markup
 
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+	'PSReviewUnusedParameter', 's', Scope = 'Function', Target = 'Show-SpecialFolder'
+)]
+param()
+
 Set-StrictMode -Version Latest
 
 $isPwsh = $PSVersionTable['PSVersion'].Major -ge 6
@@ -614,7 +619,7 @@ function getSpecialFolder {
 	# Personalization Control Panel
 	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{ED834ED6-4B5A-4BFE-8F11-A626DCB6A921}')
 	# History Vault
-	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{F6B6E965-E9B2-444B-9286-10C9152EDBC5}' 'File History')
+	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{F6B6E965-E9B2-444B-9286-10C9152EDBC5}')
 	# Storage Spaces
 	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{F942C606-0914-47AB-BE56-1321B8035096}')
 
@@ -678,13 +683,13 @@ function getSpecialFolder {
 	if (!$IncludeShellCommand) { return }
 
 	# フォルダー以外のshellコマンド
-	Write-Information "`nCategory: OtherShellCommands`n"
+	Write-Information "`nCategory: ShellCommandsExceptFolders`n"
 
 	# Taskbar
 	Write-Output (newShellCommand '{0DF44EAA-FF21-4412-828E-260A8728E7F1}')
 	# Search
 	# Win10 1511まで
-	if (!$win10_1709) { Write-Output (newShellCommand '{2559A1F0-21D7-11D4-BDAF-00C04F60B9F0}') }
+	if (!$win10_1709) { Write-Output (newShellCommand '{2559A1F0-21D7-11D4-BDAF-00C04F60B9F0}' 'Search Files') }
 	# Help and Support
 	# Win8.1まで
 	Write-Output (newShellCommand '{2559A1F1-21D7-11D4-BDAF-00C04F60B9F0}')
@@ -693,7 +698,7 @@ function getSpecialFolder {
 	# Set Program Access and Defaults
 	Write-Output (newShellCommand '{2559A1F7-21D7-11D4-BDAF-00C04F60B9F0}')
 	# (shell32.dll#SearchCommand)
-	Write-Output (newShellCommand '{2559A1F8-21D7-11D4-BDAF-00C04F60B9F0}' $(if ($win10) { 'Cortana' } else { 'Search' }))
+	Write-Output (newShellCommand '{2559A1F8-21D7-11D4-BDAF-00C04F60B9F0}' 'Search')
 	# Show Desktop
 	# Win+Dと同じ
 	Write-Output (newShellCommand '{3080F90D-D7AD-11D9-BD98-0000947B0257}')
@@ -731,7 +736,7 @@ function getSpecialFolder {
 	# Indexing Options Control Panel
 	Write-Output (newShellCommand '{87D66A43-7B11-4A28-9811-C86EE395ACF7}')
 	# Portable Workspace Creator
-	# Win10 1909まで(?)
+	# Win10 1909まで
 	# Enterpriseで使用可
 	# Win10 1607以降ではProでも使用可
 	Write-Output (newShellCommand '{8E0C279D-0BD1-43C3-9EBD-31C3DC5B8A77}')
@@ -1101,7 +1106,6 @@ function getSpecialFolder {
 	Write-Output (newShellCommand '{FF393560-C2A7-11CF-BFF4-444553540000}')
 	# Windows Photo Viewer Image Verbs
 	Write-Output (newShellCommand '{FFE2A43C-56B9-4BF5-9A79-CC6D4285608A}')
-	Write-Output (newSpecialFolder '{2F6CE85C-F9EE-43CA-90C7-8A9BD53A2467}')
 }
 
 <#
@@ -1220,7 +1224,7 @@ function Show-SpecialFolder {
 	$dataGrid = [DataGrid]($window.FindName('dataGrid'))
 	$dataGrid.add_PreviewKeyDown(
 		{
-			param([object]$sender, [KeyEventArgs]$e)
+			param([object]$s, [KeyEventArgs]$e)
 
 			# Home/End単独で一番上/一番下に移動できるようにする
 			if (!([Keyboard]::Modifiers -band [ModifierKeys]::Control)) {
@@ -1242,14 +1246,14 @@ function Show-SpecialFolder {
 	)
 	$dataGrid.add_MouseDoubleClick(
 		{
-			param([object]$sender, [MouseButtonEventArgs]$e)
+			param([object]$s, [MouseButtonEventArgs]$e)
 
 			if ($e.OriginalSource -is [TextBlock]) { selectInvokedCommand }
 		}
 	)
 	$dataGrid.add_ContextMenuOpening(
 		{
-			param([object]$sender, [ContextMenuEventArgs]$e)
+			param([object]$s, [ContextMenuEventArgs]$e)
 
 			$item = $dataGrid.SelectedItem
 			if ($item -isnot [SpecialFolder]) {

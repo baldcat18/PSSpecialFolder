@@ -21,10 +21,8 @@ $encoding = if ($PSVersionTable['PSVersion'] -ge '6.0') { 'utf8BOM' } else { 'ut
 
 $shell = New-Object -ComObject Shell.Application
 
-$InformationPreference = 'Continue'
-$DebugPreference = 'Continue'
-
 & {
+	$InformationPreference = 'Continue'
 	Write-Information "Module Version: $((Get-Module PSSpecialFolder).Version.ToString())"
 	Get-SpecialFolder -Debug
 } 6>&1 |
@@ -33,7 +31,7 @@ $DebugPreference = 'Continue'
 			[pscustomobject]@{ Information = $_.ToString().Replace("`n", '') }
 		} elseif (!$_.FolderItem) {
 			$folder = try { $shell.NameSpace($_.Path) } catch { $null }
-			if ($folder) { Write-Debug "$($folder.Self.Name): $($_.Path)" }
+			if ($folder) { Write-Warning "$($folder.Self.Name): $($_.Path)" }
 			$_
 		} else {
 			[pscustomobject]@{

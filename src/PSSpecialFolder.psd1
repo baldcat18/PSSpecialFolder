@@ -1,5 +1,5 @@
 ﻿@{
-	ModuleVersion = '2.4.0.1'
+	ModuleVersion = '2.4.0.2'
 	GUID = '958cb972-fb7e-4222-92b1-152d5b95a2a9'
 	Author = 'BaldCat'
 	Copyright = '(c) 2019 BaldCat. All rights reserved.'
@@ -11,6 +11,7 @@
 	CmdletsToExport = @()
 	AliasesToExport = @()
 	PrivateData = @{
+		PSData = @{ Prerelease = 'alpha' }
 		LicenseUri = 'https://github.com/baldcat18/PSSpecialFolder/blob/master/LICENSE.txt'
 		Tags = @('Folder', 'Windows')
 	}

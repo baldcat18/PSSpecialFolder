@@ -752,7 +752,7 @@ function getSpecialFolder {
 	# Win10 1909まで
 	# Enterpriseで使用可
 	# Win10 1607以降ではProでも使用可
-	Write-Output (newShellCommand '{8E0C279D-0BD1-43C3-9EBD-31C3DC5B8A77}')
+	Write-Output (newShellCommand '{8E0C279D-0BD1-43C3-9EBD-31C3DC5B8A77}' 'Windows To Go')
 	# Infrared
 	# Win10 1607から1809まで
 	Write-Output (newShellCommand '{A0275511-0E86-4ECA-97C2-ECD8F1221D08}')

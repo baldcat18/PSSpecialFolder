@@ -13,7 +13,9 @@ Set-StrictMode -Version Latest
 
 $isPwsh = $PSVersionTable['PSVersion'].Major -ge 6
 if ($isPwsh -and !$IsWindows) {
-	throw [PlatformNotSupportedException]'The PSSpecialFolder module supports Windows only.'
+	Write-Error `
+		-Category OperationStopped -CategoryActivity 'Import-Module'`
+		-Exception ([PlatformNotSupportedException]'The PSSpecialFolder module supports Windows only.')
 	return
 }
 
@@ -52,7 +54,11 @@ class SpecialFolder {
 	[void]Properties() {
 		if ($this.PropertyTypes -eq 'StartProcess') { Start-Process $this.Dir -Verb properties }
 		elseif ($this.HasProperties()) { $this.PropertiesVerb.DoIt() }
-		else { throw [InvalidOperationException]'The properties of this folder can''t be shown.' }
+		else {
+			Write-Error -ErrorAction Stop `
+				-Category InvalidOperation -CategoryActivity 'SpecialFolder::Properties()' -TargetObject $this `
+				-Exception ([InvalidOperationException]'The properties of this folder can''t be shown.')
+		}
 	}
 	[string]ToString() {
 		return "$($this.Name) [$($this.Path)]"
@@ -120,9 +126,16 @@ class FileFolder: SpecialFolder {
 		Start-Process cmd.exe "/k pushd $($this.Path)" -Verb $Verb
 	}
 	hidden [void]StartLinuxShell([string]$Verb) {
-		if (!$script:win10) { throw [InvalidOperationException]'WSL is not supported.' }
-		if (!$script:isWslEnabled) { throw [InvalidOperationException]'WSL is disabled.' }
-		Start-Process cmd.exe "/c pushd $($this.Path) & wsl.exe" -Verb $Verb
+		$activity = "FileFolder::LinuxShell{0}()" -f $(if ($Verb -eq 'runas') { 'AsAdmin' })
+		if (!$script:win10) {
+			Write-Error -ErrorAction Stop `
+				-Category NotImplemented -CategoryActivity $activity -TargetObject $this `
+				-Exception ([InvalidOperationException]'WSL is not supported.')
+		} elseif (!$script:isWslEnabled) {
+			Write-Error -ErrorAction Stop `
+				-Category NotEnabled -CategoryActivity $activity -TargetObject $this `
+				-Exception ([InvalidOperationException]'WSL is disabled.')
+		} else { Start-Process cmd.exe "/c pushd $($this.Path) & wsl.exe" -Verb $Verb }
 	}
 }
 
@@ -739,7 +752,7 @@ function getSpecialFolder {
 	# Win10 1909まで
 	# Enterpriseで使用可
 	# Win10 1607以降ではProでも使用可
-	Write-Output (newShellCommand '{8E0C279D-0BD1-43C3-9EBD-31C3DC5B8A77}')
+	Write-Output (newShellCommand '{8E0C279D-0BD1-43C3-9EBD-31C3DC5B8A77}' 'Windows To Go')
 	# Infrared
 	# Win10 1607から1809まで
 	Write-Output (newShellCommand '{A0275511-0E86-4ECA-97C2-ECD8F1221D08}')
@@ -1150,7 +1163,14 @@ function Show-SpecialFolder {
 
 	# WPFが使えない場合
 	if (($PSVersionTable['PSVersion'].Major -eq 6) -or ($Host.Runspace.ApartmentState -ne 'STA')) {
-		throw [NotSupportedException]'Show-SpecialFolder can''t be started because this function needs WPF.'
+		$PSCmdlet.WriteError(
+			[System.Management.Automation.ErrorRecord]::new(
+				[NotSupportedException]'Show-SpecialFolder can''t be started because this function needs WPF.',
+				$null,
+				'OperationStopped',
+				$null
+			)
+		)
 		return
 	}
 

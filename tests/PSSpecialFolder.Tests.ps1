@@ -1,5 +1,8 @@
 ﻿#Requires -Module @{ ModuleName = 'Pester'; ModuleVersion = '4.0.0' }
 
+[System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssignments', 'IsDebugging')]
+param()
+
 # 開発用以外のバージョンをアンロードする
 Get-Module PSSpecialFolder | Remove-Module
 
@@ -7,8 +10,6 @@ $module = Import-Module "$PSScriptRoot/../src/PSSpecialFolder.psm1" -Force -Pass
 
 InModuleScope PSSpecialFolder {
 	$IsDebugging = $false
-	# UseDeclaredVarsMoreThanAssignments警告が出ないようにするためのダミー
-	$IsDebugging > $null
 
 	Describe 'newSpecialFolder Test' {
 		Context 'Null' {

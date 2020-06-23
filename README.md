@@ -32,4 +32,4 @@ Windows で使われている特殊フォルダーのフルパスをダイアロ
 
 ## インストール
 
-Install-Module -Name PSSpecialFolder -AllowPrerelease
+Install-Module -Name PSSpecialFolder

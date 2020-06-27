@@ -149,6 +149,20 @@ InModuleScope PSSpecialFolder {
 				Should -Be 'File Explorer (@C:\Windows\system32\shell32.dll,-22067)'
 		}
 	}
+
+	Describe 'getKnownFolderPath Test' {
+		BeforeAll {
+			$IsDebugging = $false
+		}
+
+		It 'Desktop' {
+			getKnownFolderPath ThisPCDesktopFolder | Should -Be ([Environment]::GetFolderPath('Desktop'))
+		}
+		It 'FooBar' {
+			{ getKnownFolderPath getKnownFolderPath FooBar } |
+				Should -Throw -ExceptionType System.Management.Automation.RuntimeException
+		}
+	}
 }
 
 Remove-Module $module

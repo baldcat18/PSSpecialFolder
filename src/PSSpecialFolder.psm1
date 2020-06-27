@@ -139,6 +139,10 @@ class FileFolder: SpecialFolder {
 	}
 }
 
+Add-Type -ErrorAction Stop `
+	-TypeDefinition (Get-Content -LiteralPath "$PSScriptRoot\KnownFolder.cs" -Raw -ErrorAction Stop)
+
+
 $osVersion = [Environment]::OSVersion.Version
 # Win10以降
 $win10 = $osVersion -gt [version]'10.0'
@@ -154,6 +158,7 @@ if ($osVersion -lt [version]'6.3') {
 if ($win10 -and !$win10_1709) {
 	Write-Warning 'The PSSpecialFolder module supports Windows 10 Version 1709+.'
 }
+
 
 $shell = New-Object -ComObject Shell.Application
 $propertiesName = @($shell.NameSpace(0).Self.Verbs())[-1].Name
@@ -226,6 +231,16 @@ function getDirectoryFolderItem {
 	return $shell.NameSpace((Split-Path $path)).Items().Item((Split-Path $path -Leaf))
 }
 
+$folderGuids = & $PSScriptRoot\FolderGuids.ps1
+
+function getKnownFolderPath {
+	[OutputType([string])]
+	param ([string]$Name)
+
+	$folder = [Win32API.KnownFolder]::new($folderGuids[$Name], 0)
+	if ($folder.Result -eq 'OK') { return $folder.Path }
+}
+
 function getSpecialFolder {
 	[OutputType([SpecialFolder[]])]
 	param ([bool]$IncludeShellCommand, [bool]$IsDebugging)
@@ -233,7 +248,6 @@ function getSpecialFolder {
 	$is64bitOS = [Environment]::Is64BitOperatingSystem
 	$isWow64 = $is64bitOS -and ![Environment]::Is64BitProcess
 
-	$userShellFoldersKey = Get-Item 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders'
 	$currentVersionKey = Get-Item 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion'
 	$appxKey = Get-Item 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Appx'
 
@@ -335,38 +349,25 @@ function getSpecialFolder {
 
 	Write-Information "`nCategory: Libraries`n"
 
-	$librariesPath = $userShellFoldersKey.GetValue('{1B3EA5DC-B587-4786-B4EF-BD1DC332AEAE}')
-	if (!$librariesPath) { $librariesPath = "$([Environment]::GetFolderPath('ApplicationData'))\Microsoft\Windows\Libraries" }
 
 	# shell:UsersLibrariesFolder
 	# shell:::{031E4825-7B94-4DC3-B131-E946B44C8DD5}
+	$librariesPath = getKnownFolderPath Libraries
 	Write-Output (newSpecialFolder 'shell:Libraries' -Path $librariesPath -FolderItemForProperties (getDirectoryFolderItem $librariesPath))
 	# Win10 1507からサポート
 	# shell:Libraries\{2B20DF75-1EDA-4039-8097-38798227D5B7}
-	$cameraRollLibraryPath = $userShellFoldersKey.GetValue('{2B20DF75-1EDA-4039-8097-38798227D5B7}')
-	if (!$cameraRollLibraryPath) { $cameraRollLibraryPath = "$librariesPath\CameraRoll.library-ms" }
-	Write-Output (newSpecialFolder 'shell:CameraRollLibrary' -Path $cameraRollLibraryPath)
+	Write-Output (newSpecialFolder 'shell:CameraRollLibrary' -Path (getKnownFolderPath CameraRollLibrary))
 	# shell:Libraries\{7B0DB17D-9CD2-4A93-9733-46CC89022E7C}
-	$documentsLibraryPath = $userShellFoldersKey.GetValue('{7B0DB17D-9CD2-4A93-9733-46CC89022E7C}')
-	if (!$documentsLibraryPath) { $documentsLibraryPath = "$librariesPath\Documents.library-ms" }
-	Write-Output (newSpecialFolder 'shell:DocumentsLibrary' -Path $documentsLibraryPath)
+	Write-Output (newSpecialFolder 'shell:DocumentsLibrary' -Path (getKnownFolderPath DocumentsLibrary))
 	# shell:Libraries\{2112AB0A-C86A-4FFE-A368-0DE96E47012E}
-	$musicLibraryPath = $userShellFoldersKey.GetValue('{2112AB0A-C86A-4FFE-A368-0DE96E47012E}')
-	if (!$musicLibraryPath) { $musicLibraryPath = "$librariesPath\Music.library-ms" }
-	Write-Output (newSpecialFolder 'shell:MusicLibrary' -Path $musicLibraryPath)
+	Write-Output (newSpecialFolder 'shell:MusicLibrary' -Path (getKnownFolderPath MusicLibrary))
 	# shell:Libraries\{A990AE9F-A03B-4E80-94BC-9912D7504104}
-	$picturesLibraryPath = $userShellFoldersKey.GetValue('{A990AE9F-A03B-4E80-94BC-9912D7504104}')
-	if (!$picturesLibraryPath) { $picturesLibraryPath = "$librariesPath\Pictures.library-ms" }
-	Write-Output (newSpecialFolder 'shell:PicturesLibrary' -Path $picturesLibraryPath)
+	Write-Output (newSpecialFolder 'shell:PicturesLibrary' -Path (getKnownFolderPath PicturesLibrary))
 	# Win10 1507からサポート
 	# shell:Libraries\{E25B5812-BE88-4BD9-94B0-29233477B6C3}
-	$savedPicturesLibraryPath = $userShellFoldersKey.GetValue('{E25B5812-BE88-4BD9-94B0-29233477B6C3}')
-	if (!$savedPicturesLibraryPath) { $savedPicturesLibraryPath = "$librariesPath\SavedPictures.library-ms" }
-	Write-Output (newSpecialFolder 'shell:SavedPicturesLibrary' -Path $savedPicturesLibraryPath)
+	Write-Output (newSpecialFolder 'shell:SavedPicturesLibrary' -Path (getKnownFolderPath SavedPicturesLibrary))
 	# shell:::{031E4825-7B94-4DC3-B131-E946B44C8DD5}\{491E922F-5643-4AF4-A7EB-4E7A138D8174}
-	$videosLibraryPath = $userShellFoldersKey.GetValue('{491E922F-5643-4AF4-A7EB-4E7A138D8174}')
-	if (!$videosLibraryPath) { $videosLibraryPath = "$librariesPath\Videos.library-ms" }
-	Write-Output (newSpecialFolder 'shell:VideosLibrary' -Path $videosLibraryPath)
+	Write-Output (newSpecialFolder 'shell:VideosLibrary' -Path (getKnownFolderPath VideosLibrary))
 
 	Write-Information "`nCategory: StartMenu`n"
 

@@ -24,9 +24,9 @@ namespace Win32API {
 
 	public enum HResult {
 		OK = 0,
-		Fail = unchecked((int)0x80004005),
-		NotFound = unchecked((int)0x80070002),
-		AccessDenied = unchecked((int)0x80070005),
-		InvalidArg = unchecked((int)0x80070057),
+		Fail = -2147467259, // 0x80004005
+		NotFound = -2147024894, // 0x80070002
+		AccessDenied = -2147024891, // 0x80070005
+		InvalidArg = -2147024809, //0x80070057
 	}
 }

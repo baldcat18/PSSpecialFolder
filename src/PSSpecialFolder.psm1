@@ -435,6 +435,7 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:Common Documents')
 	Write-Output (newSpecialFolder 'shell:CommonDownloads')
 	Write-Output (newSpecialFolder 'shell:PublicLibraries')
+	Write-Output (newSpecialFolder (getKnownFolderPath RecordedTVLibrary) 'RecordedTVLibrary')
 	Write-Output (newSpecialFolder 'shell:CommonMusic')
 	Write-Output (newSpecialFolder 'shell:SampleMusic')
 	Write-Output (newSpecialFolder 'shell:CommonPictures')

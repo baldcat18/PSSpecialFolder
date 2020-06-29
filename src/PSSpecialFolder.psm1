@@ -1322,6 +1322,7 @@ function Show-SpecialFolder {
 	$window.FindName('wslAsInvoker').add_Click($startWsl)
 	$wslAsAdmin.add_Click({ invokeCommandAsAdmin { $dataGrid.SelectedItem.LinuxShellAsAdmin() } })
 	$properties.add_Click($showProperties)
+	$window.add_Loaded({ $window.Activate() })
 
 	$dataGrid.ItemsSource = Get-SpecialFolder @PSBoundParameters 6>&1 |
 		ForEach-Object {

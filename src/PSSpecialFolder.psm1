@@ -1123,13 +1123,14 @@ function getSpecialFolder {
 	Write-Output (newShellCommand '{FFE2A43C-56B9-4BF5-9A79-CC6D4285608A}')
 }
 
-<#
-.SYNOPSIS
-Gets the special folders for Windows. This function supports the virtual folders, e.g. Control Panel and Recycle Bin.
-.OUTPUTS
-SpecialFolder[]
-#>
 function Get-SpecialFolder {
+	<#
+	.SYNOPSIS
+	Gets the special folders for Windows. This function supports the virtual folders, e.g. Control Panel and Recycle Bin.
+	.OUTPUTS
+	SpecialFolder[]
+	#>
+
 	[CmdletBinding()]
 	[OutputType([SpecialFolder[]])]
 	param ([switch]$IncludeShellCommand)
@@ -1153,13 +1154,14 @@ function getShieldImage {
 	return $image
 }
 
-<#
-.SYNOPSIS
-Display the special folders for Windows in a dialog.
-.DESCRIPTION
-Display the special folders for Windows in a dialog. Open the folder to double-click on it. Show context menu to right-click on the folder.
-#>
 function Show-SpecialFolder {
+	<#
+	.SYNOPSIS
+	Display the special folders for Windows in a dialog.
+	.DESCRIPTION
+	Display the special folders for Windows in a dialog. Open the folder to double-click on it. Show context menu to right-click on the folder.
+	#>
+
 	[CmdletBinding()]
 	param ([switch]$IncludeShellCommand)
 

@@ -1,4 +1,7 @@
-﻿<#
+﻿using namespace System.IO
+using namespace System.Management.Automation
+
+<#
 .SYNOPSIS
 Get-SpecialFolderの出力をファイルに保存する
 #>
@@ -27,7 +30,7 @@ $shell = New-Object -ComObject Shell.Application
 	Get-SpecialFolder -Debug
 } 6>&1 |
 	ForEach-Object {
-		if ($_ -is [System.Management.Automation.InformationRecord]) {
+		if ($_ -is [InformationRecord]) {
 			[pscustomobject]@{ Information = $_.ToString().Replace("`n", '') }
 		} elseif (!$_.FolderItem) {
 			$folder = try { $shell.NameSpace($_.Path) } catch { $null }
@@ -52,7 +55,7 @@ Remove-Module $module
 
 Push-Location $PSScriptRoot
 $txtFiles = `
-	[System.IO.FileInfo[]]@(Get-ChildItem "$osVersion $cpu $edition *.html" | Sort-Object -Property Name -Descending)
+	[FileInfo[]]@(Get-ChildItem "$osVersion $cpu $edition *.html" | Sort-Object -Property Name -Descending)
 if ($txtFiles.Length -ge 2) {
 	# fc.exeはUTF-8が文字化けするのでdiff.exeがあるならこちらを使う
 	$diff = "$($Env:ProgramFiles)/Git/usr/bin/diff.exe"

@@ -1,6 +1,8 @@
-﻿#Requires -Module @{ ModuleName = 'Pester'; ModuleVersion = '4.0.0' }
+﻿using namespace System.Diagnostics.CodeAnalysis
 
-[System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssignments', 'IsDebugging')]
+#Requires -Module @{ ModuleName = 'Pester'; ModuleVersion = '4.0.0' }
+
+[SuppressMessage('PSUseDeclaredVarsMoreThanAssignments', 'IsDebugging')]
 param()
 
 # 開発用以外のバージョンをアンロードする

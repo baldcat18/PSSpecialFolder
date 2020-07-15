@@ -1,12 +1,16 @@
-﻿using namespace System.Windows
+﻿using namespace System.Diagnostics
+using namespace System.Diagnostics.CodeAnalysis
+using namespace System.Drawing
+using namespace System.IO
+using namespace System.Management.Automation
+using namespace System.Windows
 using namespace System.Windows.Controls
 using namespace System.Windows.Input
 using namespace System.Windows.Interop
 using namespace System.Windows.Markup
+using namespace Win32API
 
-[System.Diagnostics.CodeAnalysis.SuppressMessage(
-	'PSReviewUnusedParameter', 's', Scope = 'Function', Target = 'Show-SpecialFolder'
-)]
+[SuppressMessage('PSReviewUnusedParameter', 's', Scope = 'Function', Target = 'Show-SpecialFolder')]
 param()
 
 Set-StrictMode -Version Latest
@@ -20,7 +24,7 @@ if ($isPwsh -and !$IsWindows) {
 }
 
 # pwsh.exeがあるフォルダーにパスが通っていない場合もあるのでAPIから取得する
-$powershellPath = [System.Diagnostics.Process]::GetCurrentProcess().Path
+$powershellPath = [Process]::GetCurrentProcess().Path
 # ISEなど場合もあるので名前を明示する
 if ($powershellPath -notmatch '\\(?:powershell|pwsh)\.exe$') {
 	$powershellPath = `
@@ -237,7 +241,7 @@ function getKnownFolderPath {
 	[OutputType([string])]
 	param ([string]$Name)
 
-	$folder = [Win32API.KnownFolder]::new($folderGuids[$Name], 0)
+	$folder = [KnownFolder]::new($folderGuids[$Name], 0)
 	if ($folder.Result -eq 'OK') { return $folder.Path }
 }
 
@@ -396,7 +400,7 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:AppDataProgramData')
 	# %TEMP%
 	# %TMP%
-	Write-Output (newSpecialFolder ([System.IO.Path]::GetTempPath()) 'Temporary Folder')
+	Write-Output (newSpecialFolder ([Path]::GetTempPath()) 'Temporary Folder')
 	Write-Output (newSpecialFolder 'shell:Local AppData\VirtualStore')
 
 	Write-Output (newSpecialFolder 'shell:Application Shortcuts')
@@ -1147,9 +1151,11 @@ function getShieldImage {
 	[OutputType([System.Windows.Controls.Image])]
 	param ()
 
-	$image = [Image]::new()
+	# System.Drawing.Imageと曖昧になるので完全名で書いている
+	$image = [System.Windows.Controls.Image]::new()
+
 	$image.Source = [Imaging]::CreateBitmapSourceFromHIcon(
-		[System.Drawing.SystemIcons]::Shield.Handle, [Int32Rect]::Empty, $null
+		[SystemIcons]::Shield.Handle, [Int32Rect]::Empty, $null
 	)
 	return $image
 }
@@ -1168,7 +1174,7 @@ function Show-SpecialFolder {
 	# WPFが使えない場合
 	if (($PSVersionTable['PSVersion'].Major -eq 6) -or ($Host.Runspace.ApartmentState -ne 'STA')) {
 		$PSCmdlet.WriteError(
-			[System.Management.Automation.ErrorRecord]::new(
+			[ErrorRecord]::new(
 				[NotSupportedException]'Show-SpecialFolder can''t be started because this function needs WPF.',
 				$null,
 				'OperationStopped',

@@ -1,12 +1,16 @@
-﻿using namespace System.Windows
+﻿using namespace System.Diagnostics
+using namespace System.Diagnostics.CodeAnalysis
+using namespace System.Drawing
+using namespace System.IO
+using namespace System.Management.Automation
+using namespace System.Windows
 using namespace System.Windows.Controls
 using namespace System.Windows.Input
 using namespace System.Windows.Interop
 using namespace System.Windows.Markup
+using namespace Win32API
 
-[System.Diagnostics.CodeAnalysis.SuppressMessage(
-	'PSReviewUnusedParameter', 's', Scope = 'Function', Target = 'Show-SpecialFolder'
-)]
+[SuppressMessage('PSReviewUnusedParameter', 's', Scope = 'Function', Target = 'Show-SpecialFolder')]
 param()
 
 Set-StrictMode -Version Latest
@@ -20,7 +24,7 @@ if ($isPwsh -and !$IsWindows) {
 }
 
 # pwsh.exeがあるフォルダーにパスが通っていない場合もあるのでAPIから取得する
-$powershellPath = [System.Diagnostics.Process]::GetCurrentProcess().Path
+$powershellPath = [Process]::GetCurrentProcess().Path
 # ISEなど場合もあるので名前を明示する
 if ($powershellPath -notmatch '\\(?:powershell|pwsh)\.exe$') {
 	$powershellPath = `
@@ -139,6 +143,10 @@ class FileFolder: SpecialFolder {
 	}
 }
 
+Add-Type -ErrorAction Stop `
+	-TypeDefinition (Get-Content -LiteralPath "$PSScriptRoot\KnownFolder.cs" -Raw -ErrorAction Stop)
+
+
 $osVersion = [Environment]::OSVersion.Version
 # Win10以降
 $win10 = $osVersion -gt [version]'10.0'
@@ -154,6 +162,7 @@ if ($osVersion -lt [version]'6.3') {
 if ($win10 -and !$win10_1709) {
 	Write-Warning 'The PSSpecialFolder module supports Windows 10 Version 1709+.'
 }
+
 
 $shell = New-Object -ComObject Shell.Application
 $propertiesName = @($shell.NameSpace(0).Self.Verbs())[-1].Name
@@ -226,6 +235,16 @@ function getDirectoryFolderItem {
 	return $shell.NameSpace((Split-Path $path)).Items().Item((Split-Path $path -Leaf))
 }
 
+$folderGuids = & $PSScriptRoot\FolderGuids.ps1
+
+function getKnownFolderPath {
+	[OutputType([string])]
+	param ([string]$Name)
+
+	$folder = [KnownFolder]::new($folderGuids[$Name], 0)
+	if ($folder.Result -eq 'OK') { return $folder.Path }
+}
+
 function getSpecialFolder {
 	[OutputType([SpecialFolder[]])]
 	param ([bool]$IncludeShellCommand, [bool]$IsDebugging)
@@ -233,7 +252,6 @@ function getSpecialFolder {
 	$is64bitOS = [Environment]::Is64BitOperatingSystem
 	$isWow64 = $is64bitOS -and ![Environment]::Is64BitProcess
 
-	$userShellFoldersKey = Get-Item 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders'
 	$currentVersionKey = Get-Item 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion'
 	$appxKey = Get-Item 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Appx'
 
@@ -335,38 +353,25 @@ function getSpecialFolder {
 
 	Write-Information "`nCategory: Libraries`n"
 
-	$librariesPath = $userShellFoldersKey.GetValue('{1B3EA5DC-B587-4786-B4EF-BD1DC332AEAE}')
-	if (!$librariesPath) { $librariesPath = "$([Environment]::GetFolderPath('ApplicationData'))\Microsoft\Windows\Libraries" }
 
 	# shell:UsersLibrariesFolder
 	# shell:::{031E4825-7B94-4DC3-B131-E946B44C8DD5}
+	$librariesPath = getKnownFolderPath Libraries
 	Write-Output (newSpecialFolder 'shell:Libraries' -Path $librariesPath -FolderItemForProperties (getDirectoryFolderItem $librariesPath))
 	# Win10 1507からサポート
 	# shell:Libraries\{2B20DF75-1EDA-4039-8097-38798227D5B7}
-	$cameraRollLibraryPath = $userShellFoldersKey.GetValue('{2B20DF75-1EDA-4039-8097-38798227D5B7}')
-	if (!$cameraRollLibraryPath) { $cameraRollLibraryPath = "$librariesPath\CameraRoll.library-ms" }
-	Write-Output (newSpecialFolder 'shell:CameraRollLibrary' -Path $cameraRollLibraryPath)
+	Write-Output (newSpecialFolder 'shell:CameraRollLibrary' -Path (getKnownFolderPath CameraRollLibrary))
 	# shell:Libraries\{7B0DB17D-9CD2-4A93-9733-46CC89022E7C}
-	$documentsLibraryPath = $userShellFoldersKey.GetValue('{7B0DB17D-9CD2-4A93-9733-46CC89022E7C}')
-	if (!$documentsLibraryPath) { $documentsLibraryPath = "$librariesPath\Documents.library-ms" }
-	Write-Output (newSpecialFolder 'shell:DocumentsLibrary' -Path $documentsLibraryPath)
+	Write-Output (newSpecialFolder 'shell:DocumentsLibrary' -Path (getKnownFolderPath DocumentsLibrary))
 	# shell:Libraries\{2112AB0A-C86A-4FFE-A368-0DE96E47012E}
-	$musicLibraryPath = $userShellFoldersKey.GetValue('{2112AB0A-C86A-4FFE-A368-0DE96E47012E}')
-	if (!$musicLibraryPath) { $musicLibraryPath = "$librariesPath\Music.library-ms" }
-	Write-Output (newSpecialFolder 'shell:MusicLibrary' -Path $musicLibraryPath)
+	Write-Output (newSpecialFolder 'shell:MusicLibrary' -Path (getKnownFolderPath MusicLibrary))
 	# shell:Libraries\{A990AE9F-A03B-4E80-94BC-9912D7504104}
-	$picturesLibraryPath = $userShellFoldersKey.GetValue('{A990AE9F-A03B-4E80-94BC-9912D7504104}')
-	if (!$picturesLibraryPath) { $picturesLibraryPath = "$librariesPath\Pictures.library-ms" }
-	Write-Output (newSpecialFolder 'shell:PicturesLibrary' -Path $picturesLibraryPath)
+	Write-Output (newSpecialFolder 'shell:PicturesLibrary' -Path (getKnownFolderPath PicturesLibrary))
 	# Win10 1507からサポート
 	# shell:Libraries\{E25B5812-BE88-4BD9-94B0-29233477B6C3}
-	$savedPicturesLibraryPath = $userShellFoldersKey.GetValue('{E25B5812-BE88-4BD9-94B0-29233477B6C3}')
-	if (!$savedPicturesLibraryPath) { $savedPicturesLibraryPath = "$librariesPath\SavedPictures.library-ms" }
-	Write-Output (newSpecialFolder 'shell:SavedPicturesLibrary' -Path $savedPicturesLibraryPath)
+	Write-Output (newSpecialFolder 'shell:SavedPicturesLibrary' -Path (getKnownFolderPath SavedPicturesLibrary))
 	# shell:::{031E4825-7B94-4DC3-B131-E946B44C8DD5}\{491E922F-5643-4AF4-A7EB-4E7A138D8174}
-	$videosLibraryPath = $userShellFoldersKey.GetValue('{491E922F-5643-4AF4-A7EB-4E7A138D8174}')
-	if (!$videosLibraryPath) { $videosLibraryPath = "$librariesPath\Videos.library-ms" }
-	Write-Output (newSpecialFolder 'shell:VideosLibrary' -Path $videosLibraryPath)
+	Write-Output (newSpecialFolder 'shell:VideosLibrary' -Path (getKnownFolderPath VideosLibrary))
 
 	Write-Information "`nCategory: StartMenu`n"
 
@@ -395,7 +400,7 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:AppDataProgramData')
 	# %TEMP%
 	# %TMP%
-	Write-Output (newSpecialFolder ([System.IO.Path]::GetTempPath()) 'Temporary Folder')
+	Write-Output (newSpecialFolder ([Path]::GetTempPath()) 'Temporary Folder')
 	Write-Output (newSpecialFolder 'shell:Local AppData\VirtualStore')
 
 	Write-Output (newSpecialFolder 'shell:Application Shortcuts')
@@ -434,6 +439,7 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:Common Documents')
 	Write-Output (newSpecialFolder 'shell:CommonDownloads')
 	Write-Output (newSpecialFolder 'shell:PublicLibraries')
+	Write-Output (newSpecialFolder (getKnownFolderPath RecordedTVLibrary) 'RecordedTVLibrary')
 	Write-Output (newSpecialFolder 'shell:CommonMusic')
 	Write-Output (newSpecialFolder 'shell:SampleMusic')
 	Write-Output (newSpecialFolder 'shell:CommonPictures')
@@ -1121,13 +1127,14 @@ function getSpecialFolder {
 	Write-Output (newShellCommand '{FFE2A43C-56B9-4BF5-9A79-CC6D4285608A}')
 }
 
-<#
-.SYNOPSIS
-Gets the special folders for Windows. This function supports the virtual folders, e.g. Control Panel and Recycle Bin.
-.OUTPUTS
-SpecialFolder[]
-#>
 function Get-SpecialFolder {
+	<#
+	.SYNOPSIS
+	Gets the special folders for Windows. This function supports the virtual folders, e.g. Control Panel and Recycle Bin.
+	.OUTPUTS
+	SpecialFolder[]
+	#>
+
 	[CmdletBinding()]
 	[OutputType([SpecialFolder[]])]
 	param ([switch]$IncludeShellCommand)
@@ -1144,27 +1151,30 @@ function getShieldImage {
 	[OutputType([System.Windows.Controls.Image])]
 	param ()
 
-	$image = [Image]::new()
+	# System.Drawing.Imageと曖昧になるので完全名で書いている
+	$image = [System.Windows.Controls.Image]::new()
+
 	$image.Source = [Imaging]::CreateBitmapSourceFromHIcon(
-		[System.Drawing.SystemIcons]::Shield.Handle, [Int32Rect]::Empty, $null
+		[SystemIcons]::Shield.Handle, [Int32Rect]::Empty, $null
 	)
 	return $image
 }
 
-<#
-.SYNOPSIS
-Display the special folders for Windows in a dialog.
-.DESCRIPTION
-Display the special folders for Windows in a dialog. Open the folder to double-click on it. Show context menu to right-click on the folder.
-#>
 function Show-SpecialFolder {
+	<#
+	.SYNOPSIS
+	Display the special folders for Windows in a dialog.
+	.DESCRIPTION
+	Display the special folders for Windows in a dialog. Open the folder to double-click on it. Show context menu to right-click on the folder.
+	#>
+
 	[CmdletBinding()]
 	param ([switch]$IncludeShellCommand)
 
 	# WPFが使えない場合
 	if (($PSVersionTable['PSVersion'].Major -eq 6) -or ($Host.Runspace.ApartmentState -ne 'STA')) {
 		$PSCmdlet.WriteError(
-			[System.Management.Automation.ErrorRecord]::new(
+			[ErrorRecord]::new(
 				[NotSupportedException]'Show-SpecialFolder can''t be started because this function needs WPF.',
 				$null,
 				'OperationStopped',
@@ -1320,6 +1330,7 @@ function Show-SpecialFolder {
 	$window.FindName('wslAsInvoker').add_Click($startWsl)
 	$wslAsAdmin.add_Click({ invokeCommandAsAdmin { $dataGrid.SelectedItem.LinuxShellAsAdmin() } })
 	$properties.add_Click($showProperties)
+	$window.add_Loaded({ $window.Activate() })
 
 	$dataGrid.ItemsSource = Get-SpecialFolder @PSBoundParameters 6>&1 |
 		ForEach-Object {

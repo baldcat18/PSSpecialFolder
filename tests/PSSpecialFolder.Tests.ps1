@@ -1,6 +1,8 @@
-﻿#Requires -Module @{ ModuleName = 'Pester'; ModuleVersion = '4.0.0' }
+﻿using namespace System.Diagnostics.CodeAnalysis
 
-[System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssignments', 'IsDebugging')]
+#Requires -Module @{ ModuleName = 'Pester'; ModuleVersion = '4.0.0' }
+
+[SuppressMessage('PSUseDeclaredVarsMoreThanAssignments', 'IsDebugging')]
 param()
 
 # 開発用以外のバージョンをアンロードする
@@ -147,6 +149,20 @@ InModuleScope PSSpecialFolder {
 		It '{52205FD8-5DFB-447D-801A-D0B52F2E83E1} "File Explorer"' {
 			(newShellCommand '{52205FD8-5DFB-447D-801A-D0B52F2E83E1}' 'File Explorer').Name |
 				Should -Be 'File Explorer (@C:\Windows\system32\shell32.dll,-22067)'
+		}
+	}
+
+	Describe 'getKnownFolderPath Test' {
+		BeforeAll {
+			$IsDebugging = $false
+		}
+
+		It 'Desktop' {
+			getKnownFolderPath ThisPCDesktopFolder | Should -Be ([Environment]::GetFolderPath('Desktop'))
+		}
+		It 'FooBar' {
+			{ getKnownFolderPath getKnownFolderPath FooBar } |
+				Should -Throw -ExceptionType System.Management.Automation.RuntimeException
 		}
 	}
 }

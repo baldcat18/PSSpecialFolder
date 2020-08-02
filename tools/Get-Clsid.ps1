@@ -1,4 +1,6 @@
-﻿<#
+﻿using namespace System.IO
+
+<#
 .SYNOPSIS
 GetSpecialFolder.psm1に載っていないCLSIDの情報を返す
 #>
@@ -18,7 +20,7 @@ if (!$All) {
 $clsidKey = Get-Item 'Microsoft.PowerShell.Core\Registry::HKEY_CLASSES_ROOT\CLSID'
 
 # CLSIDは数が多すぎるのでいったんエクスポートしてから処理する
-$regFile = [System.IO.Path]::GetTempFileName()
+$regFile = [Path]::GetTempFileName()
 reg.exe export HKCR\CLSID $regFile /y > $null
 
 Get-Content -LiteralPath $regFile |

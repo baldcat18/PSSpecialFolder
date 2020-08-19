@@ -88,7 +88,7 @@ InModuleScope PSSpecialFolder {
 		It "$appDataPath `"AppData`"" {
 			$folder = newSpecialFolder $appDataPath 'AppData'
 
-			$folder.Name | Should -Be "AppData"
+			$folder.Name | Should -Be 'AppData'
 			$folder.Path | Should -Be $appDataPath
 		}
 		$script:librariesPath = (

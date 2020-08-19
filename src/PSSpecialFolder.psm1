@@ -130,7 +130,7 @@ class FileFolder: SpecialFolder {
 		Start-Process cmd.exe "/k pushd $($this.Path)" -Verb $Verb
 	}
 	hidden [void]StartLinuxShell([string]$Verb) {
-		$activity = "FileFolder::LinuxShell{0}()" -f $(if ($Verb -eq 'runas') { 'AsAdmin' })
+		$activity = 'FileFolder::LinuxShell{0}()' -f $(if ($Verb -eq 'runas') { 'AsAdmin' })
 		if (!$script:win10) {
 			Write-Error -ErrorAction Stop `
 				-Category NotImplemented -CategoryActivity $activity -TargetObject $this `

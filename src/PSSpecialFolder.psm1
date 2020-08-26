@@ -167,6 +167,15 @@ if ($win10 -and !$win10_1709) {
 $shell = New-Object -ComObject Shell.Application
 $propertiesName = @($shell.NameSpace(0).Self.Verbs())[-1].Name
 
+$isDebugging = $false
+
+# PSSpecialFolder.Tests.ps1から$isDebuggingの値を変更するためのもの
+function setIsDebugging {
+	param ($Value)
+
+	$script:isDebugging = $Value
+}
+
 function newSpecialFolder {
 	[OutputType([SpecialFolder])]
 	param ([string]$Dir, [string]$Name = '', [string]$Path = '', [__ComObject]$FolderItemForProperties = $null)
@@ -199,9 +208,8 @@ function newSpecialFolder {
 		FolderItemForProperties = $FolderItemForProperties
 	}
 	if ($Name) {
-		# $IsDebuggingは呼び出し元で定義している
 		$initializer['Name'] = `
-			if ($IsDebugging -and $Path -match '^shell:.+\}$') { "$Name ($($initializer['Name']))" } else { $Name }
+			if ($isDebugging -and $Path -match '^shell:.+\}$') { "$Name ($($initializer['Name']))" } else { $Name }
 	}
 
 	return $(if ($isDirectory) { [FileFolder]$initializer } else { [SpecialFolder]$initializer })
@@ -218,9 +226,8 @@ function newShellCommand {
 	$className = (Get-Item $path).GetValue('')
 
 	return [SpecialFolder]@{
-		# $IsDebuggingは呼び出し元で定義している
 		Name = if ($Name) {
-			if ($IsDebugging) { "$Name ($className)" } else { $Name }
+			if ($isDebugging) { "$Name ($className)" } else { $Name }
 		} else {
 			$className
 		}
@@ -247,7 +254,7 @@ function getKnownFolderPath {
 
 function getSpecialFolder {
 	[OutputType([SpecialFolder[]])]
-	param ([bool]$IncludeShellCommand, [bool]$IsDebugging)
+	param ([bool]$IncludeShellCommand)
 
 	$is64bitOS = [Environment]::Is64BitOperatingSystem
 	$isWow64 = $is64bitOS -and ![Environment]::Is64BitProcess
@@ -783,7 +790,7 @@ function getSpecialFolder {
 	# Pen and Touch Control Panel
 	Write-Output (newShellCommand '{F82DF8F7-8B9F-442E-A48C-818EA735FF9B}')
 
-	if (!$IsDebugging) { return }
+	if (!$isDebugging) { return }
 
 	# 通常とは違う名前がエクスプローラーのタイトルバーに表示されるフォルダー
 	Write-Information "`nCategory: OtherNames`n"
@@ -1139,11 +1146,8 @@ function Get-SpecialFolder {
 	[OutputType([SpecialFolder[]])]
 	param ([switch]$IncludeShellCommand)
 
-	$getSpecialFolderArgs = @{
-		IncludeShellCommand = $IncludeShellCommand -or $PSBoundParameters['Debug']
-		IsDebugging = !!$PSBoundParameters['Debug']
-	}
-	return getSpecialFolder @getSpecialFolderArgs | Where-Object { $_ }
+	$script:isDebugging = !!$PSBoundParameters['Debug']
+	return getSpecialFolder ($IncludeShellCommand -or $PSBoundParameters['Debug']) | Where-Object { $_ }
 }
 
 # 1つのリソースは1つのメニューにか設定できないので、必要な項目ごとに使用する

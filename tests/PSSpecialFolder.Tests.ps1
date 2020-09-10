@@ -1,9 +1,4 @@
-﻿using namespace System.Diagnostics.CodeAnalysis
-
-#Requires -Module @{ ModuleName = 'Pester'; ModuleVersion = '4.0.0' }
-
-[SuppressMessage('PSUseDeclaredVarsMoreThanAssignments', 'IsDebugging')]
-param()
+﻿#Requires -Module @{ ModuleName = 'Pester'; ModuleVersion = '4.0.0' }
 
 # 開発用以外のバージョンをアンロードする
 Get-Module PSSpecialFolder | Remove-Module
@@ -13,7 +8,7 @@ $module = Import-Module "$PSScriptRoot/../src/PSSpecialFolder.psm1" -Force -Pass
 InModuleScope PSSpecialFolder {
 	Describe 'newSpecialFolder Test' {
 		BeforeAll {
-			$IsDebugging = $false
+			setIsDebugging $false
 		}
 
 		It 'Null' {
@@ -88,7 +83,7 @@ InModuleScope PSSpecialFolder {
 		It "$appDataPath `"AppData`"" {
 			$folder = newSpecialFolder $appDataPath 'AppData'
 
-			$folder.Name | Should -Be "AppData"
+			$folder.Name | Should -Be 'AppData'
 			$folder.Path | Should -Be $appDataPath
 		}
 		$script:librariesPath = (
@@ -108,7 +103,7 @@ InModuleScope PSSpecialFolder {
 
 	Describe 'newShellCommand Test' {
 		BeforeAll {
-			$IsDebugging = $false
+			setIsDebugging $false
 		}
 
 		It 'Null' {
@@ -136,7 +131,7 @@ InModuleScope PSSpecialFolder {
 
 	Describe 'IsDebugging' {
 		BeforeAll {
-			$IsDebugging = $true
+			setIsDebugging $true
 		}
 
 		It 'shell:ThisPCDesktopFolder "DesktopFolder"' {
@@ -154,7 +149,7 @@ InModuleScope PSSpecialFolder {
 
 	Describe 'getKnownFolderPath Test' {
 		BeforeAll {
-			$IsDebugging = $false
+			setIsDebugging $false
 		}
 
 		It 'Desktop' {

@@ -154,6 +154,8 @@ $win10 = $osVersion -gt [version]'10.0'
 $win10_1709 = $osVersion -gt [version]'10.0.16299'
 # Win10 1803以降
 $win10_1803 = $osVersion -gt [version]'10.0.17134'
+# Win10 20H2以降
+$win10_20h2 = $osVersion -gt [version]'10.0.19042'
 
 
 if ($osVersion -lt [version]'6.3') {
@@ -615,7 +617,8 @@ function getSpecialFolder {
 	# Win10 1507からサポート
 	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{B98A2BEA-7D42-4558-8BD1-832F41BAC6FD}')
 	# System
-	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{BB06C0E4-D293-4F75-8A90-CB05B6477EEE}')
+	# Win10 20H2から下部に移動するので非表示に
+	if (!$win10_20h2) { Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{BB06C0E4-D293-4F75-8A90-CB05B6477EEE}') }
 	# Action Center CPL (Win8.1まで)
 	# Security and Maintenance CPL (Win10 1507から)
 	Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{BB64F8A7-BEE7-4E1A-AB8D-7D8273F7FDB6}')
@@ -668,6 +671,9 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:ConnectionsFolder')
 	# Font Settings
 	Write-Output (newSpecialFolder 'shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}\::{93412589-74D4-4E4E-AD0E-E0CB621440FD}')
+	# System
+	# Win10 20H2からここに移動
+	if ($win10_20h2) { Write-Output (newSpecialFolder 'shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}\::{BB06C0E4-D293-4F75-8A90-CB05B6477EEE}') }
 	# All Tasks
 	Write-Output (newSpecialFolder 'shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}\::{ED7BA470-8E54-465E-825C-99712043E01C}')
 
@@ -710,6 +716,10 @@ function getSpecialFolder {
 
 	# フォルダー以外のshellコマンド
 	Write-Information "`nCategory: ShellCommandsExceptFolders`n"
+
+	# System
+	# Win10 20H2から
+	if ($win10_20h2) { Write-Output (newSpecialFolder 'shell:ControlPanelFolder\::{BB06C0E4-D293-4F75-8A90-CB05B6477EEE}') }
 
 	# Taskbar
 	Write-Output (newShellCommand '{0DF44EAA-FF21-4412-828E-260A8728E7F1}')

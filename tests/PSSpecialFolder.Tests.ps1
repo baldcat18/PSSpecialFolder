@@ -71,7 +71,7 @@ InModuleScope PSSpecialFolder {
 			$folder.Path | Should -Be $myDocumentsPath
 			$folder.Dir | Should -Be "file:\\\$myDocumentsPath"
 		}
-		$script:sharedWinDirPath = "\\$Env:COMPUTERNAME\$($Env:windir -replace ':', '$')"
+		$script:sharedWinDirPath = "$Env:LOGONSERVER\$($Env:windir -replace ':', '$')"
 		It $sharedWinDirPath {
 			$folder = newSpecialFolder $sharedWinDirPath
 

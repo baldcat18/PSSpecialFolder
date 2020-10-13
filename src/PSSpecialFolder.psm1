@@ -150,6 +150,8 @@ Add-Type -ErrorAction Stop `
 $osVersion = [Environment]::OSVersion.Version
 # Win10以降
 $win10 = $osVersion -gt [version]'10.0'
+# Win10 1607以降
+$win10_1607 = $osVersion -gt [version]'10.0.14393'
 # Win10 1709以降
 $win10_1709 = $osVersion -gt [version]'10.0.16299'
 # Win10 1803以降
@@ -725,7 +727,7 @@ function getSpecialFolder {
 	Write-Output (newShellCommand '{0DF44EAA-FF21-4412-828E-260A8728E7F1}')
 	# Search
 	# Win10 1511まで
-	if (!$win10_1709) { Write-Output (newShellCommand '{2559A1F0-21D7-11D4-BDAF-00C04F60B9F0}' 'Search Files') }
+	if (!$win10_1607) { Write-Output (newShellCommand '{2559A1F0-21D7-11D4-BDAF-00C04F60B9F0}' 'Search Files') }
 	# Help and Support
 	# Win8.1まで
 	Write-Output (newShellCommand '{2559A1F1-21D7-11D4-BDAF-00C04F60B9F0}')

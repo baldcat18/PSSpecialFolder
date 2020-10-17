@@ -13,7 +13,7 @@
 	PrivateData = @{
 		PSData = @{
 			LicenseUri = 'https://github.com/baldcat18/PSSpecialFolder/blob/master/LICENSE.txt'
-			Prerelease = 'alpha'
+			Prerelease = 'beta'
 			Tags = @('Folder', 'Windows')
 		}
 	}

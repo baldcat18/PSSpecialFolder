@@ -1,5 +1,5 @@
 ﻿@{
-	ModuleVersion = '2.4.1.0'
+	ModuleVersion = '2.4.1'
 	GUID = '958cb972-fb7e-4222-92b1-152d5b95a2a9'
 	Author = 'BaldCat'
 	Copyright = '(c) 2019 BaldCat. All rights reserved.'
@@ -13,7 +13,7 @@
 	PrivateData = @{
 		PSData = @{
 			LicenseUri = 'https://github.com/baldcat18/PSSpecialFolder/blob/master/LICENSE.txt'
-			Prerelease = 'beta'
+			Prerelease = 'alpha2'
 			Tags = @('Folder', 'Windows')
 		}
 	}

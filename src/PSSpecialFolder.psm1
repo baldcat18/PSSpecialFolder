@@ -150,8 +150,8 @@ Add-Type -ErrorAction Stop `
 $osVersion = [Environment]::OSVersion.Version
 # Win10以降
 $win10 = $osVersion -gt [version]'10.0'
-# Win10 1709以降
-$win10_1709 = $osVersion -gt [version]'10.0.16299'
+# Win10 1607以降
+$win10_1607 = $osVersion -gt [version]'10.0.14393'
 # Win10 1803以降
 $win10_1803 = $osVersion -gt [version]'10.0.17134'
 # Win10 20H2以降
@@ -161,8 +161,8 @@ $win10_20h2 = $osVersion -gt [version]'10.0.19042'
 if ($osVersion -lt [version]'6.3') {
 	Write-Warning 'The PSSpecialFolder module supports Windows 8.1 and 10.'
 }
-if ($win10 -and !$win10_1709) {
-	Write-Warning 'The PSSpecialFolder module supports Windows 10 Version 1709+.'
+if ($win10 -and !$win10_1803) {
+	Write-Warning 'The PSSpecialFolder module supports Windows 10 Version 1803+.'
 }
 
 
@@ -725,7 +725,7 @@ function getSpecialFolder {
 	Write-Output (newShellCommand '{0DF44EAA-FF21-4412-828E-260A8728E7F1}')
 	# Search
 	# Win10 1511まで
-	if (!$win10_1709) { Write-Output (newShellCommand '{2559A1F0-21D7-11D4-BDAF-00C04F60B9F0}' 'Search Files') }
+	if (!$win10_1607) { Write-Output (newShellCommand '{2559A1F0-21D7-11D4-BDAF-00C04F60B9F0}' 'Search Files') }
 	# Help and Support
 	# Win8.1まで
 	Write-Output (newShellCommand '{2559A1F1-21D7-11D4-BDAF-00C04F60B9F0}')

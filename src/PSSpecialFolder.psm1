@@ -51,6 +51,8 @@ class SpecialFolder {
 	hidden [bool]$IsPropertiesChecked
 	hidden [__ComObject]$PropertiesVerb
 	hidden [__ComObject]$FolderItemForProperties
+	# Save-List.ps1で使用
+	hidden [string]$ClassName
 
 	[void]Open() {
 		$this.StartExplorer('open')
@@ -169,15 +171,6 @@ if ($win10 -and !$win10_1803) {
 $shell = New-Object -ComObject Shell.Application
 $propertiesName = @($shell.NameSpace(0).Self.Verbs())[-1].Name
 
-$isDebugging = $false
-
-# PSSpecialFolder.Tests.ps1から$isDebuggingの値を変更するためのもの
-function setIsDebugging {
-	param ($Value)
-
-	$script:isDebugging = $Value
-}
-
 function newSpecialFolder {
 	[OutputType([SpecialFolder])]
 	param ([string]$Dir, [string]$Name = '', [string]$Path = '', [__ComObject]$FolderItemForProperties = $null)
@@ -195,23 +188,22 @@ function newSpecialFolder {
 	if (!$Path) { $Path = $folderItem.Path -replace '^::', 'shell:::' }
 
 	$isDirectory = Test-Path $path -PathType Container
+	$className = if ($Dir -match '^shell:.*::(\{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\})$') {
+		(Get-Item "Microsoft.PowerShell.Core\Registry::HKEY_CLASSES_ROOT\CLSID\$($Matches[1])").GetValue('')
+	}
 	$initializer = @{
-		Name = if ($Dir -match '^shell:((?:\w|\s)+)$') {
-			$Matches[1]
-		} elseif ($Dir -match '^shell:.*::(\{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\})$') {
-			(Get-Item "Microsoft.PowerShell.Core\Registry::HKEY_CLASSES_ROOT\CLSID\$($Matches[1])").GetValue('')
-		} else {
-			$Dir -replace '^.+\\(.+?)$', '$1'
-		}
+		Name = $(
+			if ($Name) { $Name }
+			elseif ($Dir -match '^shell:((?:\w|\s)+)$') { $Matches[1] }
+			elseif ($className) { $className }
+			else { $Dir -replace '^.+\\(.+?)$', '$1' }
+		)
 		Path = $Path
 		Dir = $Dir
 		FolderItem = $folderItem
 		PropertyTypes = if ($FolderItemForProperties -or !$isDirectory) { 'Verb' } else { 'StartProcess' }
 		FolderItemForProperties = $FolderItemForProperties
-	}
-	if ($Name) {
-		$initializer['Name'] = `
-			if ($isDebugging -and $Path -match '^shell:.+\}$') { "$Name ($($initializer['Name']))" } else { $Name }
+		ClassName = if ($Name) { $className }
 	}
 
 	return $(if ($isDirectory) { [FileFolder]$initializer } else { [SpecialFolder]$initializer })
@@ -228,12 +220,9 @@ function newShellCommand {
 	$className = (Get-Item $path).GetValue('')
 
 	return [SpecialFolder]@{
-		Name = if ($Name) {
-			if ($isDebugging) { "$Name ($className)" } else { $Name }
-		} else {
-			$className
-		}
+		Name = if ($Name) { $Name } else { $className }
 		Path = "shell:::$Clsid"
+		ClassName = if ($Name) { $className }
 	}
 }
 
@@ -256,7 +245,7 @@ function getKnownFolderPath {
 
 function getSpecialFolder {
 	[OutputType([SpecialFolder[]])]
-	param ([bool]$IncludeShellCommand)
+	param ([bool]$IncludeShellCommand, [bool]$IsDebugging)
 
 	$is64bitOS = [Environment]::Is64BitOperatingSystem
 	$isWow64 = $is64bitOS -and ![Environment]::Is64BitProcess
@@ -800,7 +789,7 @@ function getSpecialFolder {
 	# Pen and Touch Control Panel
 	Write-Output (newShellCommand '{F82DF8F7-8B9F-442E-A48C-818EA735FF9B}')
 
-	if (!$isDebugging) { return }
+	if (!$IsDebugging) { return }
 
 	# 通常とは違う名前がエクスプローラーのタイトルバーに表示されるフォルダー
 	Write-Information "`nCategory: OtherNames`n"
@@ -1156,8 +1145,8 @@ function Get-SpecialFolder {
 	[OutputType([SpecialFolder[]])]
 	param ([switch]$IncludeShellCommand)
 
-	$script:isDebugging = !!$PSBoundParameters['Debug']
-	return getSpecialFolder ($IncludeShellCommand -or $PSBoundParameters['Debug']) | Where-Object { $_ }
+	return getSpecialFolder ($IncludeShellCommand -or $PSBoundParameters['Debug']) (!!$PSBoundParameters['Debug']) |
+		Where-Object { $_ }
 }
 
 # 1つのリソースは1つのメニューにか設定できないので、必要な項目ごとに使用する

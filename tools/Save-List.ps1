@@ -32,17 +32,20 @@ $shell = New-Object -ComObject Shell.Application
 	ForEach-Object {
 		if ($_ -is [InformationRecord]) {
 			[pscustomobject]@{ Information = $_.ToString().Replace("`n", '') }
-		} elseif (!$_.FolderItem) {
-			$folder = try { $shell.NameSpace($_.Path) } catch { $null }
-			if ($folder) { Write-Warning "$($folder.Self.Name): $($_.Path)" }
-			$_
-		} else {
+		} elseif ($_.FolderItem) {
 			[pscustomobject]@{
-				Name = $_.Name
+				Name = if ($_.ClassName) { "$($_.Name) ($($_.ClassName))" } else { $_.Name }
 				Dir = $_.Dir
 				Path = $_.Path
 				DisplayName = $_.FolderItem.Name
 				Type = $_.FolderItem.Type
+			}
+		} else {
+			$folder = try { $shell.NameSpace($_.Path) } catch { $null }
+			if ($folder) { Write-Warning "$($folder.Self.Name): $($_.Path)" }
+			[pscustomobject]@{
+				Name = if ($_.ClassName) { "$($_.Name) ($($_.ClassName))" } else { $_.Name }
+				Path = $_.Path
 			}
 		}
 	} |

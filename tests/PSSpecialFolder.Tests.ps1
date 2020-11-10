@@ -7,10 +7,6 @@ $module = Import-Module "$PSScriptRoot/../src/PSSpecialFolder.psm1" -Force -Pass
 
 InModuleScope PSSpecialFolder {
 	Describe 'newSpecialFolder Test' {
-		BeforeAll {
-			setIsDebugging $false
-		}
-
 		It 'Null' {
 			newSpecialFolder $null | Should -BeFalse
 		}
@@ -26,6 +22,7 @@ InModuleScope PSSpecialFolder {
 			$folder.Name | Should -Be 'Desktop'
 			$folder.Path | Should -Be ([Environment]::GetFolderPath('Desktop'))
 			$folder.PropertyTypes | Should -Be 'StartProcess'
+			$folder.ClassName | Should -Be ''
 			$folder.HasProperties() | Should -Be $true
 		}
 		It 'shell:MyComputerFolder' {
@@ -43,6 +40,13 @@ InModuleScope PSSpecialFolder {
 
 			$folder.Name | Should -Be 'Recycle Bin'
 			$folder.Path | Should -Be $recycleBinPath
+			$folder.ClassName | Should -Be ''
+		}
+		It 'shell:::{05D7B0F4-2121-4EFF-BF6B-ED3F69B894D9} "Notification Area Icons"' {
+			$folder = newSpecialFolder 'shell:::{05D7B0F4-2121-4EFF-BF6B-ED3F69B894D9}' 'Notification Area Icons'
+
+			$folder.Name | Should -Be 'Notification Area Icons'
+			$folder.ClassName | Should -Be 'Taskbar'
 		}
 		$script:powerOptionsPath = `
 			'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\0\::{025A5937-A6BE-4686-A844-36FE4BEC8B6D}'
@@ -102,10 +106,6 @@ InModuleScope PSSpecialFolder {
 	}
 
 	Describe 'newShellCommand Test' {
-		BeforeAll {
-			setIsDebugging $false
-		}
-
 		It 'Null' {
 			newShellCommand $null | Should -BeFalse
 		}
@@ -119,6 +119,7 @@ InModuleScope PSSpecialFolder {
 			$folder.Name | Should -Be 'Run...'
 			$folder.Path | Should -Be "shell:::$runClsid"
 			$folder.PropertyTypes | Should -Be 'None'
+			$folder.ClassName | Should -Be ''
 		}
 		$script:fileExplorerClsid = '{52205FD8-5DFB-447D-801A-D0B52F2E83E1}'
 		It "$fileExplorerClsid `"File Explorer`"" {
@@ -126,32 +127,11 @@ InModuleScope PSSpecialFolder {
 
 			$folder.Name | Should -Be 'File Explorer'
 			$folder.Path | Should -Be "shell:::$fileExplorerClsid"
-		}
-	}
-
-	Describe 'IsDebugging' {
-		BeforeAll {
-			setIsDebugging $true
-		}
-
-		It 'shell:ThisPCDesktopFolder "DesktopFolder"' {
-			(newSpecialFolder shell:ThisPCDesktopFolder 'DesktopFolder').Name | Should -Be 'DesktopFolder'
-		}
-		It 'shell:::{05D7B0F4-2121-4EFF-BF6B-ED3F69B894D9} "Notification Area Icons"' {
-			(newSpecialFolder 'shell:::{05D7B0F4-2121-4EFF-BF6B-ED3F69B894D9}' 'Notification Area Icons').Name |
-				Should -Be 'Notification Area Icons (Taskbar)'
-		}
-		It '{52205FD8-5DFB-447D-801A-D0B52F2E83E1} "File Explorer"' {
-			(newShellCommand '{52205FD8-5DFB-447D-801A-D0B52F2E83E1}' 'File Explorer').Name |
-				Should -Be 'File Explorer (@C:\Windows\system32\shell32.dll,-22067)'
+			$folder.ClassName | Should -Be '@C:\Windows\system32\shell32.dll,-22067'
 		}
 	}
 
 	Describe 'getKnownFolderPath Test' {
-		BeforeAll {
-			setIsDebugging $false
-		}
-
 		It 'Desktop' {
 			getKnownFolderPath ThisPCDesktopFolder | Should -Be ([Environment]::GetFolderPath('Desktop'))
 		}

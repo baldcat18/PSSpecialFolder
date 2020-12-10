@@ -156,15 +156,18 @@ $win10 = $osVersion -gt [version]'10.0'
 $win10_1607 = $osVersion -gt [version]'10.0.14393'
 # Win10 1803以降
 $win10_1803 = $osVersion -gt [version]'10.0.17134'
+# Win10 1903のみ
+$win10_1903_only = $osVersion.ToString(3) -eq '10.0.18362'
 # Win10 20H2以降
 $win10_20h2 = $osVersion -gt [version]'10.0.19042'
 
 
 if ($osVersion -lt [version]'6.3') {
 	Write-Warning 'The PSSpecialFolder module supports Windows 8.1 and 10.'
-}
-if ($win10 -and !$win10_1803) {
+} elseif ($win10 -and !$win10_1803) {
 	Write-Warning 'The PSSpecialFolder module supports Windows 10 Version 1803+.'
+} elseif ($win10_1903_only) {
+	Write-Warning 'The PSSpecialFolder module supports Windows 10 Version 1909+.'
 }
 
 

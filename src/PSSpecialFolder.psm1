@@ -151,25 +151,26 @@ Add-Type -ErrorAction Stop `
 
 $osVersion = [Environment]::OSVersion.Version
 # Win10以降
-$win10 = $osVersion -gt [version]'10.0'
+$win10 = $osVersion -gt [version]'10.0.10240'
 # Win10 1607以降
 $win10_1607 = $osVersion -gt [version]'10.0.14393'
 # Win10 1803以降
 $win10_1803 = $osVersion -gt [version]'10.0.17134'
-# Win10 1903のみ
-$win10_1903_only = $osVersion.ToString(3) -eq '10.0.18362'
 # Win10 20H2以降
 $win10_20h2 = $osVersion -gt [version]'10.0.19042'
 
 
-if ($osVersion -lt [version]'6.3') {
-	Write-Warning 'The PSSpecialFolder module supports Windows 8.1 and 10.'
-} elseif ($win10 -and !$win10_1803) {
-	Write-Warning 'The PSSpecialFolder module supports Windows 10 Version 1803+.'
-} elseif ($win10_1903_only) {
-	Write-Warning 'The PSSpecialFolder module supports Windows 10 Version 1909+.'
-}
+& {
+	if ($win10) {
+		if ($osVersion -ge '10.0.18363.0') { return } # Win10 1909以降
+		if ($osVersion -eq '10.0.17763.0') { return } # Win10 1809 Enterprise
+		if ($osVersion -eq '10.0.17134.0') { return } # Win10 1803 Enterprise
 
+		Write-Warning 'The PSSpecialFolder module supports Windows 10 Version 1909+.'
+	} elseif ($osVersion -ne '6.3.9600.0') {
+		Write-Warning 'The PSSpecialFolder module supports Windows 8.1 and 10.'
+	}
+}
 
 $shell = New-Object -ComObject Shell.Application
 $propertiesName = @($shell.NameSpace(0).Self.Verbs())[-1].Name

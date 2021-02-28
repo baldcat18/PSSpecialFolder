@@ -346,6 +346,7 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:ImplicitAppShortcuts')
 
 	Write-Output (newSpecialFolder 'shell:AccountPictures')
+	# shell:::{B155BDF8-02F0-451E-9A26-AE317CFD7779} ([delegate folder that appears in Computer])
 	Write-Output (newSpecialFolder 'shell:NetHood')
 	# shell:::{ED50FC29-B964-48A9-AFB3-15EBB9B97F36} ([printhood delegate folder])
 	Write-Output (newSpecialFolder 'shell:PrintHood')
@@ -696,8 +697,6 @@ function getSpecialFolder {
 	# (cscui.dll)
 	# 企業向けエディションで使用可
 	Write-Output (newSpecialFolder 'shell:::{AFDB1F70-2A4C-11D2-9039-00C04F8EEB3E}' 'Offline Files Folder')
-	# delegate folder that appears in Computer
-	Write-Output (newSpecialFolder 'shell:::{B155BDF8-02F0-451E-9A26-AE317CFD7779}')
 	# AppSuggestedLocations
 	Write-Output (newSpecialFolder 'shell:::{C57A6066-66A3-4D91-9EB9-41532179F0A5}')
 	# Win10 1709までサポート
@@ -809,6 +808,8 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:::{323CA680-C24D-4099-B94D-446DD2D7249E}')
 	# Common Places FS Folder (Links)
 	Write-Output (newSpecialFolder 'shell:::{D34A6CA6-62C2-4C34-8A7C-14709C1AD938}')
+	# delegate folder that appears in Computer (NetHood)
+	Write-Output (newSpecialFolder 'shell:::{B155BDF8-02F0-451E-9A26-AE317CFD7779}')
 	# printhood delegate folder (PrintHood)
 	Write-Output (newSpecialFolder 'shell:::{ED50FC29-B964-48A9-AFB3-15EBB9B97F36}')
 	# Fusion Cache (.NET Framework Assemblies)

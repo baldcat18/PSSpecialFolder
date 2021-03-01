@@ -140,34 +140,6 @@ InModuleScope PSSpecialFolder {
 				Should -Throw -ExceptionType System.Management.Automation.RuntimeException
 		}
 	}
-
-	Describe 'Properties Test' {
-		$script:testHasProperties = {
-			[OutputType([bool])]
-			param ($dir)
-
-			return @($shell.NameSpace($dir).Self.Verbs())[-1].Name -eq $propertiesName
-		}
-
-		It 'UserProfile' {
-			& $testHasProperties ([Environment+SpecialFolder]::UserProfile) | Should -BeTrue
-		}
-		It 'InternetFolder' {
-			& $testHasProperties shell:InternetFolder | Should -BeTrue
-		}
-		It 'UsersFilesFolder' {
-			& $testHasProperties shell:UsersFilesFolder | Should -BeFalse
-		}
-		It 'Profile' {
-			& $testHasProperties shell:Profile | Should -BeFalse
-		}
-		It 'Libraries' {
-			& $testHasProperties shell:Libraries | Should -BeFalse
-		}
-		It 'UsersLibrariesFolder' {
-			& $testHasProperties shell:UsersLibrariesFolder | Should -BeFalse
-		}
-	}
 }
 
 Remove-Module $module

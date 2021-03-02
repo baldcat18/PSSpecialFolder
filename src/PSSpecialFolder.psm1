@@ -173,7 +173,7 @@ $win10_20h2 = $osVersion -gt [version]'10.0.19042'
 }
 
 $shell = New-Object -ComObject Shell.Application
-$propertiesName = @($shell.NameSpace(0).Self.Verbs())[-1].Name
+$propertiesName = @($shell.NameSpace([Environment+SpecialFolder]::Desktop).Self.Verbs())[-1].Name
 
 function newSpecialFolder {
 	[OutputType([SpecialFolder])]
@@ -264,7 +264,7 @@ function getSpecialFolder {
 	# shell:ThisDeviceFolder / shell:::{F8278C54-A712-415B-B593-B77A2BE0DDA9} (Win10 1703から)
 	# %USERPROFILE%
 	# %HOMEDRIVE%%HOMEPATH%
-	Write-Output (newSpecialFolder 'shell:UsersFilesFolder' -FolderItemForProperties $shell.NameSpace(40).Self)
+	Write-Output (newSpecialFolder 'shell:UsersFilesFolder' -FolderItemForProperties $shell.NameSpace([Environment+SpecialFolder]::UserProfile).Self)
 	# Win10 1507からサポート
 	# shell:MyComputerFolder\::{0DB7E03F-FC29-4DC6-9020-FF41B59E513A} (Win10 1709から)
 	# Win10 1507から1703では3D Builderを起動した時に自動生成される

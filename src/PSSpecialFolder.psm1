@@ -10,7 +10,6 @@ using namespace System.Windows.Interop
 using namespace System.Windows.Markup
 using namespace Win32API
 
-[SuppressMessage('PSReviewUnusedParameter', 's', Scope = 'Function', Target = 'Show-SpecialFolder')]
 param()
 
 Set-StrictMode -Version Latest
@@ -1262,40 +1261,41 @@ function Show-SpecialFolder {
 	$dataGrid = [DataGrid]($window.FindName('dataGrid'))
 	$dataGrid.add_PreviewKeyDown(
 		{
-			param([object]$s, [KeyEventArgs]$e)
+			# インテリセンスを効かせるために型を明示している
+			$ke = [KeyEventArgs]$_
 
 			# Home/End単独で一番上/一番下に移動できるようにする
 			if (!([Keyboard]::Modifiers -band [ModifierKeys]::Control)) {
-				switch ($e.Key) {
+				switch ($ke.Key) {
 					'Home' { $wsh.SendKeys('^{HOME}') }
 					'End' { $wsh.SendKeys('^{END}') }
 				}
 			}
 
-			# $_.KeyだとAlt単独もAlt+Enterも'System'になるので[Keyboard]::IsKeyDown('Enter')を見ている
+			# $ke.KeyだとAlt単独もAlt+Enterも'System'になるので[Keyboard]::IsKeyDown('Enter')を見ている
 			if (![Keyboard]::IsKeyDown('Enter')) { return }
 
-			$source = [Control]$e.OriginalSource
+			$source = [Control]$ke.OriginalSource
 			if ($source -is [DataGridCell]) { $dataGrid.SelectedItem = $source.DataContext }
 
-			$e.Handled = $true
+			$ke.Handled = $true
 			selectInvokedCommand
 		}
 	)
 	$dataGrid.add_MouseDoubleClick(
 		{
-			param([object]$s, [MouseButtonEventArgs]$e)
+			$me = [MouseButtonEventArgs]$_
 
-			if ($e.OriginalSource -is [TextBlock]) { selectInvokedCommand }
+			if ($me.OriginalSource -is [TextBlock]) { selectInvokedCommand }
 		}
 	)
 	$dataGrid.add_ContextMenuOpening(
 		{
-			param([object]$s, [ContextMenuEventArgs]$e)
+			$ce = [ContextMenuEventArgs]$_
 
 			$item = $dataGrid.SelectedItem
 			if ($item -isnot [SpecialFolder]) {
-				$e.Handled = $true
+				$ce.Handled = $true
 				return
 			}
 

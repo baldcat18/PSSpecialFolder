@@ -10,7 +10,6 @@ using namespace System.Windows.Interop
 using namespace System.Windows.Markup
 using namespace Win32API
 
-[SuppressMessage('PSReviewUnusedParameter', 's', Scope = 'Function', Target = 'Show-SpecialFolder')]
 param()
 
 Set-StrictMode -Version Latest
@@ -151,28 +150,29 @@ Add-Type -ErrorAction Stop `
 
 $osVersion = [Environment]::OSVersion.Version
 # Win10以降
-$win10 = $osVersion -gt [version]'10.0'
+$win10 = $osVersion -gt [version]'10.0.10240'
 # Win10 1607以降
 $win10_1607 = $osVersion -gt [version]'10.0.14393'
 # Win10 1803以降
 $win10_1803 = $osVersion -gt [version]'10.0.17134'
-# Win10 1903のみ
-$win10_1903_only = $osVersion.ToString(3) -eq '10.0.18362'
 # Win10 20H2以降
 $win10_20h2 = $osVersion -gt [version]'10.0.19042'
 
 
-if ($osVersion -lt [version]'6.3') {
-	Write-Warning 'The PSSpecialFolder module supports Windows 8.1 and 10.'
-} elseif ($win10 -and !$win10_1803) {
-	Write-Warning 'The PSSpecialFolder module supports Windows 10 Version 1803+.'
-} elseif ($win10_1903_only) {
-	Write-Warning 'The PSSpecialFolder module supports Windows 10 Version 1909+.'
+& {
+	if ($win10) {
+		if ($osVersion -ge '10.0.18363.0') { return } # Win10 1909以降
+		if ($osVersion -eq '10.0.17763.0') { return } # Win10 1809 Enterprise
+		if ($osVersion -eq '10.0.17134.0') { return } # Win10 1803 Enterprise
+
+		Write-Warning 'The PSSpecialFolder module supports Windows 10 Version 1909+.'
+	} elseif ($osVersion -ne '6.3.9600.0') {
+		Write-Warning 'The PSSpecialFolder module supports Windows 8.1 and 10.'
+	}
 }
 
-
 $shell = New-Object -ComObject Shell.Application
-$propertiesName = @($shell.NameSpace(0).Self.Verbs())[-1].Name
+$propertiesName = @($shell.NameSpace([Environment+SpecialFolder]::Desktop).Self.Verbs())[-1].Name
 
 function newSpecialFolder {
 	[OutputType([SpecialFolder])]
@@ -263,7 +263,7 @@ function getSpecialFolder {
 	# shell:ThisDeviceFolder / shell:::{F8278C54-A712-415B-B593-B77A2BE0DDA9} (Win10 1703から)
 	# %USERPROFILE%
 	# %HOMEDRIVE%%HOMEPATH%
-	Write-Output (newSpecialFolder 'shell:UsersFilesFolder' -FolderItemForProperties $shell.NameSpace(40).Self)
+	Write-Output (newSpecialFolder 'shell:UsersFilesFolder' -FolderItemForProperties $shell.NameSpace([Environment+SpecialFolder]::UserProfile).Self)
 	# Win10 1507からサポート
 	# shell:MyComputerFolder\::{0DB7E03F-FC29-4DC6-9020-FF41B59E513A} (Win10 1709から)
 	# Win10 1507から1703では3D Builderを起動した時に自動生成される
@@ -345,6 +345,7 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:ImplicitAppShortcuts')
 
 	Write-Output (newSpecialFolder 'shell:AccountPictures')
+	# shell:::{B155BDF8-02F0-451E-9A26-AE317CFD7779} ([delegate folder that appears in Computer])
 	Write-Output (newSpecialFolder 'shell:NetHood')
 	# shell:::{ED50FC29-B964-48A9-AFB3-15EBB9B97F36} ([printhood delegate folder])
 	Write-Output (newSpecialFolder 'shell:PrintHood')
@@ -695,8 +696,6 @@ function getSpecialFolder {
 	# (cscui.dll)
 	# 企業向けエディションで使用可
 	Write-Output (newSpecialFolder 'shell:::{AFDB1F70-2A4C-11D2-9039-00C04F8EEB3E}' 'Offline Files Folder')
-	# delegate folder that appears in Computer
-	Write-Output (newSpecialFolder 'shell:::{B155BDF8-02F0-451E-9A26-AE317CFD7779}')
 	# AppSuggestedLocations
 	Write-Output (newSpecialFolder 'shell:::{C57A6066-66A3-4D91-9EB9-41532179F0A5}')
 	# Win10 1709までサポート
@@ -808,6 +807,8 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:::{323CA680-C24D-4099-B94D-446DD2D7249E}')
 	# Common Places FS Folder (Links)
 	Write-Output (newSpecialFolder 'shell:::{D34A6CA6-62C2-4C34-8A7C-14709C1AD938}')
+	# delegate folder that appears in Computer (NetHood)
+	Write-Output (newSpecialFolder 'shell:::{B155BDF8-02F0-451E-9A26-AE317CFD7779}')
 	# printhood delegate folder (PrintHood)
 	Write-Output (newSpecialFolder 'shell:::{ED50FC29-B964-48A9-AFB3-15EBB9B97F36}')
 	# Fusion Cache (.NET Framework Assemblies)
@@ -1260,40 +1261,41 @@ function Show-SpecialFolder {
 	$dataGrid = [DataGrid]($window.FindName('dataGrid'))
 	$dataGrid.add_PreviewKeyDown(
 		{
-			param([object]$s, [KeyEventArgs]$e)
+			# インテリセンスを効かせるために型を明示している
+			$ke = [KeyEventArgs]$_
 
 			# Home/End単独で一番上/一番下に移動できるようにする
 			if (!([Keyboard]::Modifiers -band [ModifierKeys]::Control)) {
-				switch ($e.Key) {
+				switch ($ke.Key) {
 					'Home' { $wsh.SendKeys('^{HOME}') }
 					'End' { $wsh.SendKeys('^{END}') }
 				}
 			}
 
-			# $_.KeyだとAlt単独もAlt+Enterも'System'になるので[Keyboard]::IsKeyDown('Enter')を見ている
+			# $ke.KeyだとAlt単独もAlt+Enterも'System'になるので[Keyboard]::IsKeyDown('Enter')を見ている
 			if (![Keyboard]::IsKeyDown('Enter')) { return }
 
-			$source = [Control]$e.OriginalSource
+			$source = [Control]$ke.OriginalSource
 			if ($source -is [DataGridCell]) { $dataGrid.SelectedItem = $source.DataContext }
 
-			$e.Handled = $true
+			$ke.Handled = $true
 			selectInvokedCommand
 		}
 	)
 	$dataGrid.add_MouseDoubleClick(
 		{
-			param([object]$s, [MouseButtonEventArgs]$e)
+			$me = [MouseButtonEventArgs]$_
 
-			if ($e.OriginalSource -is [TextBlock]) { selectInvokedCommand }
+			if ($me.OriginalSource -is [TextBlock]) { selectInvokedCommand }
 		}
 	)
 	$dataGrid.add_ContextMenuOpening(
 		{
-			param([object]$s, [ContextMenuEventArgs]$e)
+			$ce = [ContextMenuEventArgs]$_
 
 			$item = $dataGrid.SelectedItem
 			if ($item -isnot [SpecialFolder]) {
-				$e.Handled = $true
+				$ce.Handled = $true
 				return
 			}
 

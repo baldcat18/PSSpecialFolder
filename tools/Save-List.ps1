@@ -1,5 +1,4 @@
 ﻿using namespace System.IO
-using namespace System.Management.Automation
 
 <#
 .SYNOPSIS
@@ -23,16 +22,17 @@ $module = Import-Module "$PSScriptRoot/../src/PSSpecialFolder.psd1" -PassThru
 $encoding = if ($PSVersionTable['PSVersion'] -ge '6.0') { 'utf8BOM' } else { 'utf8' }
 
 $shell = New-Object -ComObject Shell.Application
+$category = ''
+Get-SpecialFolder -Debug |
+	ForEach-Object -Begin {
+		[pscustomobject]@{ Information = "Module Version: $((Get-Module PSSpecialFolder).Version.ToString())" }
+	} {
+		if ($script:category -ne $_.Category) {
+			$script:category = $_.Category
+			[pscustomobject]@{ Information = "Category: $category" }
+		}
 
-& {
-	$InformationPreference = 'Continue'
-	Write-Information "Module Version: $((Get-Module PSSpecialFolder).Version.ToString())"
-	Get-SpecialFolder -Debug
-} 6>&1 |
-	ForEach-Object {
-		if ($_ -is [InformationRecord]) {
-			[pscustomobject]@{ Information = $_.ToString().Replace("`n", '') }
-		} elseif ($_.FolderItem) {
+		if ($_.FolderItem) {
 			[pscustomobject]@{
 				Name = if ($_.ClassName) { "$($_.Name) ($($_.ClassName))" } else { $_.Name }
 				Dir = $_.Dir

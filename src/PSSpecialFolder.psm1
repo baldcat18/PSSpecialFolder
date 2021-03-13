@@ -50,6 +50,7 @@ class SpecialFolder {
 	hidden [bool]$IsPropertiesChecked
 	hidden [__ComObject]$PropertiesVerb
 	hidden [__ComObject]$FolderItemForProperties
+	hidden [string]$Category
 	# Save-List.ps1で使用
 	hidden [string]$ClassName
 
@@ -172,6 +173,7 @@ $win10_20h2 = $osVersion -gt [version]'10.0.19042'
 }
 
 $shell = New-Object -ComObject Shell.Application
+$categoryName = ''
 $propertiesName = @($shell.NameSpace([Environment+SpecialFolder]::Desktop).Self.Verbs())[-1].Name
 
 function newSpecialFolder {
@@ -206,6 +208,7 @@ function newSpecialFolder {
 		FolderItem = $folderItem
 		PropertyTypes = if ($FolderItemForProperties -or !$isDirectory) { 'Verb' } else { 'StartProcess' }
 		FolderItemForProperties = $FolderItemForProperties
+		Category = $script:categoryName
 		ClassName = if ($Name) { $className }
 	}
 
@@ -225,6 +228,7 @@ function newShellCommand {
 	return [SpecialFolder]@{
 		Name = if ($Name) { $Name } else { $className }
 		Path = "shell:::$Clsid"
+		Category = $script:categoryName
 		ClassName = if ($Name) { $className }
 	}
 }
@@ -256,7 +260,7 @@ function getSpecialFolder {
 	$currentVersionKey = Get-Item 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion'
 	$appxKey = Get-Item 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Appx'
 
-	Write-Information 'Category: User''s Files'
+	$script:categoryName = 'User''s Files'
 
 	# shell:Profile
 	# shell:::{59031A47-3F72-44A7-89C5-5595FE6B30EE}
@@ -318,7 +322,7 @@ function getSpecialFolder {
 	# shell:UsersFilesFolder\{7D1D3A04-DEBB-4115-95CF-2F29DA2920DA}
 	Write-Output (newSpecialFolder 'shell:Searches')
 
-	Write-Information "`nCategory: OneDrive`n"
+	$script:categoryName = 'OneDrive'
 
 	# Win8.1ではMicrosoftアカウントでサインインする時に自動生成される
 	# shell:::{59031A47-3F72-44A7-89C5-5595FE6B30EE}\::{8E74D236-7F35-4720-B138-1FED0B85EA75} (Win8.1のみ)
@@ -330,7 +334,7 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder $(if ($win10) { 'shell:OneDrivePictures' } else { 'shell:SkyDrivePictures' }))
 	Write-Output (newSpecialFolder $(if ($win10) { 'shell:OneDriveCameraRoll' } else { 'shell:SkyDriveCameraRoll' }))
 
-	Write-Information "`nCategory: AppData`n"
+	$script:categoryName = 'AppData'
 
 	# %APPDATA%
 	Write-Output (newSpecialFolder 'shell:AppData')
@@ -353,8 +357,7 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:SendTo')
 	Write-Output (newSpecialFolder 'shell:Templates')
 
-	Write-Information "`nCategory: Libraries`n"
-
+	$script:categoryName = 'Libraries'
 
 	# shell:UsersLibrariesFolder
 	# shell:::{031E4825-7B94-4DC3-B131-E946B44C8DD5}
@@ -375,14 +378,14 @@ function getSpecialFolder {
 	# shell:::{031E4825-7B94-4DC3-B131-E946B44C8DD5}\{491E922F-5643-4AF4-A7EB-4E7A138D8174}
 	Write-Output (newSpecialFolder 'shell:VideosLibrary' -Path (getKnownFolderPath VideosLibrary))
 
-	Write-Information "`nCategory: StartMenu`n"
+	$script:categoryName = 'StartMenu'
 
 	Write-Output (newSpecialFolder 'shell:Start Menu')
 	Write-Output (newSpecialFolder 'shell:Programs')
 	Write-Output (newSpecialFolder 'shell:Administrative Tools')
 	Write-Output (newSpecialFolder 'shell:Startup')
 
-	Write-Information "`nCategory: LocalAppData`n"
+	$script:categoryName = 'LocalAppData'
 
 	# %LOCALAPPDATA%
 	Write-Output (newSpecialFolder 'shell:Local AppData')
@@ -429,7 +432,7 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:UserProgramFiles')
 	Write-Output (newSpecialFolder 'shell:UserProgramFilesCommon')
 
-	Write-Information "`nCategory: Public`n"
+	$script:categoryName = 'Public'
 
 	# shell:::{4336A54D-038B-4685-AB02-99BB52D3FB8B}
 	# shell:ThisDeviceFolder (Win10 1507から1607まで)
@@ -449,7 +452,7 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:CommonVideo')
 	Write-Output (newSpecialFolder 'shell:SampleVideos')
 
-	Write-Information "`nCategory: ProgramData`n"
+	$script:categoryName = 'ProgramData'
 
 	# %ALLUSERSPROFILE%
 	# %ProgramData%
@@ -465,7 +468,7 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:CommonRingtones')
 	Write-Output (newSpecialFolder 'shell:Common Templates')
 
-	Write-Information "`nCategory: CommonStartMenu`n"
+	$script:categoryName = 'CommonStartMenu'
 
 	Write-Output (newSpecialFolder 'shell:Common Start Menu')
 	Write-Output (newSpecialFolder 'shell:Common Programs')
@@ -475,7 +478,7 @@ function getSpecialFolder {
 	# Win10 1507からサポート
 	Write-Output (newSpecialFolder 'shell:Common Start Menu Places')
 
-	Write-Information "`nCategory: Windows`n"
+	$script:categoryName = 'Windows'
 
 	# %SystemRoot%
 	# %windir%
@@ -496,12 +499,12 @@ function getSpecialFolder {
 		Write-Output (newSpecialFolder $(if (!$isWow64) { 'shell:SystemX86' } else { 'shell:Windows\SysNative' } ) )
 	}
 
-	Write-Information "`nCategory: UserProfiles`n"
+	$script:categoryName = 'UserProfiles'
 
 	Write-Output (newSpecialFolder 'shell:UserProfiles')
 	Write-Output (newSpecialFolder (Get-ItemPropertyValue 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList' 'Default') 'DefaultUserProfile')
 
-	Write-Information "`nCategory: ProgramFiles`n"
+	$script:categoryName = 'ProgramFiles'
 
 	# shell:ProgramFilesX64 (64ビットアプリのみ)
 	# %ProgramFiles%
@@ -521,7 +524,7 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:ProgramFiles\Windows Sidebar\Gadgets' 'Default Gadgets')
 	Write-Output (newSpecialFolder 'shell:ProgramFiles\Windows Sidebar\Shared Gadgets')
 
-	Write-Information "`nCategory: Desktop / MyComputer`n"
+	$script:categoryName = 'Desktop / MyComputer'
 
 	Write-Output (newSpecialFolder 'shell:Desktop')
 	# shell:MyComputerFolderはWin10 1507/1511だとなぜかデスクトップになってしまう
@@ -549,7 +552,7 @@ function getSpecialFolder {
 	# Win10 1507からサポート
 	Write-Output (newSpecialFolder 'shell:::{F5FB2C77-0E2F-4A16-A381-3E560C68BC83}')
 
-	Write-Information "`nCategory: ControlPanel`n"
+	$script:categoryName = 'ControlPanel'
 
 	# Control Panel
 	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}')
@@ -670,7 +673,7 @@ function getSpecialFolder {
 	# All Tasks
 	Write-Output (newSpecialFolder 'shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}\::{ED7BA470-8E54-465E-825C-99712043E01C}')
 
-	Write-Information "`nCategory: OtherFolders`n"
+	$script:categoryName = 'OtherFolders'
 
 	# Hyper-V Remote File Browsing
 	# クライアントHyper-Vを有効にすると利用可
@@ -706,7 +709,7 @@ function getSpecialFolder {
 	if (!$IncludeShellCommand) { return }
 
 	# フォルダー以外のshellコマンド
-	Write-Information "`nCategory: ShellCommandsExceptFolders`n"
+	$script:categoryName = 'ShellCommandsExceptFolders'
 
 	# System
 	# Win10 20H2から
@@ -794,7 +797,7 @@ function getSpecialFolder {
 	if (!$IsDebugging) { return }
 
 	# 通常とは違う名前がエクスプローラーのタイトルバーに表示されるフォルダー
-	Write-Information "`nCategory: OtherNames`n"
+	$script:categoryName = 'OtherNames'
 
 	# Public (Win10 1607まで)
 	# UsersFilesFolder (Win10 1703から)
@@ -822,7 +825,7 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}\::{2E9E59C0-B437-4981-A647-9C34B9B90891}')
 
 	# エクスプローラーで開けないフォルダー
-	Write-Information "`nCategory: CantOpen`n"
+	$script:categoryName = 'CantOpen'
 
 	# CLSID_SearchFolder
 	Write-Output (newSpecialFolder 'shell:::{04731B67-D933-450A-90E6-4ACD2E9408FE}')
@@ -894,7 +897,7 @@ function getSpecialFolder {
 
 	# 上にあるのとは違うデータでフォルダーの情報を取得する
 	# CSIDLは扱わない
-	Write-Information "`nCategory: OtherDirs`n"
+	$script:categoryName = 'OtherDirs'
 
 	Write-Output (newSpecialFolder 'shell:Profile')
 	Write-Output (newSpecialFolder 'shell:Local Documents')
@@ -1020,7 +1023,7 @@ function getSpecialFolder {
 	Write-Output (newShellCommand '{E44E5D18-0652-4508-A4E2-8A090067BCB0}')
 
 	# フォルダーとして使えないshellコマンド
-	Write-Information "`nCategory: Unusable`n"
+	$script:categoryName = 'Unusable'
 
 	Write-Output (newSpecialFolder 'shell:MAPIFolder')
 	Write-Output (newSpecialFolder 'shell:RecordedTVLibrary')
@@ -1340,10 +1343,14 @@ function Show-SpecialFolder {
 	$properties.add_Click($showProperties)
 	$window.add_Loaded({ $window.Activate() })
 
-	$dataGrid.ItemsSource = Get-SpecialFolder @PSBoundParameters 6>&1 |
+	$category = ''
+	$dataGrid.ItemsSource = Get-SpecialFolder @PSBoundParameters |
 		ForEach-Object {
-			if ($_ -is [SpecialFolder]) { $_ }
-			else { [pscustomobject]@{ Name = $_.ToString().Replace("`n", ''); Path = $null } }
+			if ($category -ne $_.Category) {
+				$category = $_.Category
+				[pscustomobject]@{ Name = "Category: $($_.Category)"; Path = $null }
+			}
+			$_
 		}
 
 	$window.ShowDialog() > $null

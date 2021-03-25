@@ -164,8 +164,6 @@ $win10_20h2 = $osVersion -gt [version]'10.0.19042'
 	if ($win10) {
 		if ($osVersion -ge '10.0.18363.0') { return } # Win10 2004以降
 		if ($osVersion -eq '10.0.18363.0') { return } # Win10 1909 Enterprise
-		if ($osVersion -eq '10.0.17763.0') { return } # Win10 1809 Enterprise
-		if ($osVersion -eq '10.0.17134.0') { return } # Win10 1803 Enterprise
 
 		Write-Warning 'The PSSpecialFolder module supports Windows 10 Version 2004+.'
 	} elseif ($osVersion -ne '6.3.9600.0') {

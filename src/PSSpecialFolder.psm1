@@ -209,7 +209,7 @@ function newSpecialFolder {
 		FolderItem = $folderItem
 		PropertyTypes = if ($FolderItemForProperties -or !$isDirectory) { 'Verb' } else { 'StartProcess' }
 		FolderItemForProperties = $FolderItemForProperties
-		Category = $script:categoryName
+		Category = $categoryName
 		ClassName = if ($Name) { $className }
 	}
 
@@ -229,7 +229,7 @@ function newShellCommand {
 	return [SpecialFolder]@{
 		Name = if ($Name) { $Name } else { $className }
 		Path = "shell:::$Clsid"
-		Category = $script:categoryName
+		Category = $categoryName
 		ClassName = if ($Name) { $className }
 	}
 }

@@ -30,6 +30,7 @@ if ($powershellPath -notmatch '\\(?:powershell|pwsh)\.exe$') {
 		if ($isPwsh -and (Get-Command pwsh.exe -ErrorAction SilentlyContinue)) { 'pwsh.exe' } else { 'powershell.exe' }
 }
 
+$isWtInstalled = Test-Path -LiteralPath "${Env:LOCALAPPDATA}\Microsoft\WindowsApps\wt.exe" -PathType Leaf
 $isWslEnabled = Test-Path "$([Environment]::GetFolderPath('System'))/wsl.exe"
 $canFolderBeOpenedAsAdmin = `
 	!((Get-Item 'HKLM:/SOFTWARE/Classes/AppID/{CDCBCFCA-3CDC-436f-A4E2-0E02075250C2}').GetValue('RunAs'))
@@ -131,6 +132,14 @@ class FileFolder: SpecialFolder {
 	hidden [void]StartCmd([string]$Verb) {
 		Start-Process cmd.exe "/k pushd $($this.Path)" -Verb $Verb
 	}
+	hidden [void]StartWindowsTerminal([string]$Verb) {
+		$activity = 'FileFolder::WindowsTerminal{0}()' -f $(if ($Verb -eq 'runas') { 'AsAdmin' })
+		if (!$script:isWtInstalled) {
+			Write-Error -ErrorAction Stop `
+				-Category NotEnabled -CategoryActivity $activity -TargetObject $this `
+				-Exception ([InvalidOperationException]'Windows  Terminal is not installed.')
+		} else { Start-Process wt.exe "-d `"$($this.Path)`"" -Verb $Verb }
+	}
 	hidden [void]StartLinuxShell([string]$Verb) {
 		$activity = 'FileFolder::LinuxShell{0}()' -f $(if ($Verb -eq 'runas') { 'AsAdmin' })
 		if (!$script:win10) {
@@ -143,6 +152,16 @@ class FileFolder: SpecialFolder {
 				-Exception ([InvalidOperationException]'WSL is disabled.')
 		} else { Start-Process cmd.exe "/c pushd $($this.Path) & wsl.exe" -Verb $Verb }
 	}
+}
+
+Get-TypeData FileFolder | Remove-TypeData
+if ($isWtInstalled) {
+	Update-TypeData `
+		-TypeName FileFolder -MemberName WindowsTerminal -MemberType ScriptMethod `
+		-Value { $this.StartWindowsTerminal('open') }
+	Update-TypeData `
+		-TypeName FileFolder -MemberName WindowsTerminalAsAdmin -MemberType ScriptMethod `
+		-Value { $this.StartWindowsTerminal('runas') }
 }
 
 Add-Type -ErrorAction Stop `

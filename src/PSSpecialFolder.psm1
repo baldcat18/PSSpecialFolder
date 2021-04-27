@@ -1254,6 +1254,7 @@ function Show-SpecialFolder {
 	}
 
 	$openFolder = { $dataGrid.SelectedItem.Open() }
+	$startWt = { $dataGrid.SelectedItem.WindowsTerminal() }
 	$startPowershell = {
 		$item = $dataGrid.SelectedItem
 		if ($item -is [FileFolder]) { $item.Powershell() }
@@ -1270,6 +1271,9 @@ function Show-SpecialFolder {
 	$window = [Window][XamlReader]::Parse((Get-Content "$PSScriptRoot/window.xaml" -Raw))
 
 	$openAsAdmin = [MenuItem]$window.FindName('openAsAdmin')
+	$wt = [MenuItem]$window.FindName('wt')
+	$wtEx = [MenuItem]$window.FindName('wtEx')
+	$wtAsAdmin = [MenuItem]$window.FindName('wtAsAdmin')
 	$powershell = [MenuItem]$window.FindName('powershell')
 	$powershellEx = [MenuItem]$window.FindName('powershellEx')
 	$powershellAsAdmin = [MenuItem]$window.FindName('powershellAsAdmin')
@@ -1282,9 +1286,12 @@ function Show-SpecialFolder {
 	$properties = [MenuItem]$window.FindName('properties')
 
 	$openAsAdmin.Icon = getShieldImage
+	$wtAsAdmin.Icon = getShieldImage
 	$powershellAsAdmin.Icon = getShieldImage
 	$cmdAsAdmin.Icon = getShieldImage
 	$wslAsAdmin.Icon = getShieldImage
+
+	$isWtUsable = $isWtInstalled -and $PSBoundParameters['Debug']
 
 	$dataGrid = [DataGrid]($window.FindName('dataGrid'))
 	$dataGrid.add_PreviewKeyDown(
@@ -1328,6 +1335,8 @@ function Show-SpecialFolder {
 			}
 
 			$openAsAdmin.Visibility = 'Collapsed'
+			$wt.Visibility = 'Collapsed'
+			$wtEx.Visibility = 'Collapsed'
 			$powershell.Visibility = 'Collapsed'
 			$powershellEx.Visibility = 'Collapsed'
 			$cmd.Visibility = 'Collapsed'
@@ -1341,12 +1350,14 @@ function Show-SpecialFolder {
 				if ($item -is [FileFolder]) {
 					$cmdEx.Visibility = 'Visible'
 					$powershellEx.Visibility = 'Visible'
+					if ($isWtUsable) { $wtEx.Visibility = 'Visible' }
 					if ($isWslEnabled) { $wslEx.Visibility = 'Visible' }
 				}
 			} else {
 				if ($item -is [FileFolder]) {
 					$cmd.Visibility = 'Visible'
 					$powershell.Visibility = 'Visible'
+					if ($isWtUsable) { $wt.Visibility = 'Visible' }
 					if ($isWslEnabled) { $wsl.Visibility = 'Visible' }
 				}
 			}
@@ -1356,6 +1367,9 @@ function Show-SpecialFolder {
 	$window.FindName('open').add_Click($openFolder)
 	$window.FindName('copyAsPath').add_Click({ Set-Clipboard $dataGrid.SelectedItem.Path })
 	$openAsAdmin.add_Click({ invokeCommandAsAdmin { $dataGrid.SelectedItem.OpenAsAdmin() } })
+	$wt.add_Click($startWt)
+	$window.FindName('wtAsInvoker').add_Click($startWt)
+	$wtAsAdmin.add_Click({ invokeCommandAsAdmin { $dataGrid.SelectedItem.WindowsTerminalAsAdmin() } })
 	$powershell.add_Click($startPowershell)
 	$window.FindName('powershellAsInvoker').add_Click($startPowershell)
 	$powershellAsAdmin.add_Click({ invokeCommandAsAdmin { $dataGrid.SelectedItem.PowershellAsAdmin() } })

@@ -30,6 +30,7 @@ if ($powershellPath -notmatch '\\(?:powershell|pwsh)\.exe$') {
 		if ($isPwsh -and (Get-Command pwsh.exe -ErrorAction SilentlyContinue)) { 'pwsh.exe' } else { 'powershell.exe' }
 }
 
+$isWtInstalled = Test-Path -LiteralPath "${Env:LOCALAPPDATA}\Microsoft\WindowsApps\wt.exe" -PathType Leaf
 $isWslEnabled = Test-Path "$([Environment]::GetFolderPath('System'))/wsl.exe"
 $canFolderBeOpenedAsAdmin = `
 	!((Get-Item 'HKLM:/SOFTWARE/Classes/AppID/{CDCBCFCA-3CDC-436f-A4E2-0E02075250C2}').GetValue('RunAs'))
@@ -131,6 +132,14 @@ class FileFolder: SpecialFolder {
 	hidden [void]StartCmd([string]$Verb) {
 		Start-Process cmd.exe "/k pushd $($this.Path)" -Verb $Verb
 	}
+	hidden [void]StartWindowsTerminal([string]$Verb) {
+		$activity = 'FileFolder::WindowsTerminal{0}()' -f $(if ($Verb -eq 'runas') { 'AsAdmin' })
+		if (!$script:isWtInstalled) {
+			Write-Error -ErrorAction Stop `
+				-Category NotEnabled -CategoryActivity $activity -TargetObject $this `
+				-Exception ([InvalidOperationException]'Windows  Terminal is not installed.')
+		} else { Start-Process wt.exe "-d `"$($this.Path)`"" -Verb $Verb }
+	}
 	hidden [void]StartLinuxShell([string]$Verb) {
 		$activity = 'FileFolder::LinuxShell{0}()' -f $(if ($Verb -eq 'runas') { 'AsAdmin' })
 		if (!$script:win10) {
@@ -143,6 +152,16 @@ class FileFolder: SpecialFolder {
 				-Exception ([InvalidOperationException]'WSL is disabled.')
 		} else { Start-Process cmd.exe "/c pushd $($this.Path) & wsl.exe" -Verb $Verb }
 	}
+}
+
+Get-TypeData FileFolder | Remove-TypeData
+if ($isWtInstalled) {
+	Update-TypeData `
+		-TypeName FileFolder -MemberName WindowsTerminal -MemberType ScriptMethod `
+		-Value { $this.StartWindowsTerminal('open') }
+	Update-TypeData `
+		-TypeName FileFolder -MemberName WindowsTerminalAsAdmin -MemberType ScriptMethod `
+		-Value { $this.StartWindowsTerminal('runas') }
 }
 
 Add-Type -ErrorAction Stop `
@@ -1235,6 +1254,7 @@ function Show-SpecialFolder {
 	}
 
 	$openFolder = { $dataGrid.SelectedItem.Open() }
+	$startWt = { $dataGrid.SelectedItem.WindowsTerminal() }
 	$startPowershell = {
 		$item = $dataGrid.SelectedItem
 		if ($item -is [FileFolder]) { $item.Powershell() }
@@ -1251,6 +1271,9 @@ function Show-SpecialFolder {
 	$window = [Window][XamlReader]::Parse((Get-Content "$PSScriptRoot/window.xaml" -Raw))
 
 	$openAsAdmin = [MenuItem]$window.FindName('openAsAdmin')
+	$wt = [MenuItem]$window.FindName('wt')
+	$wtEx = [MenuItem]$window.FindName('wtEx')
+	$wtAsAdmin = [MenuItem]$window.FindName('wtAsAdmin')
 	$powershell = [MenuItem]$window.FindName('powershell')
 	$powershellEx = [MenuItem]$window.FindName('powershellEx')
 	$powershellAsAdmin = [MenuItem]$window.FindName('powershellAsAdmin')
@@ -1263,9 +1286,12 @@ function Show-SpecialFolder {
 	$properties = [MenuItem]$window.FindName('properties')
 
 	$openAsAdmin.Icon = getShieldImage
+	$wtAsAdmin.Icon = getShieldImage
 	$powershellAsAdmin.Icon = getShieldImage
 	$cmdAsAdmin.Icon = getShieldImage
 	$wslAsAdmin.Icon = getShieldImage
+
+	$isWtUsable = $isWtInstalled -and $PSBoundParameters['Debug']
 
 	$dataGrid = [DataGrid]($window.FindName('dataGrid'))
 	$dataGrid.add_PreviewKeyDown(
@@ -1309,6 +1335,8 @@ function Show-SpecialFolder {
 			}
 
 			$openAsAdmin.Visibility = 'Collapsed'
+			$wt.Visibility = 'Collapsed'
+			$wtEx.Visibility = 'Collapsed'
 			$powershell.Visibility = 'Collapsed'
 			$powershellEx.Visibility = 'Collapsed'
 			$cmd.Visibility = 'Collapsed'
@@ -1322,12 +1350,14 @@ function Show-SpecialFolder {
 				if ($item -is [FileFolder]) {
 					$cmdEx.Visibility = 'Visible'
 					$powershellEx.Visibility = 'Visible'
+					if ($isWtUsable) { $wtEx.Visibility = 'Visible' }
 					if ($isWslEnabled) { $wslEx.Visibility = 'Visible' }
 				}
 			} else {
 				if ($item -is [FileFolder]) {
 					$cmd.Visibility = 'Visible'
 					$powershell.Visibility = 'Visible'
+					if ($isWtUsable) { $wt.Visibility = 'Visible' }
 					if ($isWslEnabled) { $wsl.Visibility = 'Visible' }
 				}
 			}
@@ -1337,6 +1367,9 @@ function Show-SpecialFolder {
 	$window.FindName('open').add_Click($openFolder)
 	$window.FindName('copyAsPath').add_Click({ Set-Clipboard $dataGrid.SelectedItem.Path })
 	$openAsAdmin.add_Click({ invokeCommandAsAdmin { $dataGrid.SelectedItem.OpenAsAdmin() } })
+	$wt.add_Click($startWt)
+	$window.FindName('wtAsInvoker').add_Click($startWt)
+	$wtAsAdmin.add_Click({ invokeCommandAsAdmin { $dataGrid.SelectedItem.WindowsTerminalAsAdmin() } })
 	$powershell.add_Click($startPowershell)
 	$window.FindName('powershellAsInvoker').add_Click($startPowershell)
 	$powershellAsAdmin.add_Click({ invokeCommandAsAdmin { $dataGrid.SelectedItem.PowershellAsAdmin() } })

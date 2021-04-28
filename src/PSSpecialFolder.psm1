@@ -31,9 +31,9 @@ if ($powershellPath -notmatch '\\(?:powershell|pwsh)\.exe$') {
 }
 
 $isWtInstalled = Test-Path -LiteralPath "${Env:LOCALAPPDATA}\Microsoft\WindowsApps\wt.exe" -PathType Leaf
-$isWslEnabled = Test-Path "$([Environment]::GetFolderPath('System'))/wsl.exe"
+$isWslEnabled = Test-Path "$([Environment]::GetFolderPath('System'))\wsl.exe" -PathType Leaf
 $canFolderBeOpenedAsAdmin = `
-	!((Get-Item 'HKLM:/SOFTWARE/Classes/AppID/{CDCBCFCA-3CDC-436f-A4E2-0E02075250C2}').GetValue('RunAs'))
+	!((Get-Item 'HKLM:\SOFTWARE\Classes\AppID\{CDCBCFCA-3CDC-436f-A4E2-0E02075250C2}').GetValue('RunAs'))
 
 enum PropertyTypes {
 	None
@@ -72,7 +72,7 @@ class SpecialFolder {
 	}
 
 	hidden [void]StartExplorer([string]$Verb) {
-		Start-Process explorer.exe $(if ($this.Dir) { $this.Dir } else { $this.Path }) -Verb $Verb
+		Start-Process explorer.exe "`"$(if ($this.Dir) { $this.Dir } else { $this.Path })`"" -Verb $Verb
 	}
 	hidden [bool]HasProperties() {
 		if ($this.PropertyTypes -eq 'StartProcess') { return $true }
@@ -130,7 +130,7 @@ class FileFolder: SpecialFolder {
 		Start-Process @startArgs
 	}
 	hidden [void]StartCmd([string]$Verb) {
-		Start-Process cmd.exe "/k pushd $($this.Path)" -Verb $Verb
+		Start-Process cmd.exe "/k pushd `"$($this.Path)`"" -Verb $Verb
 	}
 	hidden [void]StartWindowsTerminal([string]$Verb) {
 		$activity = 'FileFolder::WindowsTerminal{0}()' -f $(if ($Verb -eq 'runas') { 'AsAdmin' })
@@ -150,7 +150,7 @@ class FileFolder: SpecialFolder {
 			Write-Error -ErrorAction Stop `
 				-Category NotEnabled -CategoryActivity $activity -TargetObject $this `
 				-Exception ([InvalidOperationException]'WSL is disabled.')
-		} else { Start-Process cmd.exe "/c pushd $($this.Path) & wsl.exe" -Verb $Verb }
+		} else { Start-Process cmd.exe "/c pushd `"$($this.Path)`" & wsl.exe" -Verb $Verb }
 	}
 }
 
@@ -1268,7 +1268,7 @@ function Show-SpecialFolder {
 	$startWsl = { $dataGrid.SelectedItem.LinuxShell() }
 	$showProperties = { invokeCommand { $dataGrid.SelectedItem.Properties() } }
 
-	$window = [Window][XamlReader]::Parse((Get-Content "$PSScriptRoot/window.xaml" -Raw))
+	$window = [Window][XamlReader]::Parse((Get-Content -LiteralPath "$PSScriptRoot\window.xaml" -Raw -ErrorAction Stop))
 
 	$openAsAdmin = [MenuItem]$window.FindName('openAsAdmin')
 	$wt = [MenuItem]$window.FindName('wt')

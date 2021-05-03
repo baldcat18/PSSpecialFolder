@@ -114,12 +114,6 @@ class FileFolder: SpecialFolder {
 	[void]CmdAsAdmin() {
 		$this.StartCmd('runas')
 	}
-	[void]LinuxShell() {
-		$this.StartLinuxShell('open')
-	}
-	[void]LinuxShellAsAdmin() {
-		$this.StartLinuxShell('runas')
-	}
 
 	hidden [void]StartPowershell([string]$Verb) {
 		$startArgs = @{
@@ -162,6 +156,14 @@ if ($isWtInstalled) {
 	Update-TypeData `
 		-TypeName FileFolder -MemberName WindowsTerminalAsAdmin -MemberType ScriptMethod `
 		-Value { $this.StartWindowsTerminal('runas') }
+}
+if ($isWslEnabled) {
+	Update-TypeData `
+		-TypeName FileFolder -MemberName LinuxShell -MemberType ScriptMethod `
+		-Value { $this.StartLinuxShell('open') }
+	Update-TypeData `
+		-TypeName FileFolder -MemberName LinuxShellAsAdmin -MemberType ScriptMethod `
+		-Value { $this.StartLinuxShell('runas') }
 }
 
 Add-Type -ErrorAction Stop `

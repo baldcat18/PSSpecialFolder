@@ -127,24 +127,10 @@ class FileFolder: SpecialFolder {
 		Start-Process cmd.exe "/k pushd `"$($this.Path)`"" -Verb $Verb
 	}
 	hidden [void]StartWindowsTerminal([string]$Verb) {
-		$activity = 'FileFolder::WindowsTerminal{0}()' -f $(if ($Verb -eq 'runas') { 'AsAdmin' })
-		if (!$script:isWtInstalled) {
-			Write-Error -ErrorAction Stop `
-				-Category NotEnabled -CategoryActivity $activity -TargetObject $this `
-				-Exception ([InvalidOperationException]'Windows  Terminal is not installed.')
-		} else { Start-Process wt.exe "-d `"$($this.Path)`"" -Verb $Verb }
+		Start-Process wt.exe "-d `"$($this.Path)`"" -Verb $Verb
 	}
 	hidden [void]StartLinuxShell([string]$Verb) {
-		$activity = 'FileFolder::LinuxShell{0}()' -f $(if ($Verb -eq 'runas') { 'AsAdmin' })
-		if (!$script:win10) {
-			Write-Error -ErrorAction Stop `
-				-Category NotImplemented -CategoryActivity $activity -TargetObject $this `
-				-Exception ([InvalidOperationException]'WSL is not supported.')
-		} elseif (!$script:isWslEnabled) {
-			Write-Error -ErrorAction Stop `
-				-Category NotEnabled -CategoryActivity $activity -TargetObject $this `
-				-Exception ([InvalidOperationException]'WSL is disabled.')
-		} else { Start-Process cmd.exe "/c pushd `"$($this.Path)`" & wsl.exe" -Verb $Verb }
+		Start-Process cmd.exe "/c pushd `"$($this.Path)`" & wsl.exe" -Verb $Verb
 	}
 }
 

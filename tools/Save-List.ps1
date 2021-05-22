@@ -1,5 +1,4 @@
 ﻿using namespace System.IO
-using namespace System.Management.Automation
 
 <#
 .SYNOPSIS
@@ -20,45 +19,46 @@ $now = Get-Date -Format yyyyMMdd-HHmmss
 Get-Module PSSpecialFolder | Remove-Module
 
 $module = Import-Module "$PSScriptRoot/../src/PSSpecialFolder.psd1" -PassThru
-$encoding = if ($PSVersionTable['PSVersion'] -ge '6.0') { 'utf8BOM' } else { 'utf8' }
+
+$txtPath = "$PSScriptRoot/$osVersion $cpu $edition $now.txt"
+$outFileArgs = @{
+	LiteralPath = $txtPath
+	Encoding = if ($PSVersionTable['PSVersion'] -ge '6.0') { 'utf8BOM' } else { 'utf8' }
+}
+"Module Version: $((Get-Module PSSpecialFolder).Version.ToString())`n" | Out-File @outFileArgs
 
 $shell = New-Object -ComObject Shell.Application
-
-& {
-	$InformationPreference = 'Continue'
-	Write-Information "Module Version: $((Get-Module PSSpecialFolder).Version.ToString())"
-	Get-SpecialFolder -Debug
-} 6>&1 |
+Get-SpecialFolder -Debug |
 	ForEach-Object {
-		if ($_ -is [InformationRecord]) {
-			[pscustomobject]@{ Information = $_.ToString().Replace("`n", '') }
-		} elseif ($_.FolderItem) {
+		$name = if ($_.ClassName) { "$($_.Name) ($($_.ClassName))" } else { $_.Name }
+		if ($_.FolderItem) {
 			[pscustomobject]@{
-				Name = if ($_.ClassName) { "$($_.Name) ($($_.ClassName))" } else { $_.Name }
+				Name = $name
 				Dir = $_.Dir
 				Path = $_.Path
 				DisplayName = $_.FolderItem.Name
 				Type = $_.FolderItem.Type
+				Category = $_.Category
 			}
 		} else {
 			$folder = try { $shell.NameSpace($_.Path) } catch { $null }
 			if ($folder) { Write-Warning "$($folder.Self.Name): $($_.Path)" }
-			[pscustomobject]@{
-				Name = if ($_.ClassName) { "$($_.Name) ($($_.ClassName))" } else { $_.Name }
-				Path = $_.Path
-			}
+			[pscustomobject]@{ Name = $name; Path = $_.Path; Category = $_.Category }
 		}
 	} |
-	ConvertTo-Html -As List -Head '<meta charset="UTF-8">' |
-	# ps5.1では必要 (https://github.com/PowerShell/PowerShell/pull/2184)
-	ForEach-Object { $_.ToString().Replace('<td>*:</td>', '<td>Information:</td>') } |
-	Out-File "$PSScriptRoot/$osVersion $cpu $edition $now.html" -Encoding $encoding
+	Format-List -GroupBy Category |
+	oss -Width ([int]::MaxValue) |
+	Where-Object {
+		# カテゴリ名は Format-List が表示するのでオブジェクトごとに入れる必要はない
+		$_ -cnotmatch '^Cate'
+	} |
+	Out-File @outFileArgs -Append
 
 Remove-Module $module
 
 Push-Location $PSScriptRoot
 $txtFiles = `
-	[FileInfo[]]@(Get-ChildItem "$osVersion $cpu $edition *.html" | Sort-Object -Property Name -Descending)
+	[FileInfo[]]@(Get-ChildItem "$osVersion $cpu $edition *.txt" | Sort-Object -Property Name -Descending)
 if ($txtFiles.Length -ge 2) {
 	# fc.exeはUTF-8が文字化けするのでdiff.exeがあるならこちらを使う
 	$diff = "$($Env:ProgramFiles)/Git/usr/bin/diff.exe"

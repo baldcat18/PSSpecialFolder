@@ -1,3 +1,4 @@
-*.html
 /.vscode/
 /src/LICENSE.txt
+/tools/*.html
+/tools/*.txt

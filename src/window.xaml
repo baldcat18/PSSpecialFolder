@@ -25,6 +25,11 @@
 					<MenuItem Header="_Open" Name="open" />
 					<MenuItem Header="Path _as copy" Name="copyAsPath" />
 					<MenuItem Header="Open as _Administrator" Name="openAsAdmin" />
+					<MenuItem Header="Open in Windows Terminal" Name="wt" />
+					<MenuItem Header="Windows Terminal" Name="wtEx">
+						<MenuItem Header="Open _here" Name="wtAsInvoker" />
+						<MenuItem Header="Open here as _Administrator" Name="wtAsAdmin" />
+					</MenuItem>
 					<MenuItem Header="Open Power_Shell here" Name="powershell" />
 					<MenuItem Header="Power_Shell" Name="powershellEx">
 						<MenuItem Header="Open _here" Name="powershellAsInvoker" />

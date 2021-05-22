@@ -12,19 +12,15 @@ $shell = New-Object -ComObject Shell.Application
 $propertiesName = @($shell.NameSpace([Environment+SpecialFolder]::Desktop).Self.Verbs())[-1].Name
 
 @(
-	# True になるはず
-	[Environment+SpecialFolder]::UserProfile
-	'shell:InternetFolder'
+	[ordered]@{ Folder = [Environment+SpecialFolder]::UserProfile; Expected = $true }
+	[ordered]@{ Folder = 'shell:InternetFolder'; Expected = $true }
 
-	# False になるはず
-	'shell:UsersFilesFolder'
-	'shell:Profile'
-	'shell:Libraries'
-	'shell:UsersLibrariesFolder'
+	[ordered]@{ Folder = 'shell:UsersFilesFolder'; Expected = $false }
+	[ordered]@{ Folder = 'shell:Profile'; Expected = $false }
+	[ordered]@{ Folder = 'shell:Libraries'; Expected = $false }
+	[ordered]@{ Folder = 'shell:UsersLibrariesFolder'; Expected = $false }
 ) |
 	ForEach-Object {
-		return [pscustomobject]@{
-			Folder = $_
-			HasProperties = @($shell.NameSpace($_).Self.Verbs())[-1].Name -eq $propertiesName
-		}
+		$_['Actual'] = @($shell.NameSpace($_['Folder']).Self.Verbs())[-1].Name -eq $propertiesName
+		return [pscustomobject]$_
 	}

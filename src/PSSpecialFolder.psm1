@@ -30,9 +30,10 @@ if ($powershellPath -notmatch '\\(?:powershell|pwsh)\.exe$') {
 		if ($isPwsh -and (Get-Command pwsh.exe -ErrorAction SilentlyContinue)) { 'pwsh.exe' } else { 'powershell.exe' }
 }
 
-$isWslEnabled = Test-Path "$([Environment]::GetFolderPath('System'))/wsl.exe"
+$isWtInstalled = Test-Path -LiteralPath "${Env:LOCALAPPDATA}\Microsoft\WindowsApps\wt.exe" -PathType Leaf
+$isWslEnabled = Test-Path "$([Environment]::GetFolderPath('System'))\wsl.exe" -PathType Leaf
 $canFolderBeOpenedAsAdmin = `
-	!((Get-Item 'HKLM:/SOFTWARE/Classes/AppID/{CDCBCFCA-3CDC-436f-A4E2-0E02075250C2}').GetValue('RunAs'))
+	!((Get-Item 'HKLM:\SOFTWARE\Classes\AppID\{CDCBCFCA-3CDC-436f-A4E2-0E02075250C2}').GetValue('RunAs'))
 
 enum PropertyTypes {
 	None
@@ -50,6 +51,7 @@ class SpecialFolder {
 	hidden [bool]$IsPropertiesChecked
 	hidden [__ComObject]$PropertiesVerb
 	hidden [__ComObject]$FolderItemForProperties
+	hidden [string]$Category
 	# Save-List.ps1で使用
 	hidden [string]$ClassName
 
@@ -70,7 +72,7 @@ class SpecialFolder {
 	}
 
 	hidden [void]StartExplorer([string]$Verb) {
-		Start-Process explorer.exe $(if ($this.Dir) { $this.Dir } else { $this.Path }) -Verb $Verb
+		Start-Process explorer.exe "`"$(if ($this.Dir) { $this.Dir } else { $this.Path })`"" -Verb $Verb
 	}
 	hidden [bool]HasProperties() {
 		if ($this.PropertyTypes -eq 'StartProcess') { return $true }
@@ -112,12 +114,6 @@ class FileFolder: SpecialFolder {
 	[void]CmdAsAdmin() {
 		$this.StartCmd('runas')
 	}
-	[void]LinuxShell() {
-		$this.StartLinuxShell('open')
-	}
-	[void]LinuxShellAsAdmin() {
-		$this.StartLinuxShell('runas')
-	}
 
 	hidden [void]StartPowershell([string]$Verb) {
 		$startArgs = @{
@@ -128,20 +124,32 @@ class FileFolder: SpecialFolder {
 		Start-Process @startArgs
 	}
 	hidden [void]StartCmd([string]$Verb) {
-		Start-Process cmd.exe "/k pushd $($this.Path)" -Verb $Verb
+		Start-Process cmd.exe "/k pushd `"$($this.Path)`"" -Verb $Verb
+	}
+	hidden [void]StartWindowsTerminal([string]$Verb) {
+		Start-Process wt.exe "-d `"$($this.Path)`"" -Verb $Verb
 	}
 	hidden [void]StartLinuxShell([string]$Verb) {
-		$activity = 'FileFolder::LinuxShell{0}()' -f $(if ($Verb -eq 'runas') { 'AsAdmin' })
-		if (!$script:win10) {
-			Write-Error -ErrorAction Stop `
-				-Category NotImplemented -CategoryActivity $activity -TargetObject $this `
-				-Exception ([InvalidOperationException]'WSL is not supported.')
-		} elseif (!$script:isWslEnabled) {
-			Write-Error -ErrorAction Stop `
-				-Category NotEnabled -CategoryActivity $activity -TargetObject $this `
-				-Exception ([InvalidOperationException]'WSL is disabled.')
-		} else { Start-Process cmd.exe "/c pushd $($this.Path) & wsl.exe" -Verb $Verb }
+		Start-Process cmd.exe "/c pushd `"$($this.Path)`" & wsl.exe" -Verb $Verb
 	}
+}
+
+Get-TypeData FileFolder | Remove-TypeData
+if ($isWtInstalled) {
+	Update-TypeData `
+		-TypeName FileFolder -MemberName WindowsTerminal -MemberType ScriptMethod `
+		-Value { $this.StartWindowsTerminal('open') }
+	Update-TypeData `
+		-TypeName FileFolder -MemberName WindowsTerminalAsAdmin -MemberType ScriptMethod `
+		-Value { $this.StartWindowsTerminal('runas') }
+}
+if ($isWslEnabled) {
+	Update-TypeData `
+		-TypeName FileFolder -MemberName LinuxShell -MemberType ScriptMethod `
+		-Value { $this.StartLinuxShell('open') }
+	Update-TypeData `
+		-TypeName FileFolder -MemberName LinuxShellAsAdmin -MemberType ScriptMethod `
+		-Value { $this.StartLinuxShell('runas') }
 }
 
 Add-Type -ErrorAction Stop `
@@ -159,20 +167,24 @@ $win10_1803 = $osVersion -gt [version]'10.0.17134'
 $win10_20h2 = $osVersion -gt [version]'10.0.19042'
 
 
-& {
-	if ($win10) {
-		if ($osVersion -ge '10.0.18363.0') { return } # Win10 1909以降
-		if ($osVersion -eq '10.0.17763.0') { return } # Win10 1809 Enterprise
-		if ($osVersion -eq '10.0.17134.0') { return } # Win10 1803 Enterprise
-
-		Write-Warning 'The PSSpecialFolder module supports Windows 10 Version 1909+.'
-	} elseif ($osVersion -ne '6.3.9600.0') {
-		Write-Warning 'The PSSpecialFolder module supports Windows 8.1 and 10.'
+switch ($osVersion) {
+	{ $_ -ge '10.0.18363.0' } { break } # Win10 2004以降
+	'10.0.18363.0' { break } # Win10 1909 Enterprise
+	'6.3.9600.0' { break } # Win8.1
+	default {
+		if ($win10) {
+			Write-Warning 'The PSSpecialFolder module supports Windows 10 Version 2004+.'
+		} else {
+			Write-Warning 'The PSSpecialFolder module supports Windows 8.1 and 10.'
+		}
 	}
 }
 
 $shell = New-Object -ComObject Shell.Application
 $propertiesName = @($shell.NameSpace([Environment+SpecialFolder]::Desktop).Self.Verbs())[-1].Name
+
+# PSSpecialFolder.Tests.ps1を実行するときに変数未定義エラーにならないようにするためのダミー
+$categoryName = ''
 
 function newSpecialFolder {
 	[OutputType([SpecialFolder])]
@@ -206,6 +218,7 @@ function newSpecialFolder {
 		FolderItem = $folderItem
 		PropertyTypes = if ($FolderItemForProperties -or !$isDirectory) { 'Verb' } else { 'StartProcess' }
 		FolderItemForProperties = $FolderItemForProperties
+		Category = $categoryName
 		ClassName = if ($Name) { $className }
 	}
 
@@ -225,6 +238,7 @@ function newShellCommand {
 	return [SpecialFolder]@{
 		Name = if ($Name) { $Name } else { $className }
 		Path = "shell:::$Clsid"
+		Category = $categoryName
 		ClassName = if ($Name) { $className }
 	}
 }
@@ -247,6 +261,9 @@ function getKnownFolderPath {
 }
 
 function getSpecialFolder {
+	# $categoryNameはnewSpecialFolderやnewShellCommand関数で参照する
+	[SuppressMessage('PSUseDeclaredVarsMoreThanAssignments', 'categoryName')]
+
 	[OutputType([SpecialFolder[]])]
 	param ([bool]$IncludeShellCommand, [bool]$IsDebugging)
 
@@ -256,7 +273,7 @@ function getSpecialFolder {
 	$currentVersionKey = Get-Item 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion'
 	$appxKey = Get-Item 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Appx'
 
-	Write-Information 'Category: User''s Files'
+	$categoryName = 'User''s Files'
 
 	# shell:Profile
 	# shell:::{59031A47-3F72-44A7-89C5-5595FE6B30EE}
@@ -318,7 +335,7 @@ function getSpecialFolder {
 	# shell:UsersFilesFolder\{7D1D3A04-DEBB-4115-95CF-2F29DA2920DA}
 	Write-Output (newSpecialFolder 'shell:Searches')
 
-	Write-Information "`nCategory: OneDrive`n"
+	$categoryName = 'OneDrive'
 
 	# Win8.1ではMicrosoftアカウントでサインインする時に自動生成される
 	# shell:::{59031A47-3F72-44A7-89C5-5595FE6B30EE}\::{8E74D236-7F35-4720-B138-1FED0B85EA75} (Win8.1のみ)
@@ -330,7 +347,7 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder $(if ($win10) { 'shell:OneDrivePictures' } else { 'shell:SkyDrivePictures' }))
 	Write-Output (newSpecialFolder $(if ($win10) { 'shell:OneDriveCameraRoll' } else { 'shell:SkyDriveCameraRoll' }))
 
-	Write-Information "`nCategory: AppData`n"
+	$categoryName = 'AppData'
 
 	# %APPDATA%
 	Write-Output (newSpecialFolder 'shell:AppData')
@@ -353,8 +370,7 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:SendTo')
 	Write-Output (newSpecialFolder 'shell:Templates')
 
-	Write-Information "`nCategory: Libraries`n"
-
+	$categoryName = 'Libraries'
 
 	# shell:UsersLibrariesFolder
 	# shell:::{031E4825-7B94-4DC3-B131-E946B44C8DD5}
@@ -375,14 +391,14 @@ function getSpecialFolder {
 	# shell:::{031E4825-7B94-4DC3-B131-E946B44C8DD5}\{491E922F-5643-4AF4-A7EB-4E7A138D8174}
 	Write-Output (newSpecialFolder 'shell:VideosLibrary' -Path (getKnownFolderPath VideosLibrary))
 
-	Write-Information "`nCategory: StartMenu`n"
+	$categoryName = 'StartMenu'
 
 	Write-Output (newSpecialFolder 'shell:Start Menu')
 	Write-Output (newSpecialFolder 'shell:Programs')
 	Write-Output (newSpecialFolder 'shell:Administrative Tools')
 	Write-Output (newSpecialFolder 'shell:Startup')
 
-	Write-Information "`nCategory: LocalAppData`n"
+	$categoryName = 'LocalAppData'
 
 	# %LOCALAPPDATA%
 	Write-Output (newSpecialFolder 'shell:Local AppData')
@@ -429,7 +445,7 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:UserProgramFiles')
 	Write-Output (newSpecialFolder 'shell:UserProgramFilesCommon')
 
-	Write-Information "`nCategory: Public`n"
+	$categoryName = 'Public'
 
 	# shell:::{4336A54D-038B-4685-AB02-99BB52D3FB8B}
 	# shell:ThisDeviceFolder (Win10 1507から1607まで)
@@ -449,7 +465,7 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:CommonVideo')
 	Write-Output (newSpecialFolder 'shell:SampleVideos')
 
-	Write-Information "`nCategory: ProgramData`n"
+	$categoryName = 'ProgramData'
 
 	# %ALLUSERSPROFILE%
 	# %ProgramData%
@@ -465,7 +481,7 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:CommonRingtones')
 	Write-Output (newSpecialFolder 'shell:Common Templates')
 
-	Write-Information "`nCategory: CommonStartMenu`n"
+	$categoryName = 'CommonStartMenu'
 
 	Write-Output (newSpecialFolder 'shell:Common Start Menu')
 	Write-Output (newSpecialFolder 'shell:Common Programs')
@@ -475,7 +491,7 @@ function getSpecialFolder {
 	# Win10 1507からサポート
 	Write-Output (newSpecialFolder 'shell:Common Start Menu Places')
 
-	Write-Information "`nCategory: Windows`n"
+	$categoryName = 'Windows'
 
 	# %SystemRoot%
 	# %windir%
@@ -496,12 +512,12 @@ function getSpecialFolder {
 		Write-Output (newSpecialFolder $(if (!$isWow64) { 'shell:SystemX86' } else { 'shell:Windows\SysNative' } ) )
 	}
 
-	Write-Information "`nCategory: UserProfiles`n"
+	$categoryName = 'UserProfiles'
 
 	Write-Output (newSpecialFolder 'shell:UserProfiles')
 	Write-Output (newSpecialFolder (Get-ItemPropertyValue 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList' 'Default') 'DefaultUserProfile')
 
-	Write-Information "`nCategory: ProgramFiles`n"
+	$categoryName = 'ProgramFiles'
 
 	# shell:ProgramFilesX64 (64ビットアプリのみ)
 	# %ProgramFiles%
@@ -521,7 +537,7 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:ProgramFiles\Windows Sidebar\Gadgets' 'Default Gadgets')
 	Write-Output (newSpecialFolder 'shell:ProgramFiles\Windows Sidebar\Shared Gadgets')
 
-	Write-Information "`nCategory: Desktop / MyComputer`n"
+	$categoryName = 'Desktop / MyComputer'
 
 	Write-Output (newSpecialFolder 'shell:Desktop')
 	# shell:MyComputerFolderはWin10 1507/1511だとなぜかデスクトップになってしまう
@@ -549,7 +565,7 @@ function getSpecialFolder {
 	# Win10 1507からサポート
 	Write-Output (newSpecialFolder 'shell:::{F5FB2C77-0E2F-4A16-A381-3E560C68BC83}')
 
-	Write-Information "`nCategory: ControlPanel`n"
+	$categoryName = 'ControlPanel'
 
 	# Control Panel
 	Write-Output (newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}')
@@ -670,7 +686,7 @@ function getSpecialFolder {
 	# All Tasks
 	Write-Output (newSpecialFolder 'shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}\::{ED7BA470-8E54-465E-825C-99712043E01C}')
 
-	Write-Information "`nCategory: OtherFolders`n"
+	$categoryName = 'OtherFolders'
 
 	# Hyper-V Remote File Browsing
 	# クライアントHyper-Vを有効にすると利用可
@@ -706,7 +722,7 @@ function getSpecialFolder {
 	if (!$IncludeShellCommand) { return }
 
 	# フォルダー以外のshellコマンド
-	Write-Information "`nCategory: ShellCommandsExceptFolders`n"
+	$categoryName = 'ShellCommandsExceptFolders'
 
 	# System
 	# Win10 20H2から
@@ -794,7 +810,7 @@ function getSpecialFolder {
 	if (!$IsDebugging) { return }
 
 	# 通常とは違う名前がエクスプローラーのタイトルバーに表示されるフォルダー
-	Write-Information "`nCategory: OtherNames`n"
+	$categoryName = 'OtherNames'
 
 	# Public (Win10 1607まで)
 	# UsersFilesFolder (Win10 1703から)
@@ -822,7 +838,7 @@ function getSpecialFolder {
 	Write-Output (newSpecialFolder 'shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}\::{2E9E59C0-B437-4981-A647-9C34B9B90891}')
 
 	# エクスプローラーで開けないフォルダー
-	Write-Information "`nCategory: CantOpen`n"
+	$categoryName = 'CantOpen'
 
 	# CLSID_SearchFolder
 	Write-Output (newSpecialFolder 'shell:::{04731B67-D933-450A-90E6-4ACD2E9408FE}')
@@ -894,7 +910,7 @@ function getSpecialFolder {
 
 	# 上にあるのとは違うデータでフォルダーの情報を取得する
 	# CSIDLは扱わない
-	Write-Information "`nCategory: OtherDirs`n"
+	$categoryName = 'OtherDirs'
 
 	Write-Output (newSpecialFolder 'shell:Profile')
 	Write-Output (newSpecialFolder 'shell:Local Documents')
@@ -1020,7 +1036,7 @@ function getSpecialFolder {
 	Write-Output (newShellCommand '{E44E5D18-0652-4508-A4E2-8A090067BCB0}')
 
 	# フォルダーとして使えないshellコマンド
-	Write-Information "`nCategory: Unusable`n"
+	$categoryName = 'Unusable'
 
 	Write-Output (newSpecialFolder 'shell:MAPIFolder')
 	Write-Output (newSpecialFolder 'shell:RecordedTVLibrary')
@@ -1226,6 +1242,7 @@ function Show-SpecialFolder {
 	}
 
 	$openFolder = { $dataGrid.SelectedItem.Open() }
+	$startWt = { $dataGrid.SelectedItem.WindowsTerminal() }
 	$startPowershell = {
 		$item = $dataGrid.SelectedItem
 		if ($item -is [FileFolder]) { $item.Powershell() }
@@ -1239,9 +1256,12 @@ function Show-SpecialFolder {
 	$startWsl = { $dataGrid.SelectedItem.LinuxShell() }
 	$showProperties = { invokeCommand { $dataGrid.SelectedItem.Properties() } }
 
-	$window = [Window][XamlReader]::Parse((Get-Content "$PSScriptRoot/window.xaml" -Raw))
+	$window = [Window][XamlReader]::Parse((Get-Content -LiteralPath "$PSScriptRoot\window.xaml" -Raw -ErrorAction Stop))
 
 	$openAsAdmin = [MenuItem]$window.FindName('openAsAdmin')
+	$wt = [MenuItem]$window.FindName('wt')
+	$wtEx = [MenuItem]$window.FindName('wtEx')
+	$wtAsAdmin = [MenuItem]$window.FindName('wtAsAdmin')
 	$powershell = [MenuItem]$window.FindName('powershell')
 	$powershellEx = [MenuItem]$window.FindName('powershellEx')
 	$powershellAsAdmin = [MenuItem]$window.FindName('powershellAsAdmin')
@@ -1254,9 +1274,12 @@ function Show-SpecialFolder {
 	$properties = [MenuItem]$window.FindName('properties')
 
 	$openAsAdmin.Icon = getShieldImage
+	$wtAsAdmin.Icon = getShieldImage
 	$powershellAsAdmin.Icon = getShieldImage
 	$cmdAsAdmin.Icon = getShieldImage
 	$wslAsAdmin.Icon = getShieldImage
+
+	$isWtUsable = $isWtInstalled -and $PSBoundParameters['Debug']
 
 	$dataGrid = [DataGrid]($window.FindName('dataGrid'))
 	$dataGrid.add_PreviewKeyDown(
@@ -1300,6 +1323,8 @@ function Show-SpecialFolder {
 			}
 
 			$openAsAdmin.Visibility = 'Collapsed'
+			$wt.Visibility = 'Collapsed'
+			$wtEx.Visibility = 'Collapsed'
 			$powershell.Visibility = 'Collapsed'
 			$powershellEx.Visibility = 'Collapsed'
 			$cmd.Visibility = 'Collapsed'
@@ -1313,12 +1338,14 @@ function Show-SpecialFolder {
 				if ($item -is [FileFolder]) {
 					$cmdEx.Visibility = 'Visible'
 					$powershellEx.Visibility = 'Visible'
+					if ($isWtUsable) { $wtEx.Visibility = 'Visible' }
 					if ($isWslEnabled) { $wslEx.Visibility = 'Visible' }
 				}
 			} else {
 				if ($item -is [FileFolder]) {
 					$cmd.Visibility = 'Visible'
 					$powershell.Visibility = 'Visible'
+					if ($isWtUsable) { $wt.Visibility = 'Visible' }
 					if ($isWslEnabled) { $wsl.Visibility = 'Visible' }
 				}
 			}
@@ -1328,6 +1355,9 @@ function Show-SpecialFolder {
 	$window.FindName('open').add_Click($openFolder)
 	$window.FindName('copyAsPath').add_Click({ Set-Clipboard $dataGrid.SelectedItem.Path })
 	$openAsAdmin.add_Click({ invokeCommandAsAdmin { $dataGrid.SelectedItem.OpenAsAdmin() } })
+	$wt.add_Click($startWt)
+	$window.FindName('wtAsInvoker').add_Click($startWt)
+	$wtAsAdmin.add_Click({ invokeCommandAsAdmin { $dataGrid.SelectedItem.WindowsTerminalAsAdmin() } })
 	$powershell.add_Click($startPowershell)
 	$window.FindName('powershellAsInvoker').add_Click($startPowershell)
 	$powershellAsAdmin.add_Click({ invokeCommandAsAdmin { $dataGrid.SelectedItem.PowershellAsAdmin() } })
@@ -1340,10 +1370,14 @@ function Show-SpecialFolder {
 	$properties.add_Click($showProperties)
 	$window.add_Loaded({ $window.Activate() })
 
-	$dataGrid.ItemsSource = Get-SpecialFolder @PSBoundParameters 6>&1 |
+	$category = ''
+	$dataGrid.ItemsSource = Get-SpecialFolder @PSBoundParameters |
 		ForEach-Object {
-			if ($_ -is [SpecialFolder]) { $_ }
-			else { [pscustomobject]@{ Name = $_.ToString().Replace("`n", ''); Path = $null } }
+			if ($category -ne $_.Category) {
+				$category = $_.Category
+				[pscustomobject]@{ Name = "Category: $($_.Category)"; Path = $null }
+			}
+			$_
 		}
 
 	$window.ShowDialog() > $null

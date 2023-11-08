@@ -1,2 +1,35 @@
-# PSSpecialFolder
-Gets the special folders for Windows. This function supports the virtual folders, e.g. Control Panel and Recycle Bin.
+﻿# PSSpecialFolder
+
+Windows で使われている特殊フォルダーのフルパスを取得する PowerShell モジュールです。
+
+## 最小 PowerShell バージョン
+
+5.1
+
+## サポートする Windows バージョン
+
+Windows 10 バージョン 22H2<br>
+Windows 11 バージョン 22H2、23H2
+
+Windows 10 バージョン 21H2、Windows 11 バージョン 21H2 でも動作すると思いますが、動作確認していません。
+
+## 提供する関数
+
+### Get-SpecialFolder
+
+Windows で使われている特殊フォルダーのフルパスを取得します。
+
+### Show-SpecialFolder
+
+Windows で使われている特殊フォルダーのフルパスをダイアログ上に表示します。
+
+ダブルクリックすると、そのフォルダーを開きます。
+
+右クリックすると、コンテキストメニューが表示されます。
+フォルダーのパスをクリップボードにコピー、PowerShell やコマンドプロンプトの起動、フォルダーのプロパティの表示ができます。
+
+この関数は WPF を利用しているので、PowerShell Core 6.x では使用できません。
+
+## インストール
+
+Install-Module -Name PSSpecialFolder

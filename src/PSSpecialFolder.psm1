@@ -11,11 +11,9 @@ using namespace System.Windows.Interop
 using namespace System.Windows.Markup
 using namespace Win32API
 
-param([bool]$Develop)
+param()
 
 Set-StrictMode -Version Latest
-
-if ($Develop) { $DebugPreference = 'Inquire' }
 
 if ([Environment]::OSVersion.Platform -ne 'Win32NT') {
 	throw [PlatformNotSupportedException]'The PSSpecialFolder module supports Windows only.'
@@ -27,12 +25,13 @@ class OS {
 	static [bool]$Win10_1607 # Win10 1607以降
 	static [bool]$Win10_1803 # Win10 1803以降
 	static [bool]$Win10_20h2 # Win10 20H2以降
-	static [bool]$Win10_21h2_Only # Win10 21H2のみ
 	static [bool]$Win10_22h2_Only # Win10 22H2のみ
 	static [bool]$Win11 # Win11以降
 	static [bool]$Win11_21h2_Only # Win11 21H2のみ
 	static [bool]$Win11_22h2 # Win11 22H2以降
+	static [bool]$Win11_22h2_Only # Win11 22H2のみ
 	static [bool]$Win11_22h2_moment4 # Win11 22H2 Moment4以降
+	static [bool]$Win11_23h2 # Win11 23H2以降
 
 	static OS() {
 		$os = & $PSScriptRoot\Get-OSVersion.ps1
@@ -43,20 +42,19 @@ class OS {
 		[OS]::Win10_1607 = $version -gt '10.0.14393'
 		[OS]::Win10_1803 = $version -gt '10.0.17134'
 		[OS]::Win10_20h2 = $version -gt '10.0.19042'
-		[OS]::Win10_21h2_Only = $verString -eq '10.0.19044'
 		[OS]::Win10_22h2_Only = $verString -eq '10.0.19045'
 		[OS]::Win11 = $version -gt '10.0.22000'
-		[OS]::Win11_21h2_Only = $verString -eq '10.0.22000'
 		[OS]::Win11_22h2 = $version -gt '10.0.22621'
+		[OS]::Win11_22h2_Only = $version -eq '10.0.22621'
 		[OS]::Win11_22h2_moment4 = $version -ge '10.0.22621.2361'
+		[OS]::Win11_23h2 = $version -gt '10.0.22631'
 	}
 }
 
 do {
-	if ([OS]::Win11_22h2) { break }
-	if ([OS]::Win11_21h2_Only) { break }
+	if ([OS]::Win11_23h2) { break }
+	if ([OS]::Win11_22h2_Only) { break }
 	if ([OS]::Win10_22h2_Only) { break }
-	if ([OS]::Win10_21h2_Only) { break }
 
 	if ([OS]::Win10) {
 		Write-Warning 'The PSSpecialFolder module supports Windows 10 Version 22H2+.'
@@ -282,6 +280,7 @@ function getSpecialFolder {
 	$isShfusionRegistered = (Test-Path 'HKLM:\SOFTWARE\Classes\CLSID\{1D2680C9-0E2A-469d-B787-065558BC7D43}') `
 		-and ($shell.NameSpace('shell:Windows\assembly').Items().Count() -eq 1)
 
+	#region Category: User's Files
 	$categoryName = 'User''s Files'
 
 	# shell:Profile
@@ -290,24 +289,33 @@ function getSpecialFolder {
 	# %USERPROFILE%
 	# %HOMEDRIVE%%HOMEPATH%
 	newSpecialFolder 'shell:UsersFilesFolder' -FolderItemForProperties $shell.NameSpace([Environment+SpecialFolder]::UserProfile).Self
-	# shell:MyComputerFolder\::{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}
+	# shell:MyComputerFolder\::{B4BFCC3A-DB2C-424C-B029-7FE99A87C641} (Win11 23H2まで)
+	# shell:::{B4BFCC3A-DB2C-424C-B029-7FE99A87C641} (Win11 24H2から)
 	newSpecialFolder 'shell:ThisPCDesktopFolder' 'DesktopFolder'
-	# shell:Local Documents / shell:MyComputerFolder\::{D3162B92-9365-467A-956B-92703ACA08AF}
+	# shell:Local Documents / shell:MyComputerFolder\::{D3162B92-9365-467A-956B-92703ACA08AF} (Win11 23H2まで)
+	# shell:::{D3162B92-9365-467A-956B-92703ACA08AF} (Win11 24H2から)
 	# shell:::{450D8FBA-AD25-11D0-98A8-0800361B1103} ([My Documents])
-	# shell:MyComputerFolder\::{A8CDFF1C-4878-43BE-B5FD-F8091C1C60D0}
+	# shell:MyComputerFolder\::{A8CDFF1C-4878-43BE-B5FD-F8091C1C60D0} (Win11 23H2まで)
+	# shell:::{A8CDFF1C-4878-43BE-B5FD-F8091C1C60D0} (Win11 24H2から)
 	newSpecialFolder 'shell:Personal' 'My Documents'
-	# shell:Local Downloads / shell:MyComputerFolder\::{088E3905-0323-4B02-9826-5D99428E115F}
-	# shell:MyComputerFolder\::{374DE290-123F-4565-9164-39C4925E467B}
+	# shell:Local Downloads / shell:MyComputerFolder\::{088E3905-0323-4B02-9826-5D99428E115F} (Win11 23H2まで)
+	# shell:::{088E3905-0323-4B02-9826-5D99428E115F} (Win11 24H2から)
+	# shell:MyComputerFolder\::{374DE290-123F-4565-9164-39C4925E467B} (Win11 23H2まで)
+	# shell:::{374DE290-123F-4565-9164-39C4925E467B} (Win11 24H2から)
 	newSpecialFolder 'shell:Downloads'
 
-	# shell:Local Music / shell:MyComputerFolder\::{3DFDF296-DBEC-4FB4-81D1-6A3438BCF4DE}
-	# shell:MyComputerFolder\::{1CF1260C-4DD0-4EBB-811F-33C572699FDE}
+	# shell:Local Music / shell:MyComputerFolder\::{3DFDF296-DBEC-4FB4-81D1-6A3438BCF4DE} (Win11 23H2まで)
+	# shell:::{3DFDF296-DBEC-4FB4-81D1-6A3438BCF4DE} (Win11 24H2から)
+	# shell:MyComputerFolder\::{1CF1260C-4DD0-4EBB-811F-33C572699FDE} (Win11 23H2まで)
+	# shell:::{1CF1260C-4DD0-4EBB-811F-33C572699FDE} (Win11 24H2から)
 	newSpecialFolder 'shell:My Music'
 	# WMPやGroove ミュージックで再生リストを作成する時に自動生成される
 	newSpecialFolder 'shell:Playlists'
 
-	# shell:Local Pictures / shell:MyComputerFolder\::{24AD3AD4-A569-4530-98E1-AB02F9417AA8}
-	# shell:MyComputerFolder\::{3ADD1653-EB32-4CB0-BBD7-DFA0ABB5ACCA}
+	# shell:Local Pictures / shell:MyComputerFolder\::{24AD3AD4-A569-4530-98E1-AB02F9417AA8} (Win11 23H2まで)
+	# shell:::{24AD3AD4-A569-4530-98E1-AB02F9417AA8} (Win11 24H2から)
+	# shell:MyComputerFolder\::{3ADD1653-EB32-4CB0-BBD7-DFA0ABB5ACCA} (Win11 23H2まで)
+	# shell:::{3ADD1653-EB32-4CB0-BBD7-DFA0ABB5ACCA} (Win11 24H2から)
 	newSpecialFolder 'shell:My Pictures'
 	# カメラアプリで写真や動画を撮影する時に自動生成される
 	newSpecialFolder 'shell:Camera Roll'
@@ -316,8 +324,10 @@ function getSpecialFolder {
 	newSpecialFolder 'shell:Screenshots'
 	newSpecialFolder 'shell:PhotoAlbums'
 
-	# shell:Local Videos / shell:MyComputerFolder\::{F86FA3AB-70D2-4FC7-9C99-FCBF05467F3A}
-	# shell:MyComputerFolder\::{A0953C92-50DC-43BF-BE83-3742FED03C9C}
+	# shell:Local Videos / shell:MyComputerFolder\::{F86FA3AB-70D2-4FC7-9C99-FCBF05467F3A} (Win11 23H2まで)
+	# shell:::{F86FA3AB-70D2-4FC7-9C99-FCBF05467F3A} (Win11 24H2から)
+	# shell:MyComputerFolder\::{A0953C92-50DC-43BF-BE83-3742FED03C9C} (Win11 23H2まで)
+	# shell:::{A0953C92-50DC-43BF-BE83-3742FED03C9C} (Win11 24H2から)
 	newSpecialFolder 'shell:My Video'
 	# ゲームバーで動画やスクリーンショットを保存する時に自動生成される
 	newSpecialFolder 'shell:Captures'
@@ -339,7 +349,9 @@ function getSpecialFolder {
 	newSpecialFolder 'shell:SavedGames'
 	# shell:UsersFilesFolder\{7D1D3A04-DEBB-4115-95CF-2F29DA2920DA}
 	newSpecialFolder 'shell:Searches'
+	#endregion
 
+	#region Category: OneDrive
 	$categoryName = 'OneDrive'
 
 	# shell:::{59031A47-3F72-44A7-89C5-5595FE6B30EE}\::{018D5C66-4533-4307-9B53-224DE2ED1FE6}
@@ -349,7 +361,9 @@ function getSpecialFolder {
 	newSpecialFolder 'shell:OneDriveMusic'
 	newSpecialFolder 'shell:OneDrivePictures'
 	newSpecialFolder 'shell:OneDriveCameraRoll'
+	#endregion
 
+	#region Category: AppData
 	$categoryName = 'AppData'
 
 	# %APPDATA%
@@ -372,7 +386,9 @@ function getSpecialFolder {
 	newSpecialFolder 'shell:Recent'
 	newSpecialFolder 'shell:SendTo'
 	newSpecialFolder 'shell:Templates'
+	#endregion
 
+	#region Category: Libraries
 	$categoryName = 'Libraries'
 
 	# shell:UsersLibrariesFolder
@@ -391,14 +407,18 @@ function getSpecialFolder {
 	newSpecialFolder 'shell:SavedPicturesLibrary' -Path (getKnownFolderPath SavedPicturesLibrary)
 	# shell:::{031E4825-7B94-4DC3-B131-E946B44C8DD5}\{491E922F-5643-4AF4-A7EB-4E7A138D8174}
 	newSpecialFolder 'shell:VideosLibrary' -Path (getKnownFolderPath VideosLibrary)
+	#endregion
 
+	#region Category: StartMenu
 	$categoryName = 'StartMenu'
 
 	newSpecialFolder 'shell:Start Menu'
 	newSpecialFolder 'shell:Programs'
 	newSpecialFolder 'shell:Administrative Tools'
 	newSpecialFolder 'shell:Startup'
+	#endregion
 
+	#region Category: LocalAppData
 	$categoryName = 'LocalAppData'
 
 	# %LOCALAPPDATA%
@@ -447,7 +467,9 @@ function getSpecialFolder {
 	newSpecialFolder 'shell:UserProgramFilesCommon'
 
 	newSpecialFolder 'shell:LocalAppDataLow'
+	#endregion
 
+	#region Category: Public
 	$categoryName = 'Public'
 
 	# shell:::{4336A54D-038B-4685-AB02-99BB52D3FB8B}
@@ -467,7 +489,9 @@ function getSpecialFolder {
 	newSpecialFolder 'shell:SamplePictures'
 	newSpecialFolder 'shell:CommonVideo'
 	newSpecialFolder 'shell:SampleVideos'
+	#endregion
 
+	#region Category: ProgramData
 	$categoryName = 'ProgramData'
 
 	# %ALLUSERSPROFILE%
@@ -482,7 +506,9 @@ function getSpecialFolder {
 	newSpecialFolder 'shell:Retail Demo'
 	newSpecialFolder 'shell:CommonRingtones'
 	newSpecialFolder 'shell:Common Templates'
+	#endregion
 
+	#region Category: CommonStartMenu
 	$categoryName = 'CommonStartMenu'
 
 	newSpecialFolder 'shell:Common Start Menu'
@@ -491,7 +517,9 @@ function getSpecialFolder {
 	newSpecialFolder 'shell:Common Administrative Tools'
 	newSpecialFolder 'shell:Common Startup'
 	newSpecialFolder 'shell:Common Start Menu Places'
+	#endregion
 
+	#region Category: Windows
 	$categoryName = 'Windows'
 
 	# %SystemRoot%
@@ -515,12 +543,16 @@ function getSpecialFolder {
 	if ($is64bitOS) {
 		newSpecialFolder $(if (!$isWow64) { 'shell:SystemX86' } else { 'shell:Windows\SysNative' } )
 	}
+	#endregion
 
+	#region Category: UserProfiles
 	$categoryName = 'UserProfiles'
 
 	newSpecialFolder 'shell:UserProfiles'
 	newSpecialFolder (getItemValue (getItem 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList') 'Default') 'DefaultUserProfile'
+	#endregion
 
+	#region Category: ProgramFiles
 	$categoryName = 'ProgramFiles'
 
 	# shell:ProgramFilesX64 (64ビットアプリのみ)
@@ -541,7 +573,9 @@ function getSpecialFolder {
 		if (!$isWow64) { newSpecialFolder 'shell:ProgramFilesCommonX86' }
 		else { newSpecialFolder (getItemValue $currentVersionKey 'CommonW6432Dir') 'ProgramFilesCommonX64' }
 	}
+	#endregion
 
+	#region Category: Desktop / MyComputer
 	$categoryName = 'Desktop / MyComputer'
 
 	newSpecialFolder 'shell:Desktop'
@@ -573,7 +607,9 @@ function getSpecialFolder {
 	# (windows.storage.dll)
 	# Win11 22H2から
 	if ([OS]::Win11_22h2) { newSpecialFolder 'shell:::{F874310E-B6B7-47DC-BC84-B9E6B38F5903}' 'Home' }
+	#endregion
 
+	#region Category: ControlPanel
 	$categoryName = 'ControlPanel'
 
 	# Control Panel
@@ -612,7 +648,7 @@ function getSpecialFolder {
 	# Windows Firewall (Win10 1703まで)
 	# Windows Defender Firewall (Win10 1709から)
 	newSpecialFolder 'shell:ControlPanelFolder\::{4026492F-2F69-46B8-B9BF-5654FC07E423}'
-	# Speech Recognition
+	# Speech Recognition (Win11 23H2まで)
 	newSpecialFolder 'shell:ControlPanelFolder\::{58E3C745-D971-4081-9034-86E34B30836A}'
 	# User Accounts
 	newSpecialFolder 'shell:ControlPanelFolder\::{60632754-C523-4B62-B45C-4172DA012619}'
@@ -689,7 +725,9 @@ function getSpecialFolder {
 	if ([OS]::Win10_20h2 -and ![OS]::Win11) { newSpecialFolder 'shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}\::{BB06C0E4-D293-4F75-8A90-CB05B6477EEE}' }
 	# All Tasks
 	newSpecialFolder 'shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}\::{ED7BA470-8E54-465E-825C-99712043E01C}'
+	#endregion
 
+	#region Category: OtherFolders
 	$categoryName = 'OtherFolders'
 
 	# Hyper-V Remote File Browsing
@@ -697,6 +735,9 @@ function getSpecialFolder {
 	newSpecialFolder 'shell:::{0907616E-F5E6-48D8-9D61-A91C3D28106D}'
 	# Cabinet Shell Folder
 	newSpecialFolder 'shell:::{0CD7A5C0-9F37-11CE-AE65-08002B2E1262}'
+	# MS Graph Shared File Folder
+	# Win11 22H2/23H2 Moment5からサポート
+	newSpecialFolder 'shell:::{18F546F6-B34B-4B30-B4C6-5E88BED8BD84}'
 	# Network
 	newSpecialFolder 'shell:::{208D2C60-3AEA-1069-A2D7-08002B30309D}'
 	# DLNA Media Servers Data Source
@@ -733,9 +774,11 @@ function getSpecialFolder {
 	newSpecialFolder 'shell:Games'
 	# Previous Versions Results Folder
 	newSpecialFolder 'shell:::{F8C2AB3B-17BC-41DA-9758-339D7DBF2D88}'
+	#endregion
 
 	if (!$IncludeShellCommand) { return }
 
+	#region Category: ShellCommandsExceptFolders
 	# フォルダー以外のshellコマンド
 	$categoryName = 'ShellCommandsExceptFolders'
 
@@ -764,6 +807,9 @@ function getSpecialFolder {
 	newShellCommand '{2559A1F7-21D7-11D4-BDAF-00C04F60B9F0}'
 	# (shell32.dll#SearchCommand)
 	newShellCommand '{2559A1F8-21D7-11D4-BDAF-00C04F60B9F0}' 'Search'
+	# Learn about this picture
+	# Windows スポットライトを有効にすると利用可
+	newShellCommand '{2CC5CA98-6485-489A-920E-B3E88A6CCCE3}'
 	# Show Desktop
 	# Win+Dと同じ
 	newShellCommand '{3080F90D-D7AD-11D9-BD98-0000947B0257}'
@@ -825,357 +871,7 @@ function getSpecialFolder {
 	newShellCommand '{F2DDFC82-8F12-4CDD-B7DC-D4FE1425AA4D}'
 	# Pen and Touch Control Panel
 	newShellCommand '{F82DF8F7-8B9F-442E-A48C-818EA735FF9B}'
-
-	if (!$Develop) { return }
-
-	# 通常とは違う名前がエクスプローラーのタイトルバーに表示されるフォルダー
-	$categoryName = 'OtherNames'
-
-	# Fusion Cache (.NET Framework Assemblies)
-	# .NET3.5まで
-	# CLSIDを使ってアクセスするとエクスプローラーがクラッシュする
-	newSpecialFolder 'shell:::{1D2680C9-0E2A-469D-B787-065558BC7D43}'
-	# Favorites (Links)
-	newSpecialFolder 'shell:::{323CA680-C24D-4099-B94D-446DD2D7249E}'
-	# My Documents (Documents)
-	newSpecialFolder 'shell:::{450D8FBA-AD25-11D0-98A8-0800361B1103}' 'My Documents'
-	# Recent Items Instance Folder (Recent files)
-	# Win11 22H2ではすべてのファイルが表示されない
-	newSpecialFolder 'shell:::{4564B25E-30CD-4787-82BA-39E73A750B14}'
-	# delegate folder that appears in Computer (NetHood)
-	newSpecialFolder 'shell:::{B155BDF8-02F0-451E-9A26-AE317CFD7779}'
-	# Common Places FS Folder (Links)
-	newSpecialFolder 'shell:::{D34A6CA6-62C2-4C34-8A7C-14709C1AD938}'
-	# printhood delegate folder (PrintHood)
-	newSpecialFolder 'shell:::{ED50FC29-B964-48A9-AFB3-15EBB9B97F36}'
-	# Public (Win10 1607まで)
-	# UsersFilesFolder (Win10 1703から)
-	# shell:::{5B934B42-522B-4C34-BBFE-37A3EF7B9C90} (Win10 1607まで)
-	# shell:::{F8278C54-A712-415B-B593-B77A2BE0DDA9} (Win10 1703から)
-	newSpecialFolder 'shell:ThisDeviceFolder'
-	# Sync Setup Folder (SyncSetupFolder)
-	newSpecialFolder 'shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}\::{2E9E59C0-B437-4981-A647-9C34B9B90891}'
-
-	# エクスプローラーで開けないフォルダー
-	$categoryName = 'CantOpen'
-
-	# CLSID_SearchFolder
-	newSpecialFolder 'shell:::{04731B67-D933-450A-90E6-4ACD2E9408FE}'
-	# Manage Wireless Networks
-	newSpecialFolder 'shell:::{1FA9085F-25A2-489B-85D4-86326EEDCD87}'
-	# Sync Center Conflict Folder
-	newSpecialFolder 'shell:::{289978AC-A101-4341-A817-21EBA7FD046D}'
-	# FileHistoryDataSource
-	# ファイル履歴を有効にすると利用可
-	newSpecialFolder 'shell:::{2F6CE85C-F9EE-43CA-90C7-8A9BD53A2467}'
-	# LayoutFolder
-	newSpecialFolder 'shell:::{328B0346-7EAF-4BBE-A479-7CB88A095F5B}'
-	# Explorer Browser Results Folder
-	newSpecialFolder 'shell:::{418C8B64-5463-461D-88E0-75E2AFA3C6FA}'
-	# PC Settings
-	newSpecialFolder 'shell:::{5ED4F38C-D3FF-4D61-B506-6820320AEBFE}'
-	# Microsoft FTP Folder
-	newSpecialFolder 'shell:::{63DA6EC0-2E98-11CF-8D82-444553540000}'
-	# CLSID_AppInstanceFolder
-	newSpecialFolder 'shell:::{64693913-1C21-4F30-A98F-4E52906D3B56}'
-	# Sync Results Folder
-	newSpecialFolder 'shell:::{71D99464-3B6B-475C-B241-E15883207529}'
-	# Programs Folder
-	# Win10 1511まで
-	newSpecialFolder 'shell:::{7BE9D83C-A729-4D97-B5A7-1B7313C39E0A}'
-	# Programs Folder and Fast Items
-	# Win10 1511まで
-	newSpecialFolder 'shell:::{865E5E76-AD83-4DCA-A109-50DC2113CE9A}'
-	newSpecialFolder 'shell:InternetFolder'
-	# File Backup Index
-	newSpecialFolder 'shell:::{877CA5AC-CB41-4842-9C69-9136E42D47E2}'
-	# (mssvp.dll)
-	newSpecialFolder 'shell:::{89D83576-6BD1-4C86-9454-BEB04E94C819}' 'Microsoft Office Outlook'
-	# DXP
-	newSpecialFolder 'shell:::{8FD8B88D-30E1-4F25-AC2B-553D3D65F0EA}'
-	# Enhanced Storage Data Source
-	newSpecialFolder 'shell:::{9113A02D-00A3-46B9-BC5F-9C04DADDD5D7}'
-	# CLSID_StartMenuLauncherProviderFolder
-	newSpecialFolder 'shell:::{98F275B4-4FFF-11E0-89E2-7B86DFD72085}'
-	# IE RSS Feeds Folder
-	newSpecialFolder 'shell:::{9A096BB5-9DC3-4D1C-8526-C3CBF991EA4E}'
-	# CLSID_StartMenuCommandingProviderFolder
-	newSpecialFolder 'shell:::{A00EE528-EBD9-48B8-944A-8942113D46AC}'
-	# Previous Versions Results Delegate Folder
-	newSpecialFolder 'shell:::{A3C3D402-E56C-4033-95F7-4885E80B0111}'
-	# Library Folder
-	newSpecialFolder 'shell:::{A5A3563A-5755-4A6F-854E-AFA3230B199F}'
-	# Win10までサポート
-	newSpecialFolder 'shell:HomeGroupCurrentUserFolder'
-	# Sync Results Delegate Folder
-	newSpecialFolder 'shell:::{BC48B32F-5910-47F5-8570-5074A8A5636A}'
-	# (mssvp.dll)
-	newSpecialFolder 'shell:::{BD7A2E7B-21CB-41B2-A086-B309680C6B7E}' 'Offline Files'
-	# DLNA Content Directory Data Source
-	newSpecialFolder 'shell:::{D2035EDF-75CB-4EF1-95A7-410D9EE17170}'
-	# CLSID_StartMenuProviderFolder
-	newSpecialFolder 'shell:::{DAF95313-E44D-46AF-BE1B-CBACEA2C3065}'
-	# CLSID_StartMenuPathCompleteProviderFolder
-	newSpecialFolder 'shell:::{E345F35F-9397-435C-8F95-4E922C26259E}'
-	# Sync Center Conflict Delegate Folder
-	newSpecialFolder 'shell:::{E413D040-6788-4C22-957E-175D1C513A34}'
-	# Shell DocObject Viewer
-	newSpecialFolder 'shell:::{E7E4BC40-E76A-11CE-A9BB-00AA004AE837}'
-	# StreamBackedFolder
-	newSpecialFolder 'shell:::{EDC978D6-4D53-4B2F-A265-5805674BE568}'
-	# Sync Setup Delegate Folder
-	newSpecialFolder 'shell:::{F1390A9A-A3F4-4E5D-9C5F-98F3BD8D935C}'
-	newSpecialFolder 'shell:CSCFolder'
-
-	# 上にあるのとは違うデータでフォルダーの情報を取得する
-	# CSIDLは扱わない
-	$categoryName = 'OtherDirs'
-
-	newSpecialFolder 'shell:Profile'
-	newSpecialFolder 'shell:Local Documents'
-	newSpecialFolder 'shell:Local Downloads'
-	newSpecialFolder 'shell:Local Music'
-	newSpecialFolder 'shell:Local Pictures'
-	newSpecialFolder 'shell:Local Videos'
-	newSpecialFolder 'shell:UsersFilesFolder\{56784854-C6CB-462B-8169-88E350ACB882}' 'Contacts'
-	newSpecialFolder 'shell:UsersFilesFolder\{BFB9D5E0-C6A9-404C-B2B2-AE6DB6AF4968}' 'Links'
-	newSpecialFolder 'shell:UsersFilesFolder\{4C5C32FF-BB9D-43B0-B5B4-2D72E54EAAA4}' 'SavedGames'
-	newSpecialFolder 'shell:UsersFilesFolder\{7D1D3A04-DEBB-4115-95CF-2F29DA2920DA}' 'Searches'
-	newSpecialFolder 'shell:UsersLibrariesFolder'
-	newSpecialFolder 'shell:Libraries\{2B20DF75-1EDA-4039-8097-38798227D5B7}' 'CameraRollLibrary'
-	newSpecialFolder 'shell:Libraries\{7B0DB17D-9CD2-4A93-9733-46CC89022E7C}' 'DocumentsLibrary'
-	newSpecialFolder 'shell:Libraries\{2112AB0A-C86A-4FFE-A368-0DE96E47012E}' 'MusicLibrary'
-	newSpecialFolder 'shell:Libraries\{A990AE9F-A03B-4E80-94BC-9912D7504104}' 'PicturesLibrary'
-	newSpecialFolder 'shell:Libraries\{E25B5812-BE88-4BD9-94B0-29233477B6C3}' 'SavedPicturesLibrary'
-	newSpecialFolder 'shell:Libraries\{491E922F-5643-4AF4-A7EB-4E7A138D8174}' 'VideosLibrary'
-	# 64ビットアプリのみ
-	newSpecialFolder 'shell:ProgramFilesX64'
-	# 64ビットアプリのみ
-	newSpecialFolder 'shell:ProgramFilesCommonX64'
-
-	newSpecialFolder "$Env:USERPROFILE" '%USERPROFILE%'
-	newSpecialFolder "${Env:HOMEDRIVE}${Env:HOMEPATH}" '%HOMEDRIVE%%HOMEPATH%'
-	newSpecialFolder "$Env:OneDrive" '%OneDrive%'
-	newSpecialFolder "$Env:APPDATA" '%APPDATA%'
-	newSpecialFolder "$Env:LOCALAPPDATA" '%LOCALAPPDATA%'
-	newSpecialFolder "$Env:PUBLIC" '%PUBLIC%'
-	newSpecialFolder "$Env:ALLUSERSPROFILE" '%ALLUSERSPROFILE%'
-	newSpecialFolder "$Env:ProgramData" '%ProgramData%'
-	newSpecialFolder "$Env:SystemRoot" '%SystemRoot%'
-	newSpecialFolder "$Env:windir" '%windir%'
-	newSpecialFolder "$Env:ProgramFiles" '%ProgramFiles%'
-	newSpecialFolder "$Env:CommonProgramFiles" '%CommonProgramFiles%'
-
-	# OneDrive
-	newSpecialFolder 'shell:::{018D5C66-4533-4307-9B53-224DE2ED1FE6}'
-	# UsersLibraries
-	newSpecialFolder 'shell:::{031E4825-7B94-4DC3-B131-E946B44C8DD5}'
-	newSpecialFolder 'shell:::{088E3905-0323-4B02-9826-5D99428E115F}' 'Local Downloads'
-	# Win10 1709から
-	newSpecialFolder 'shell:::{0DB7E03F-FC29-4DC6-9020-FF41B59E513A}' '3D Object'
-	# Install New Programs
-	newSpecialFolder 'shell:::{15EAE92E-F17A-4431-9F28-805E482DAFD4}'
-	newSpecialFolder 'shell:::{1CF1260C-4DD0-4EBB-811F-33C572699FDE}' 'My Music'
-	# User Pinned
-	newSpecialFolder 'shell:::{1F3427C8-5C10-4210-AA03-2EE45287D668}'
-	# This PC
-	newSpecialFolder 'shell:::{20D04FE0-3AEA-1069-A2D8-08002B30309D}'
-	# All Control Panel Items
-	newSpecialFolder 'shell:::{21EC2020-3AEA-1069-A2DD-08002B30309D}'
-	# Printers
-	newSpecialFolder 'shell:::{2227A280-3AEA-1069-A2DE-08002B30309D}'
-	newSpecialFolder 'shell:::{24AD3AD4-A569-4530-98E1-AB02F9417AA8}' 'Local Pictures'
-	newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\0' 'All Control Panel Items'
-	newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\4' 'Hardware and Sound'
-	newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\10' 'System and Security'
-	newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\11' 'All Control Panel Items'
-	newSpecialFolder 'shell:::{374DE290-123F-4565-9164-39C4925E467B}' 'Downloads'
-	newSpecialFolder 'shell:::{3ADD1653-EB32-4CB0-BBD7-DFA0ABB5ACCA}' 'My Pictures'
-	newSpecialFolder 'shell:::{3DFDF296-DBEC-4FB4-81D1-6A3438BCF4DE}' 'Local Music'
-	# Applications
-	newSpecialFolder 'shell:::{4234D49B-0245-4DF3-B780-3893943456E1}'
-	# Public Folder
-	newSpecialFolder 'shell:::{4336A54D-038B-4685-AB02-99BB52D3FB8B}'
-	# UsersFiles
-	newSpecialFolder 'shell:::{59031A47-3F72-44A7-89C5-5595FE6B30EE}'
-	# This Device
-	newSpecialFolder 'shell:::{5B934B42-522B-4C34-BBFE-37A3EF7B9C90}'
-	# Recycle Bin
-	newSpecialFolder 'shell:::{645FF040-5081-101B-9F08-00AA002F954E}'
-	# (windows.storage.dll)
-	# Win11 22H2では[Pinned files(ピン留めされたファイル)]カテゴリがない旧タイプ
-	if ([OS]::Win11_22h2) { newSpecialFolder 'shell:::{679F85CB-0220-4080-B29B-5540CC05AAB6}' 'Home' }
-	# Programs and Features
-	newSpecialFolder 'shell:::{7B81BE6A-CE2B-4676-A29E-EB907A5126C5}'
-	# Network Connections
-	newSpecialFolder 'shell:::{7007ACC7-3202-11D1-AAD2-00805FC1270E}'
-	# Remote Printers
-	newSpecialFolder 'shell:::{863AA9FD-42DF-457B-8E4D-0DE1B8015C60}'
-	# Internet Folder
-	newSpecialFolder 'shell:::{871C5380-42A0-1069-A2EA-08002B30309D}'
-	# CLSID_SearchHome
-	newSpecialFolder 'shell:::{9343812E-1C37-4A49-A12E-4B2D810D956B}'
-	# Sync Center Folder
-	newSpecialFolder 'shell:::{9C73F5E5-7AE7-4E32-A8E8-8D23B85255BF}'
-	# Network Connections
-	newSpecialFolder 'shell:::{992CFFA0-F557-101A-88EC-00DD010CCC48}'
-	newSpecialFolder 'shell:::{A0953C92-50DC-43BF-BE83-3742FED03C9C}' 'My Video'
-	newSpecialFolder 'shell:::{A8CDFF1C-4878-43BE-B5FD-F8091C1C60D0}' 'Personal'
-	# Win10 1511まで
-	newSpecialFolder 'shell:::{ADFA80E7-9769-4AD9-992C-55DC57E1008C}' 'StartMenuAllPrograms'
-	newSpecialFolder 'shell:::{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}' 'ThisPCDesktopFolder'
-	# Other Users Folder
-	# Win10まで
-	newSpecialFolder 'shell:::{B4FB3F98-C1EA-428D-A78A-D1F5659CBA93}'
-	# Microsoft Windows Font Folder
-	newSpecialFolder 'shell:ControlPanelFolder\::{BD84B380-8CA2-1069-AB1D-08000948F534}'
-	# Administrative Tools (Win10まで)
-	# Windows Tools (Win11 21H2から)
-	newSpecialFolder 'shell:::{D20EA4E1-3957-11D2-A40B-0C5020524153}'
-	newSpecialFolder 'shell:::{D3162B92-9365-467A-956B-92703ACA08AF}' 'Local Documents'
-	# Installed Updates
-	newSpecialFolder 'shell:::{D450A8A1-9568-45C7-9C0E-B4F9FB4537BD}'
-	# Games Explorer
-	# Win10 1709までサポート
-	newSpecialFolder 'shell:::{ED228FDF-9EA8-4870-83B1-96B02CFE0D52}'
-	# Computers and Devices
-	newSpecialFolder 'shell:::{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}'
-	# This Device
-	# Win10 1703から
-	newSpecialFolder 'shell:::{F8278C54-A712-415B-B593-B77A2BE0DDA9}'
-	newSpecialFolder 'shell:::{F86FA3AB-70D2-4FC7-9C99-FCBF05467F3A}' 'Local Videos'
-
-	# Control Panel command object for Start menu and desktop
-	newShellCommand '{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}'
-	# Default Programs command object for Start menu
-	newShellCommand '{E44E5D18-0652-4508-A4E2-8A090067BCB0}'
-
-	# フォルダーとして使えないshellコマンド
-	$categoryName = 'Unusable'
-
-	newSpecialFolder 'shell:MAPIFolder'
-	newSpecialFolder 'shell:RecordedTVLibrary'
-
-	newShellCommand '{00020D75-0000-0000-C000-000000000046}'
-	# Desktop
-	newShellCommand '{00021400-0000-0000-C000-000000000046}'
-	# Shortcut
-	newShellCommand '{00021401-0000-0000-C000-000000000046}'
-	newShellCommand '{047EA9A0-93BB-415F-A1C3-D7AEB3DD5087}'
-	# Open With Context Menu Handler
-	newShellCommand '{09799AFB-AD67-11D1-ABCD-00C04FC30936}'
-	# Folder Shortcut
-	newShellCommand '{0AFACED1-E828-11D1-9187-B532F1E9575D}'
-	# ArchiveFolder
-	# Win11 22H2 Moment4から
-	newShellCommand '{0C1FD748-B888-443D-9EC3-AD7E22D48808}'
-	# (windows.storage.dll)
-	newShellCommand '{0C39A5CF-1A7A-40C8-BA74-8900E6DF5FCD}'
-	# (dsuiext.dll)
-	newShellCommand '{0D45D530-764B-11D0-A1CA-00AA00C16E65}'
-	# Shell File System Folder
-	newShellCommand '{0E5AAE11-A475-4C5B-AB00-C66DE400274E}'
-	# Device Center Print Context Menu Extension
-	newShellCommand '{0E6DAA63-DD4E-47CE-BF9D-FDB72ECE4A0D}'
-	# IE History and Feeds Shell Data Source for Windows Search
-	newShellCommand '{11016101-E366-4D22-BC06-4ADA335C892B}'
-	# OpenMediaSharing
-	newShellCommand '{17FC1A80-140E-4290-A64F-4A29A951A867}'
-	# CLSID_LibraryQueryFolder
-	# Win11 22H2 Moment4から
-	newShellCommand '{1947EC0A-74E1-4D7B-AF91-FAC0C34C938D}'
-	# CLSID_DBFolderBoth
-	newShellCommand '{1BEF2128-2F96-4500-BA7C-098DC0049CB2}'
-	# CompatContextMenu Class
-	newShellCommand '{1D27F844-3A1F-4410-85AC-14651078412D}'
-	# Windows Security
-	newShellCommand '{2559A1F2-21D7-11D4-BDAF-00C04F60B9F0}'
-	# E-mail
-	newShellCommand '{2559A1F5-21D7-11D4-BDAF-00C04F60B9F0}'
-	# Location Folder
-	newShellCommand '{267CF8A9-F4E3-41E6-95B1-AF881BE130FF}'
-	# Enhanced Storage Context Menu Handler Class
-	newShellCommand '{2854F705-3548-414C-A113-93E27C808C85}'
-	# (van.dll)
-	newShellCommand '{38A98528-6CBF-4CA9-8DC0-B1E1D10F7B1B}' 'Connect To'
-	# System Restore
-	newShellCommand '{3F6BC534-DFA1-4AB4-AE54-EF25A74E0107}'
-	# Start Menu Folder
-	newShellCommand '{48E7CAAB-B918-4E58-A94D-505519C795DC}'
-	# IGD Property Page
-	newShellCommand '{4A1E5ACD-A108-4100-9E26-D2FAFA1BA486}'
-	# LzhCompressedFolder2
-	# Win10 1607まで
-	newShellCommand '{4F289A46-2BBB-4AE8-9EDA-E5E034707A71}'
-	# Shell File System NetFolder
-	# Win11 21H2から
-	newShellCommand '{4FE04BFD-85B9-49DD-B914-F4C9556B9DA6}'
-	# This PC
-	newShellCommand '{5E5F29CE-E0A8-49D3-AF32-7A7BDC173478}'
-	# (dsuiext.dll)
-	newShellCommand '{62AE1F9A-126A-11D0-A14B-0800361B1103}'
-	# Search Connector Folder
-	newShellCommand '{72B36E70-8700-42D6-A7F7-C9AB3323EE51}'
-	# CryptPKO Class
-	newShellCommand '{7444C717-39BF-11D1-8CD9-00C04FC29D45}'
-	# Temporary Internet Files
-	newShellCommand '{7BD29E00-76C1-11CF-9DD0-00A0C9034933}'
-	# Temporary Internet Files
-	newShellCommand '{7BD29E01-76C1-11CF-9DD0-00A0C9034933}'
-	# Briefcase (Win10 1607まで)
-	#  (Win10 1703から)
-	newShellCommand '{85BBD920-42A0-1069-A2E4-08002B30309D}'
-	# Shortcut
-	newShellCommand '{85CFCCAF-2D14-42B6-80B6-F40F65D016E7}'
-	# Mobile Broadband Profile Settings Editor
-	# Win11 21H2まで
-	newShellCommand '{87630419-6216-4FF8-A1F0-143562D16D5C}'
-	# Compressed (zipped) Folder SendTo Target
-	newShellCommand '{888DCA60-FC0A-11CF-8F0F-00C04FD7D062}'
-	# ActiveX Cache Folder
-	newShellCommand '{88C6C381-2E85-11D0-94DE-444553540000}'
-	# Libraries delegate folder that appears in Users Files Folder
-	newShellCommand '{896664F7-12E1-490F-8782-C0835AFD98FC}'
-	# Windows Search Service Media Center Namespace Extension Handler
-	# Win10 1607まで
-	newShellCommand '{98D99750-0B8A-4C59-9151-589053683D73}'
-	# MAPI Shell Context Menu
-	newShellCommand '{9D3C0751-A13F-46A6-B833-B46A43C30FE8}'
-	# Previous Versions
-	newShellCommand '{9DB7A13C-F208-4981-8353-73CC61AE2783}'
-	# Mail Service
-	newShellCommand '{9E56BE60-C50F-11CF-9A2C-00A0C90A90CE}'
-	# Desktop Shortcut
-	newShellCommand '{9E56BE61-C50F-11CF-9A2C-00A0C90A90CE}'
-	# DevicePairingFolder Initialization
-	newShellCommand '{AEE2420F-D50E-405C-8784-363C582BF45A}'
-	# CLSID_DBFolder
-	newShellCommand '{B2952B16-0E07-4E5A-B993-58C52CB94CAE}'
-	# Device Center Scan Context Menu Extension
-	newShellCommand '{B5A60A9E-A4C7-4A93-AC6E-0B76D1D87DC4}'
-	# DeviceCenter Initialization
-	newShellCommand '{C2B136E2-D50E-405C-8784-363C582BF43E}'
-	# Win10 1607まで
-	newShellCommand '{D9AC5E73-BB10-467B-B884-AA1E475C51F5}'
-	# delegate folder that appears in Users Files Folder
-	newShellCommand '{DFFACDC5-679F-4156-8947-C5C76BC0B67F}'
-	# CompressedFolder
-	newShellCommand '{E88DCCE0-B7B3-11D1-A9F0-00AA0060FA31}'
-	# MyDocs Drop Target
-	newShellCommand '{ECF03A32-103D-11D2-854D-006008059367}'
-	# Shell File System Folder
-	newShellCommand '{F3364BA0-65B9-11CE-A9BA-00AA004AE837}'
-	# Sticky Notes Namespace Extension for Windows Desktop Search
-	# Win10 1607まで
-	newShellCommand '{F3F5824C-AD58-4728-AF59-A1EBE3392799}'
-	# Subscription Folder
-	newShellCommand '{F5175861-2688-11D0-9C5E-00AA00A45957}'
-	# Internet Shortcut
-	newShellCommand '{FBF23B40-E3F0-101B-8488-00AA003E56F8}'
-	# History
-	newShellCommand '{FF393560-C2A7-11CF-BFF4-444553540000}'
-	# Windows Photo Viewer Image Verbs
-	newShellCommand '{FFE2A43C-56B9-4BF5-9A79-CC6D4285608A}'
+	#endregion
 }
 
 function Get-SpecialFolder {
@@ -1190,7 +886,335 @@ function Get-SpecialFolder {
 	[OutputType([SpecialFolder[]])]
 	param ([switch]$IncludeShellCommand)
 
-	return getSpecialFolder ($IncludeShellCommand -or $Develop) | Where-Object { $_ }
+	return getSpecialFolder $IncludeShellCommand | Where-Object { $_ }
+}
+
+$folderKeys = $folderGuids.Keys
+
+function Get-SpecialFolderPath {
+	<#
+	.SYNOPSIS
+	Gets the path of the special folders for Windows.
+	.DESCRIPTION
+	Gets the path of the special folders for Windows. This function supports the virtual folders, e.g. ControlPanelFolder and RecycleBinFolder.
+	.PARAMETER Name
+	The name of the special folder.
+	.OUTPUTS
+	System.String
+	.EXAMPLE
+	PS >Get-SpecialFolderPath System
+
+	C:\Windows\system32
+	.EXAMPLE
+	PS >Get-SpecialFolderPath MyComputerFolder
+
+	shell:::{20D04FE0-3AEA-1069-A2D8-08002B30309D}
+	#>
+
+	[CmdletBinding()]
+	[OutputType([string])]
+	param (
+		[Parameter(Mandatory, Position = 0)]
+		[ValidateSet(
+			'3D Objects',
+			'AccountPictures',
+			'AddNewProgramsFolder',
+			'Administrative Tools',
+			'AppData',
+			'AppDataDesktop',
+			'AppDataDocuments',
+			'AppDataFavorites',
+			'AppDataProgramData',
+			'Application Shortcuts',
+			'AppMods',
+			'AppsFolder',
+			'AppUpdatesFolder',
+			'Cache',
+			'Camera Roll',
+			'CameraRollLibrary',
+			'Captures',
+			'CDBurning',
+			'Common Administrative Tools',
+			'Common Desktop',
+			'Common Documents',
+			'Common Programs',
+			'Common Start Menu',
+			'Common Start Menu Places',
+			'Common Startup',
+			'Common Templates',
+			'CommonDownloads',
+			'CommonMusic',
+			'CommonPictures',
+			'CommonRingtones',
+			'CommonVideo',
+			'ConflictFolder',
+			'ConnectionsFolder',
+			'Contacts',
+			'ControlPanelFolder',
+			'Cookies',
+			'CredentialManager',
+			'CryptoKeys',
+			'CSCFolder',
+			'DesktopFolder',
+			'Development Files',
+			'Device Metadata Store',
+			'DocumentsLibrary',
+			'Downloads',
+			'DpapiKeys',
+			'Favorites',
+			'Fonts',
+			'GameTasks',
+			'History',
+			'HomeGroupFolder',
+			'ImplicitAppShortcuts',
+			'Libraries',
+			'Links',
+			'LocalAppData',
+			'LocalAppDataLow',
+			'LocalizedResourcesDir',
+			'MusicLibrary',
+			'My Documents',
+			'My Music',
+			'My Pictures',
+			'My Video',
+			'MyComputerFolder',
+			'NetHood',
+			'NetworkPlacesFolder',
+			'OEM Links',
+			'OneDrive',
+			'OneDriveCameraRoll',
+			'OneDriveDocuments',
+			'OneDriveMusic',
+			'OneDrivePictures',
+			'Original Images',
+			'PhotoAlbums',
+			'PicturesLibrary',
+			'Playlists',
+			'PrintersFolder',
+			'PrintHood',
+			'Profile',
+			'ProgramData',
+			'ProgramFiles',
+			'ProgramFilesCommon',
+			'ProgramFilesCommonX86',
+			'ProgramFilesX86',
+			'Programs',
+			'Public',
+			'PublicAccountPictures',
+			'PublicGameTasks',
+			'PublicLibraries',
+			'Quick Launch',
+			'Recent',
+			'Recorded Calls',
+			'RecordedTVLibrary',
+			'RecycleBinFolder',
+			'ResourceDir',
+			'RetailDemo',
+			'Ringtones',
+			'Roamed Tile Images',
+			'Roaming Tiles',
+			'SampleMusic',
+			'SamplePictures',
+			'SampleVideos',
+			'SavedGames',
+			'SavedPictures',
+			'SavedPicturesLibrary',
+			'Screenshots',
+			'Searches',
+			'SearchHistoryFolder',
+			'SearchHomeFolder',
+			'SearchTemplatesFolder',
+			'SendTo',
+			'Start Menu',
+			'Startup',
+			'SyncCenterFolder',
+			'SyncResultsFolder',
+			'SyncSetupFolder',
+			'System',
+			'SystemCertificates',
+			'SystemX86',
+			'Templates',
+			'User Pinned',
+			'UserProfiles',
+			'UserProgramFiles',
+			'UserProgramFilesCommon',
+			'VideosLibrary',
+			'Windows'
+		)]
+		[string]$Name
+	)
+
+	try {
+		if ($Name -in $folderKeys) {
+			$path = getKnownFolderPath $Name
+			if ($path) { return $path }
+			else { throw [DirectoryNotFoundException]::new("Folder `"$Name`" not found.") }
+		} else {
+			try {
+				$path = $shell.NameSpace("shell:$Name").Self.Path
+				if ($path -match '^::') { return "shell:$path" } else { return $path }
+			} catch {
+				throw [NotSupportedException]::new("Folder `"$Name`" not supported in current Windows version.")
+			}
+		}
+	} catch {
+		$PSCmdlet.WriteError($_)
+	}
+}
+
+function New-SpecialFolder {
+	<#
+	.SYNOPSIS
+	Creates a new special folders for Windows.
+	.PARAMETER Name
+	The name of a new special folder.
+	.OUTPUTS
+	System.IO.FileSystemInfo
+		A object representing a new folder.
+	.EXAMPLE
+	PS >Get-SpecialFolderPath SavedPictures
+	#>
+
+	[CmdletBinding(SupportsShouldProcess)]
+	[OutputType([System.IO.FileSystemInfo])]
+	param (
+		[Parameter(Mandatory, Position = 0)]
+		[ValidateSet(
+			'3D Objects',
+			'AccountPictures',
+			'Administrative Tools',
+			'AppData',
+			'AppDataDesktop',
+			'AppDataDocuments',
+			'AppDataFavorites',
+			'AppDataProgramData',
+			'Application Shortcuts',
+			'AppMods',
+			'Cache',
+			'Camera Roll',
+			'CameraRollLibrary',
+			'Captures',
+			'CDBurning',
+			'Common Administrative Tools',
+			'Common Desktop',
+			'Common Documents',
+			'Common Programs',
+			'Common Start Menu Places',
+			'Common Start Menu',
+			'Common Startup',
+			'Common Templates',
+			'CommonDownloads',
+			'CommonMusic',
+			'CommonPictures',
+			'CommonRingtones',
+			'CommonVideo',
+			'Contacts',
+			'Cookies',
+			'CredentialManager',
+			'CryptoKeys',
+			'DesktopFolder',
+			'Development Files',
+			'Device Metadata Store',
+			'DocumentsLibrary',
+			'Downloads',
+			'DpapiKeys',
+			'Favorites',
+			'Fonts',
+			'GameTasks',
+			'History',
+			'ImplicitAppShortcuts',
+			'Libraries',
+			'Links',
+			'LocalAppData',
+			'LocalAppDataLow',
+			'LocalizedResourcesDir',
+			'MusicLibrary',
+			'My Documents',
+			'My Music',
+			'My Pictures',
+			'My Video',
+			'NetHood',
+			'OEM Links',
+			'OneDrive',
+			'OneDriveCameraRoll',
+			'OneDriveDocuments',
+			'OneDriveMusic',
+			'OneDrivePictures',
+			'Original Images',
+			'PhotoAlbums',
+			'PicturesLibrary',
+			'Playlists',
+			'PrintHood',
+			'Profile',
+			'ProgramData',
+			'ProgramFiles',
+			'ProgramFilesCommon',
+			'ProgramFilesCommonX86',
+			'ProgramFilesX86',
+			'Programs',
+			'Public',
+			'PublicAccountPictures',
+			'PublicGameTasks',
+			'PublicLibraries',
+			'Quick Launch',
+			'Recent',
+			'Recorded Calls',
+			'RecordedTVLibrary',
+			'ResourceDir',
+			'RetailDemo',
+			'Ringtones',
+			'Roamed Tile Images',
+			'Roaming Tiles',
+			'SampleMusic',
+			'SamplePictures',
+			'SampleVideos',
+			'SavedGames',
+			'SavedPictures',
+			'SavedPicturesLibrary',
+			'Screenshots',
+			'Searches',
+			'SearchHistoryFolder',
+			'SearchTemplatesFolder',
+			'SendTo',
+			'Start Menu',
+			'Startup',
+			'System',
+			'SystemCertificates',
+			'SystemX86',
+			'Templates',
+			'User Pinned',
+			'UserProfiles',
+			'UserProgramFiles',
+			'UserProgramFilesCommon',
+			'VideosLibrary',
+			'Windows'
+		)]
+		[string]$Name
+	)
+
+	try {
+		if ($Name -notin $folderKeys) { throw [NotSupportedException]::new("Folder `"$Name`" not supported.") }
+
+		if (!$PSCmdlet.ShouldProcess($Name)) { return }
+
+		$KF_FLAG_DEFAULT = [uint32]0x00000000
+		$KF_FLAG_CREATE = [uint32]0x00008000
+
+		$folder = [KnownFolder]::new($folderGuids[$Name], $KF_FLAG_DEFAULT)
+		if ($folder.Result -eq 'OK') { throw [IOException]::new("Folder `"$Name`" already exists.") }
+
+		$folder = [KnownFolder]::new($folderGuids[$Name], $KF_FLAG_CREATE)
+		switch ($folder.Result) {
+			'OK' { return Get-Item -LiteralPath $folder.Path }
+			'NotFound' {
+				throw [NotSupportedException]::new("Folder `"$Name`" not supported in current Windows version.")
+			}
+			'AccessDenied' { throw [UnauthorizedAccessException]::new("Creating the Folder `"$Name`" is denied.") }
+			Default { throw [IOException]::new("Fail to Create the Folder `"$Name`".") }
+		}
+	} catch {
+		$PSCmdlet.WriteError($_)
+	}
 }
 
 # 1つのリソースは1つのメニューにか設定できないので、必要な項目ごとに使用する

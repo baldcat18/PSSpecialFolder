@@ -9,15 +9,23 @@ Windows で使われている特殊フォルダーのフルパスを取得する
 ## サポートする Windows バージョン
 
 Windows 10 バージョン 22H2<br>
-Windows 11 バージョン 22H2、23H2
+Windows 11 バージョン 23H2、24H2
 
-Windows 10 バージョン 21H2、Windows 11 バージョン 21H2 でも動作すると思いますが、動作確認していません。
+Windows 11 バージョン 22H2 でも動作すると思いますが、動作確認していません。
 
 ## 提供する関数
 
 ### Get-SpecialFolder
 
 Windows で使われている特殊フォルダーのフルパスを取得します。
+
+### Get-SpecialFolderPath
+
+指定した特殊フォルダーのフルパスを取得します。
+
+### New-SpecialFolder
+
+指定した特殊フォルダーを作成します。
 
 ### Show-SpecialFolder
 

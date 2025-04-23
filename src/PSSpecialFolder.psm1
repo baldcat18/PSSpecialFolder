@@ -1072,7 +1072,7 @@ function New-SpecialFolder {
 	System.IO.FileSystemInfo
 		A object representing a new folder.
 	.EXAMPLE
-	PS >Get-SpecialFolderPath SavedPictures
+	PS >New-SpecialFolder SavedPictures
 	#>
 
 	[CmdletBinding(SupportsShouldProcess)]

@@ -32,6 +32,8 @@ class OS {
 	static [bool]$Win11_22h2_Only # Win11 22H2のみ
 	static [bool]$Win11_22h2_moment4 # Win11 22H2 Moment4以降
 	static [bool]$Win11_23h2 # Win11 23H2以降
+	static [bool]$Win11_24h2_3624 # Win11 24H2 26100.3624以降
+
 
 	static OS() {
 		$os = & $PSScriptRoot\Get-OSVersion.ps1
@@ -48,6 +50,7 @@ class OS {
 		[OS]::Win11_22h2_Only = $version -eq '10.0.22621'
 		[OS]::Win11_22h2_moment4 = $version -ge '10.0.22621.2361'
 		[OS]::Win11_23h2 = $version -gt '10.0.22631'
+		[OS]::Win11_24h2_3624 = $version -ge '10.0.26100.3624'
 	}
 }
 
@@ -672,7 +675,8 @@ function getSpecialFolder {
 	newSpecialFolder 'shell:ControlPanelFolder\::{BB64F8A7-BEE7-4E1A-AB8D-7D8273F7FDB6}'
 	# Microsoft Windows Font Folder
 	# shell:Fonts
-	newSpecialFolder 'shell:ControlPanelFolder\::{BD84B380-8CA2-1069-AB1D-08000948F534}' -Path 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\0\::{BD84B380-8CA2-1069-AB1D-08000948F534}'
+	# Win10 24H2 26100.3624からShellCommandsExceptFoldersカテゴリに移動するので非表示に
+	if (![OS]::Win11_24h2_3624) { newSpecialFolder 'shell:ControlPanelFolder\::{BD84B380-8CA2-1069-AB1D-08000948F534}' -Path 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\0\::{BD84B380-8CA2-1069-AB1D-08000948F534}' }
 	# Language Settings
 	# Win10 1803までサポート
 	newSpecialFolder 'shell:ControlPanelFolder\::{BF782CC9-5A52-4A17-806C-2A894FFEEAC5}'
@@ -858,6 +862,9 @@ function getSpecialFolder {
 	# System
 	# Win11 21H2からここに移動
 	if ([OS]::Win11) { newSpecialFolder 'shell:::{BB06C0E4-D293-4F75-8A90-CB05B6477EEE}' }
+	# Microsoft Windows Font Folder
+	# Win11 24H2 26100.3624からここに移動
+	if ([OS]::Win11_24h2_3624) { newShellCommand '{BD84B380-8CA2-1069-AB1D-08000948F534}' 'Fonts' }
 	# Text to Speech Control Panel
 	newShellCommand '{D17D1D6D-CC3F-4815-8FE3-607E7D5D10B3}'
 	# Add Network Place

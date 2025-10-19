@@ -15,7 +15,7 @@ $revison = $versionKey.GetValue('UBR')
 if ($null -eq $revison) { $revison = ($versionKey.GetValue('BuildLabEx') -split '\.', 3)[1] }
 
 $displayVersion = $versionKey.GetValue('DisplayVersion') # Win10 20H2から
-if ($null -eq $displayVersion) { $displayVersion = $versionKey.GetValue('ReleaseId') } # Win10 1511から
+if ($null -eq $displayVersion) { $displayVersion = $versionKey.GetValue('ReleaseId') }
 
 return @{
 	Version = [Version]"$osVersionString.$revison"

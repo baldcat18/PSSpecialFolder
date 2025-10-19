@@ -22,14 +22,11 @@ if ([Environment]::OSVersion.Platform -ne 'Win32NT') {
 
 class OS {
 	static [bool]$Win10 # Win10以降
-	static [bool]$Win10_1607 # Win10 1607以降
 	static [bool]$Win10_1803 # Win10 1803以降
 	static [bool]$Win10_20h2 # Win10 20H2以降
 	static [bool]$Win10_22h2_Only # Win10 22H2のみ
 	static [bool]$Win11 # Win11以降
-	static [bool]$Win11_21h2_Only # Win11 21H2のみ
 	static [bool]$Win11_22h2 # Win11 22H2以降
-	static [bool]$Win11_22h2_Only # Win11 22H2のみ
 	static [bool]$Win11_22h2_moment4 # Win11 22H2 Moment4以降
 	static [bool]$Win11_23h2 # Win11 23H2以降
 	static [bool]$Win11_24h2_3624 # Win11 24H2 26100.3624以降
@@ -41,13 +38,11 @@ class OS {
 		$verString = $os['VersionString']
 
 		[OS]::Win10 = $version -gt '10.0.10240'
-		[OS]::Win10_1607 = $version -gt '10.0.14393'
 		[OS]::Win10_1803 = $version -gt '10.0.17134'
 		[OS]::Win10_20h2 = $version -gt '10.0.19042'
 		[OS]::Win10_22h2_Only = $verString -eq '10.0.19045'
 		[OS]::Win11 = $version -gt '10.0.22000'
 		[OS]::Win11_22h2 = $version -gt '10.0.22621'
-		[OS]::Win11_22h2_Only = $version -eq '10.0.22621'
 		[OS]::Win11_22h2_moment4 = $version -ge '10.0.22621.2361'
 		[OS]::Win11_23h2 = $version -gt '10.0.22631'
 		[OS]::Win11_24h2_3624 = $version -ge '10.0.26100.3624'
@@ -56,7 +51,6 @@ class OS {
 
 do {
 	if ([OS]::Win11_23h2) { break }
-	if ([OS]::Win11_22h2_Only) { break }
 	if ([OS]::Win10_22h2_Only) { break }
 
 	if ([OS]::Win10) {
@@ -268,6 +262,15 @@ function getKnownFolderPath {
 	if ($folder.Result -eq 'OK') { return $folder.Path }
 }
 
+# OfficeのOutlookがインストールされているか調べる
+function isOutlookInstalled {
+	$outlookKey = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\OUTLOOK.EXE'
+	if (!(Test-Path -LiteralPath $outlookKey)) { return $false }
+
+	$outlookPath = (Get-Item -LiteralPath $outlookKey).GetValue('')
+	return $outlookPath -and (Test-Path -LiteralPath $outlookPath)
+}
+
 function getSpecialFolder {
 	# $categoryNameはnewSpecialFolderやnewShellCommand関数で参照する
 	[SuppressMessage('PSUseDeclaredVarsMoreThanAssignments', 'categoryName')]
@@ -358,7 +361,7 @@ function getSpecialFolder {
 	$categoryName = 'OneDrive'
 
 	# shell:::{59031A47-3F72-44A7-89C5-5595FE6B30EE}\::{018D5C66-4533-4307-9B53-224DE2ED1FE6}
-	# %OneDrive% (Win10 1607から)
+	# %OneDrive%
 	newSpecialFolder 'shell:OneDrive'
 	newSpecialFolder 'shell:OneDriveDocuments'
 	newSpecialFolder 'shell:OneDriveMusic'
@@ -582,7 +585,6 @@ function getSpecialFolder {
 	$categoryName = 'Desktop / MyComputer'
 
 	newSpecialFolder 'shell:Desktop'
-	# shell:MyComputerFolderはWin10 1507/1511だとなぜかデスクトップになってしまう
 	newSpecialFolder 'shell:MyComputerFolder'
 	# Recent Places Folder
 	newSpecialFolder 'shell:::{22877A6D-37A1-461A-91B0-DBDA5AAEBC99}'
@@ -675,7 +677,7 @@ function getSpecialFolder {
 	newSpecialFolder 'shell:ControlPanelFolder\::{BB64F8A7-BEE7-4E1A-AB8D-7D8273F7FDB6}'
 	# Microsoft Windows Font Folder
 	# shell:Fonts
-	# Win10 24H2 26100.3624からShellCommandsExceptFoldersカテゴリに移動するので非表示に
+	# Win11 24H2 26100.3624からShellCommandsExceptFoldersカテゴリに移動するので非表示に
 	if (![OS]::Win11_24h2_3624) { newSpecialFolder 'shell:ControlPanelFolder\::{BD84B380-8CA2-1069-AB1D-08000948F534}' -Path 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\0\::{BD84B380-8CA2-1069-AB1D-08000948F534}' }
 	# Language Settings
 	# Win10 1803までサポート
@@ -763,8 +765,6 @@ function getSpecialFolder {
 	# Win11 23H2からサポート
 	# Win11 22H2 Moment4ではKB5030509かKB5031455をインストールすると利用可
 	newSpecialFolder 'shell:::{AD182E17-4754-4742-8529-C11EEEF0C299}'
-	# Win10 1511までサポート
-	newSpecialFolder 'shell:StartMenuAllPrograms'
 	# (cscui.dll)
 	# 企業向けエディションで使用可
 	newSpecialFolder 'shell:::{AFDB1F70-2A4C-11D2-9039-00C04F8EEB3E}' 'Offline Files Folder'
@@ -802,11 +802,11 @@ function getSpecialFolder {
 	# Set User Defaults
 	# Win11 22H2からここに移動
 	if ([OS]::Win11_22h2) { newSpecialFolder 'shell:::{17CD9488-1228-4B2F-88CE-4298E93E0966}' 'Default apps' }
-	# Search
-	# Win10 1511まで
-	if (![OS]::Win10_1607) { newShellCommand '{2559A1F0-21D7-11D4-BDAF-00C04F60B9F0}' 'Search Files' }
 	# Run...
 	newShellCommand '{2559A1F3-21D7-11D4-BDAF-00C04F60B9F0}'
+	# E-mail
+	# OfficeのOutlookをインストールすると利用可
+	if (isOutlookInstalled) { newShellCommand '{2559A1F5-21D7-11D4-BDAF-00C04F60B9F0}' }
 	# Set Program Access and Defaults
 	newShellCommand '{2559A1F7-21D7-11D4-BDAF-00C04F60B9F0}'
 	# (shell32.dll#SearchCommand)
@@ -818,7 +818,7 @@ function getSpecialFolder {
 	# Win+Dと同じ
 	newShellCommand '{3080F90D-D7AD-11D9-BD98-0000947B0257}'
 	# Window Switcher
-	# Win10 1607以降ではWin+Tabと同じ (Win10 1507/1511では使用不可)
+	# Win+Tabと同じ
 	newShellCommand '{3080F90E-D7AD-11D9-BD98-0000947B0257}'
 	# Phone and Modem Control Panel
 	newShellCommand '{40419485-C444-4567-851A-2DD7BFA1684D}'
@@ -847,11 +847,10 @@ function getSpecialFolder {
 	newShellCommand '{87D66A43-7B11-4A28-9811-C86EE395ACF7}'
 	# Portable Workspace Creator
 	# Win10 1909まで
-	# Enterpriseで使用可
-	# Win10 1607以降ではProでも使用可
+	# ProやEnterpriseで使用可
 	newShellCommand '{8E0C279D-0BD1-43C3-9EBD-31C3DC5B8A77}' 'Windows To Go'
 	# Infrared
-	# Win10 1607から1809まで
+	# Win10 1809まで
 	newShellCommand '{A0275511-0E86-4ECA-97C2-ECD8F1221D08}'
 	# Internet Options
 	newShellCommand '{A3DD4F92-658A-410F-84FD-6FBBBEF2FFFE}'
@@ -897,6 +896,17 @@ function Get-SpecialFolder {
 }
 
 $folderKeys = $folderGuids.Keys
+$folderNames = & $PSScriptRoot\FolderNames.ps1
+$folderNamesForGet = & $PSScriptRoot\FolderNames.ps1 -Get
+
+function validateFolderName {
+	param ([switch]$Get)
+
+	$names = if ($Get) { $folderNamesForGet } else { $folderNames }
+	if ($_ -in $names) { return $true }
+
+	throw "Specify one of the following values: $($names -join ', ')"
+}
 
 function Get-SpecialFolderPath {
 	<#
@@ -922,132 +932,8 @@ function Get-SpecialFolderPath {
 	[OutputType([string])]
 	param (
 		[Parameter(Mandatory, Position = 0)]
-		[ValidateSet(
-			'3D Objects',
-			'AccountPictures',
-			'AddNewProgramsFolder',
-			'Administrative Tools',
-			'AppData',
-			'AppDataDesktop',
-			'AppDataDocuments',
-			'AppDataFavorites',
-			'AppDataProgramData',
-			'Application Shortcuts',
-			'AppMods',
-			'AppsFolder',
-			'AppUpdatesFolder',
-			'Cache',
-			'Camera Roll',
-			'CameraRollLibrary',
-			'Captures',
-			'CDBurning',
-			'Common Administrative Tools',
-			'Common Desktop',
-			'Common Documents',
-			'Common Programs',
-			'Common Start Menu',
-			'Common Start Menu Places',
-			'Common Startup',
-			'Common Templates',
-			'CommonDownloads',
-			'CommonMusic',
-			'CommonPictures',
-			'CommonRingtones',
-			'CommonVideo',
-			'ConflictFolder',
-			'ConnectionsFolder',
-			'Contacts',
-			'ControlPanelFolder',
-			'Cookies',
-			'CredentialManager',
-			'CryptoKeys',
-			'CSCFolder',
-			'DesktopFolder',
-			'Development Files',
-			'Device Metadata Store',
-			'DocumentsLibrary',
-			'Downloads',
-			'DpapiKeys',
-			'Favorites',
-			'Fonts',
-			'GameTasks',
-			'History',
-			'HomeGroupFolder',
-			'ImplicitAppShortcuts',
-			'Libraries',
-			'Links',
-			'LocalAppData',
-			'LocalAppDataLow',
-			'LocalizedResourcesDir',
-			'MusicLibrary',
-			'My Documents',
-			'My Music',
-			'My Pictures',
-			'My Video',
-			'MyComputerFolder',
-			'NetHood',
-			'NetworkPlacesFolder',
-			'OEM Links',
-			'OneDrive',
-			'OneDriveCameraRoll',
-			'OneDriveDocuments',
-			'OneDriveMusic',
-			'OneDrivePictures',
-			'Original Images',
-			'PhotoAlbums',
-			'PicturesLibrary',
-			'Playlists',
-			'PrintersFolder',
-			'PrintHood',
-			'Profile',
-			'ProgramData',
-			'ProgramFiles',
-			'ProgramFilesCommon',
-			'ProgramFilesCommonX86',
-			'ProgramFilesX86',
-			'Programs',
-			'Public',
-			'PublicAccountPictures',
-			'PublicGameTasks',
-			'PublicLibraries',
-			'Quick Launch',
-			'Recent',
-			'Recorded Calls',
-			'RecordedTVLibrary',
-			'RecycleBinFolder',
-			'ResourceDir',
-			'RetailDemo',
-			'Ringtones',
-			'Roamed Tile Images',
-			'Roaming Tiles',
-			'SampleMusic',
-			'SamplePictures',
-			'SampleVideos',
-			'SavedGames',
-			'SavedPictures',
-			'SavedPicturesLibrary',
-			'Screenshots',
-			'Searches',
-			'SearchHistoryFolder',
-			'SearchHomeFolder',
-			'SearchTemplatesFolder',
-			'SendTo',
-			'Start Menu',
-			'Startup',
-			'SyncCenterFolder',
-			'SyncResultsFolder',
-			'SyncSetupFolder',
-			'System',
-			'SystemCertificates',
-			'SystemX86',
-			'Templates',
-			'User Pinned',
-			'UserProfiles',
-			'UserProgramFiles',
-			'UserProgramFilesCommon',
-			'VideosLibrary',
-			'Windows'
-		)]
+		[ArgumentCompleter({ & $PSScriptRoot\FolderCompleter.ps1 $args[2] -Get })]
+		[ValidateScript({ validateFolderName -Get })]
 		[string]$Name
 	)
 
@@ -1086,116 +972,8 @@ function New-SpecialFolder {
 	[OutputType([System.IO.FileSystemInfo])]
 	param (
 		[Parameter(Mandatory, Position = 0)]
-		[ValidateSet(
-			'3D Objects',
-			'AccountPictures',
-			'Administrative Tools',
-			'AppData',
-			'AppDataDesktop',
-			'AppDataDocuments',
-			'AppDataFavorites',
-			'AppDataProgramData',
-			'Application Shortcuts',
-			'AppMods',
-			'Cache',
-			'Camera Roll',
-			'CameraRollLibrary',
-			'Captures',
-			'CDBurning',
-			'Common Administrative Tools',
-			'Common Desktop',
-			'Common Documents',
-			'Common Programs',
-			'Common Start Menu Places',
-			'Common Start Menu',
-			'Common Startup',
-			'Common Templates',
-			'CommonDownloads',
-			'CommonMusic',
-			'CommonPictures',
-			'CommonRingtones',
-			'CommonVideo',
-			'Contacts',
-			'Cookies',
-			'CredentialManager',
-			'CryptoKeys',
-			'DesktopFolder',
-			'Development Files',
-			'Device Metadata Store',
-			'DocumentsLibrary',
-			'Downloads',
-			'DpapiKeys',
-			'Favorites',
-			'Fonts',
-			'GameTasks',
-			'History',
-			'ImplicitAppShortcuts',
-			'Libraries',
-			'Links',
-			'LocalAppData',
-			'LocalAppDataLow',
-			'LocalizedResourcesDir',
-			'MusicLibrary',
-			'My Documents',
-			'My Music',
-			'My Pictures',
-			'My Video',
-			'NetHood',
-			'OEM Links',
-			'OneDrive',
-			'OneDriveCameraRoll',
-			'OneDriveDocuments',
-			'OneDriveMusic',
-			'OneDrivePictures',
-			'Original Images',
-			'PhotoAlbums',
-			'PicturesLibrary',
-			'Playlists',
-			'PrintHood',
-			'Profile',
-			'ProgramData',
-			'ProgramFiles',
-			'ProgramFilesCommon',
-			'ProgramFilesCommonX86',
-			'ProgramFilesX86',
-			'Programs',
-			'Public',
-			'PublicAccountPictures',
-			'PublicGameTasks',
-			'PublicLibraries',
-			'Quick Launch',
-			'Recent',
-			'Recorded Calls',
-			'RecordedTVLibrary',
-			'ResourceDir',
-			'RetailDemo',
-			'Ringtones',
-			'Roamed Tile Images',
-			'Roaming Tiles',
-			'SampleMusic',
-			'SamplePictures',
-			'SampleVideos',
-			'SavedGames',
-			'SavedPictures',
-			'SavedPicturesLibrary',
-			'Screenshots',
-			'Searches',
-			'SearchHistoryFolder',
-			'SearchTemplatesFolder',
-			'SendTo',
-			'Start Menu',
-			'Startup',
-			'System',
-			'SystemCertificates',
-			'SystemX86',
-			'Templates',
-			'User Pinned',
-			'UserProfiles',
-			'UserProgramFiles',
-			'UserProgramFilesCommon',
-			'VideosLibrary',
-			'Windows'
-		)]
+		[ArgumentCompleter({ & $PSScriptRoot\FolderCompleter.ps1 $args[2] })]
+		[ValidateScript({ validateFolderName })]
 		[string]$Name
 	)
 
@@ -1217,7 +995,7 @@ function New-SpecialFolder {
 				throw [NotSupportedException]::new("Folder `"$Name`" not supported in current Windows version.")
 			}
 			'AccessDenied' { throw [UnauthorizedAccessException]::new("Creating the Folder `"$Name`" is denied.") }
-			Default { throw [IOException]::new("Fail to Create the Folder `"$Name`".") }
+			default { throw [IOException]::new("Fail to Create the Folder `"$Name`".") }
 		}
 	} catch {
 		$PSCmdlet.WriteError($_)

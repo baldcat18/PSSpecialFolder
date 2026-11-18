@@ -11,6 +11,8 @@ using namespace System.Windows.Interop
 using namespace System.Windows.Markup
 using namespace Win32API
 
+using module .\OS.psm1
+
 param()
 
 Set-StrictMode -Version Latest
@@ -20,37 +22,9 @@ if ([Environment]::OSVersion.Platform -ne 'Win32NT') {
 	return
 }
 
-class OS {
-	static [bool]$Win10 # Win10以降
-	static [bool]$Win10_1803 # Win10 1803以降
-	static [bool]$Win10_20h2 # Win10 20H2以降
-	static [bool]$Win10_22h2_Only # Win10 22H2のみ
-	static [bool]$Win11 # Win11以降
-	static [bool]$Win11_22h2 # Win11 22H2以降
-	static [bool]$Win11_22h2_moment4 # Win11 22H2 Moment4以降
-	static [bool]$Win11_23h2 # Win11 23H2以降
-	static [bool]$Win11_24h2_3624 # Win11 24H2 26100.3624以降
-
-
-	static OS() {
-		$os = & $PSScriptRoot\Get-OSVersion.ps1
-		$version = $os['Version']
-		$verString = $os['VersionString']
-
-		[OS]::Win10 = $version -gt '10.0.10240'
-		[OS]::Win10_1803 = $version -gt '10.0.17134'
-		[OS]::Win10_20h2 = $version -gt '10.0.19042'
-		[OS]::Win10_22h2_Only = $verString -eq '10.0.19045'
-		[OS]::Win11 = $version -gt '10.0.22000'
-		[OS]::Win11_22h2 = $version -gt '10.0.22621'
-		[OS]::Win11_22h2_moment4 = $version -ge '10.0.22621.2361'
-		[OS]::Win11_23h2 = $version -gt '10.0.22631'
-		[OS]::Win11_24h2_3624 = $version -ge '10.0.26100.3624'
-	}
-}
-
 do {
-	if ([OS]::Win11_23h2) { break }
+	if ([OS]::Win11_25h2) { break }
+	if ([OS]::Win11_24h2_Only) { break }
 	if ([OS]::Win10_22h2_Only) { break }
 
 	if ([OS]::Win10) {
@@ -291,7 +265,7 @@ function getSpecialFolder {
 
 	# shell:Profile
 	# shell:::{59031A47-3F72-44A7-89C5-5595FE6B30EE}
-	# shell:ThisDeviceFolder / shell:::{F8278C54-A712-415B-B593-B77A2BE0DDA9} (Win10 1703から)
+	# shell:ThisDeviceFolder / shell:::{F8278C54-A712-415B-B593-B77A2BE0DDA9}
 	# %USERPROFILE%
 	# %HOMEDRIVE%%HOMEPATH%
 	newSpecialFolder 'shell:UsersFilesFolder' -FolderItemForProperties $shell.NameSpace([Environment+SpecialFolder]::UserProfile).Self
@@ -338,10 +312,8 @@ function getSpecialFolder {
 	# ゲームバーで動画やスクリーンショットを保存する時に自動生成される
 	newSpecialFolder 'shell:Captures'
 
-	# shell:::{0DB7E03F-FC29-4DC6-9020-FF41B59E513A} (Win10 1709から)
-	# Win10 1703までは3D Builderを起動した時に自動生成される
+	# shell:::{0DB7E03F-FC29-4DC6-9020-FF41B59E513A}
 	newSpecialFolder 'shell:3D Objects'
-	# Win10 1703からサポート
 	newSpecialFolder 'shell:AppMods'
 	# shell:UsersFilesFolder\{56784854-C6CB-462B-8169-88E350ACB882}
 	newSpecialFolder 'shell:Contacts'
@@ -361,6 +333,7 @@ function getSpecialFolder {
 	$categoryName = 'OneDrive'
 
 	# shell:::{59031A47-3F72-44A7-89C5-5595FE6B30EE}\::{018D5C66-4533-4307-9B53-224DE2ED1FE6}
+	# shell:::{04271989-C4D2-1C39-85A9-0F5F1E0B24A7} (Win11 23H2まで)
 	# %OneDrive%
 	newSpecialFolder 'shell:OneDrive'
 	newSpecialFolder 'shell:OneDriveDocuments'
@@ -430,16 +403,12 @@ function getSpecialFolder {
 	# %LOCALAPPDATA%
 	newSpecialFolder 'shell:Local AppData'
 
-	# Win10 1709からサポート
 	newSpecialFolder 'shell:AppDataDesktop'
 	newSpecialFolder 'shell:Development Files'
-	# Win10 1709からサポート
 	newSpecialFolder 'shell:AppDataDocuments'
-	# Win10 1709からサポート
 	newSpecialFolder 'shell:AppDataFavorites'
 	# ストアアプリの設定
 	newSpecialFolder 'shell:Local AppData\Packages' 'PackagedApps Data'
-	# Win10 1709からサポート
 	newSpecialFolder 'shell:AppDataProgramData'
 	# %TEMP%
 	# %TMP%
@@ -448,7 +417,6 @@ function getSpecialFolder {
 
 	newSpecialFolder 'shell:Application Shortcuts'
 	newSpecialFolder 'shell:CD Burning'
-	# Win10 1809からサポート
 	# 標準ユーザー権限でフォントをインストールした時に自動生成される
 	newSpecialFolder 'shell:Local AppData\Microsoft\Windows\Fonts' 'UserFonts'
 	newSpecialFolder 'shell:GameTasks'
@@ -479,7 +447,6 @@ function getSpecialFolder {
 	$categoryName = 'Public'
 
 	# shell:::{4336A54D-038B-4685-AB02-99BB52D3FB8B}
-	# shell:ThisDeviceFolder (Win10 1607まで)
 	# shell:::{5B934B42-522B-4C34-BBFE-37A3EF7B9C90}
 	# %PUBLIC%
 	newSpecialFolder 'shell:Public'
@@ -543,7 +510,6 @@ function getSpecialFolder {
 	newSpecialFolder 'shell:LocalizedResourcesDir'
 
 	newSpecialFolder $(if (!$isWow64) { 'shell:System' } else { 'shell:SystemX86' } )
-	# Win10 1803からサポート
 	newSpecialFolder "$Env:DriverData" 'DriverData'
 	newSpecialFolder (getItemValue (getItem 'HKLM:\SOFTWARE\Microsoft\Wbem') 'Installation Directory') 'WMI'
 	if ($is64bitOS) {
@@ -585,7 +551,7 @@ function getSpecialFolder {
 	$categoryName = 'Desktop / MyComputer'
 
 	newSpecialFolder 'shell:Desktop'
-	newSpecialFolder 'shell:MyComputerFolder'
+	newSpecialFolder 'shell:MyComputerFolder' 'This PC'
 	# Recent Places Folder
 	newSpecialFolder 'shell:::{22877A6D-37A1-461A-91B0-DBDA5AAEBC99}'
 	# shell:::{4564B25E-30CD-4787-82BA-39E73A750B14} ([Recent Items Instance Folder])
@@ -625,7 +591,7 @@ function getSpecialFolder {
 	newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\3' 'Network and Internet'
 	# shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\10
 	newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\5' 'System and Security'
-	newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\6' $(if ([OS]::Win10_1803) { 'Clock and Region' } else { 'Clock, Language, and Region' })
+	newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\6' 'Clock and Region'
 	newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\7' 'Ease of Access'
 	newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\8' 'Programs'
 	newSpecialFolder 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\9' 'User Accounts'
@@ -650,16 +616,12 @@ function getSpecialFolder {
 	if (![OS]::Win11_22h2) { newSpecialFolder 'shell:ControlPanelFolder\::{17CD9488-1228-4B2F-88CE-4298E93E0966}' 'Default Programs' }
 	# Workspaces Center
 	newSpecialFolder 'shell:ControlPanelFolder\::{241D7C96-F8BF-4F85-B01F-E2B043341A4B}' 'RemoteApp and Desktop Connections'
-	# Windows Firewall (Win10 1703まで)
-	# Windows Defender Firewall (Win10 1709から)
+	# Windows Defender Firewall
 	newSpecialFolder 'shell:ControlPanelFolder\::{4026492F-2F69-46B8-B9BF-5654FC07E423}'
 	# Speech Recognition (Win11 23H2まで)
 	newSpecialFolder 'shell:ControlPanelFolder\::{58E3C745-D971-4081-9034-86E34B30836A}'
 	# User Accounts
 	newSpecialFolder 'shell:ControlPanelFolder\::{60632754-C523-4B62-B45C-4172DA012619}'
-	# HomeGroup Control Panel
-	# Win10 1709までサポート
-	newSpecialFolder 'shell:ControlPanelFolder\::{67CA7650-96E6-4FDD-BB43-A8E774F73A57}'
 	# Network and Sharing Center
 	newSpecialFolder 'shell:ControlPanelFolder\::{8E908FC9-BECC-40F6-915B-F4CA0E70D03D}'
 	# AutoPlay
@@ -679,12 +641,6 @@ function getSpecialFolder {
 	# shell:Fonts
 	# Win11 24H2 26100.3624からShellCommandsExceptFoldersカテゴリに移動するので非表示に
 	if (![OS]::Win11_24h2_3624) { newSpecialFolder 'shell:ControlPanelFolder\::{BD84B380-8CA2-1069-AB1D-08000948F534}' -Path 'shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\0\::{BD84B380-8CA2-1069-AB1D-08000948F534}' }
-	# Language Settings
-	# Win10 1803までサポート
-	newSpecialFolder 'shell:ControlPanelFolder\::{BF782CC9-5A52-4A17-806C-2A894FFEEAC5}'
-	# Display
-	# Win10 1607までサポート
-	newSpecialFolder 'shell:ControlPanelFolder\::{C555438B-3C23-4769-A71F-B6D3D9B6053A}'
 	# Troubleshooting
 	# Win10 22H2 Moment4からShellCommandsExceptFoldersカテゴリに移動するので非表示に
 	if (![OS]::Win11_22h2_moment4) { newSpecialFolder 'shell:ControlPanelFolder\::{C58C4893-3BE0-4B45-ABB5-A63E4B8C8651}' }
@@ -774,8 +730,6 @@ function getSpecialFolder {
 	newSpecialFolder 'shell:::{B2B4A4D1-2754-4140-A2EB-9A76D9D7CDC6}'
 	# AppSuggestedLocations
 	newSpecialFolder 'shell:::{C57A6066-66A3-4D91-9EB9-41532179F0A5}'
-	# Win10 1709までサポート
-	newSpecialFolder 'shell:Games'
 	# Previous Versions Results Folder
 	newSpecialFolder 'shell:::{F8C2AB3B-17BC-41DA-9758-339D7DBF2D88}'
 	#endregion
@@ -868,9 +822,6 @@ function getSpecialFolder {
 	newShellCommand '{D17D1D6D-CC3F-4815-8FE3-607E7D5D10B3}'
 	# Add Network Place
 	newShellCommand '{D4480A50-BA28-11D1-8E75-00C04FA31A86}'
-	# Windows Defender
-	# Win10 1607まで
-	newShellCommand '{D8559EB9-20C0-410E-BEDA-7ED416AECC2A}'
 	# Date and Time Control Panel
 	newShellCommand '{E2E7934B-DCE5-43C4-9576-7FE4F75E7480}'
 	# Sound Control Panel
@@ -1002,6 +953,21 @@ function New-SpecialFolder {
 	}
 }
 
+
+$windowFont = $null
+$fontTable = @{
+	'ja-JP' = 'BIZ UDGothic, '
+}
+
+function setWindowFont {
+	param ($window)
+
+	if ($null -eq $windowFont) {
+		$script:windowFont = $fontTable[$PSUICulture] + 'Cascadia Mono Regular, Consolas, Global Monospace'
+	}
+	$window.FontFamily = $windowFont
+}
+
 # 1つのリソースは1つのメニューにか設定できないので、必要な項目ごとに使用する
 function getShieldImage {
 	[OutputType([System.Windows.Controls.Image])]
@@ -1075,6 +1041,7 @@ function Show-SpecialFolder {
 	$startWsl = { $dataGrid.SelectedItem.Wsl('open') }
 
 	$window = [Window][XamlReader]::Parse((Get-Content -LiteralPath "$PSScriptRoot\window.xaml" -Raw -ErrorAction Stop))
+	setWindowFont($window)
 
 	$open = [MenuItem]$window.FindName('open')
 	$openEx = [MenuItem]$window.FindName('openEx')
